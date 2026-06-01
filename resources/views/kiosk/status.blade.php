@@ -169,7 +169,6 @@
             gap: 0.75rem;
             justify-content: center;
         }
-
         .status-btn {
             min-width: 220px;
             min-height: 48px;
@@ -309,8 +308,7 @@
                 <strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong>
             </div>
         </section>
-
-        <div class="status-actions">
+<div class="status-actions">
             @if ($visit->status === 'approved' && $canConfirm)
                 <form class="status-form" method="post" action="{{ route('kiosk.checkin.confirm', $visit) }}">
                     @csrf

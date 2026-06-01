@@ -1,0 +1,13 @@
+{
+  "name": "gatehouse-printer-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local printer bridge for Gatehouse Pro QR tickets.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

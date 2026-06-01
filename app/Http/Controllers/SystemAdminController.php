@@ -454,6 +454,13 @@ class SystemAdminController extends Controller
         ]));
     }
 
+    public function printerSettingsEdit(): View
+    {
+        return view('admin.settings.printer', $this->withBase([
+            'defaultBridgeUrl' => 'http://127.0.0.1:9191',
+        ]));
+    }
+
     public function kioskSettingsUpdate(Request $request): RedirectResponse
     {
         $validated = $request->validate([

@@ -150,7 +150,7 @@
 
 .ci-no-scan {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 470px;
+    min-height: 550px;
     gap: .7rem; padding: 2.75rem 1.5rem; text-align: center; color: #9aafca;
 }
 .ci-no-scan i { font-size: 2.8rem; color: #c8daf0; }

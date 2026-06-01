@@ -53,7 +53,7 @@ class KioskFlowTest extends TestCase
             ->get('/kiosk')
             ->assertOk()
             ->assertSee($visit->code)
-            ->assertSee('Yêu cầu gần nhất');
+            ->assertSee('Trạng thái yêu cầu gần nhất');
     }
 
     public function test_guest_can_check_in_by_visit_code_after_approval_without_camera(): void
@@ -88,6 +88,29 @@ class KioskFlowTest extends TestCase
             ->where('event', 'CHECK_IN')
             ->where('source', 'kiosk')
             ->exists());
+    }
+
+    public function test_guest_can_lookup_visit_by_code_as_json_for_kiosk_modal(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $visit = Visit::query()
+            ->with(['visitor', 'hostEmployee.department'])
+            ->where('status', 'approved')
+            ->firstOrFail();
+
+        $response = $this->postJson('/kiosk/checkin/scan-qr', [
+            'qr_token' => $visit->code,
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('visit.code', $visit->code)
+            ->assertJsonPath('visit.can_confirm', true)
+            ->assertJsonPath('visit.status_label', 'Đã được duyệt')
+            ->assertSessionHas('kiosk_checkin_visit_id', $visit->id)
+            ->assertSessionHas('kiosk_last_visit_id', $visit->id);
     }
 
     public function test_kiosk_rejects_pending_visit_check_in(): void

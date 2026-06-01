@@ -64,6 +64,7 @@ trait HasAdminLayoutData
             ['label' => 'Thẻ ra vào', 'route' => 'admin.badges.index', 'icon' => 'bi-person-badge-fill', 'permission' => 'badges.manage', 'group' => 'AN NINH'],
             ['label' => 'Thông báo', 'route' => 'admin.notifications.index', 'icon' => 'bi-bell-fill', 'permission' => null, 'group' => 'HỆ THỐNG'],
             ['label' => 'Cài đặt', 'route' => 'admin.settings.kiosk', 'icon' => 'bi-sliders', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
+            ['label' => 'Cài đặt máy in', 'route' => 'admin.settings.printer', 'icon' => 'bi-printer-fill', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
             ['label' => 'Phân quyền', 'route' => 'admin.rbac.index', 'icon' => 'bi-shield-lock-fill', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
             ['label' => 'Nhật ký hệ thống', 'route' => 'admin.audit-logs.index', 'icon' => 'bi-journal-text', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
         ];

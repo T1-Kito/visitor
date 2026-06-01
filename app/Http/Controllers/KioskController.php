@@ -141,7 +141,7 @@ class KioskController extends Controller
             ->with('status', 'Da gui yeu cau. Vui long cho nhan vien tiep khach phe duyet.');
     }
 
-    public function scanQr(Request $request): RedirectResponse
+    public function scanQr(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'qr_token' => ['required', 'string', 'max:80'],
@@ -156,7 +156,39 @@ class KioskController extends Controller
         }
 
         if ($visit === null) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Không tìm thấy lịch hẹn với mã vừa nhập.',
+                ], 404);
+            }
+
             return redirect()->back()->with('error', 'Không tìm thấy lịch hẹn với mã QR hoặc mã lịch hẹn này.');
+        }
+
+        $request->session()->put('kiosk_last_visit_id', $visit->id);
+
+        if ($request->expectsJson()) {
+            if ($scannedByQr && $visit->qr_expires_at !== null && $visit->qr_expires_at->lt(now())) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'QR đã hết hạn. Vui lòng liên hệ lễ tân để được hỗ trợ.',
+                    'visit' => $this->kioskVisitPayload($visit, false),
+                ], 422);
+            }
+
+            if ($visit->status === 'approved') {
+                $request->session()->put('kiosk_checkin_visit_id', $visit->id);
+                $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'message' => $visit->status === 'approved'
+                    ? 'Mã hợp lệ. Khách có thể xác nhận check-in.'
+                    : 'Đã tìm thấy lịch hẹn. Vui lòng kiểm tra trạng thái hiện tại.',
+                'visit' => $this->kioskVisitPayload($visit, $visit->status === 'approved'),
+            ]);
         }
 
         if ($visit->status !== 'approved') {
@@ -173,34 +205,63 @@ class KioskController extends Controller
 
         $request->session()->put('kiosk_checkin_visit_id', $visit->id);
         $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
-        $request->session()->put('kiosk_last_visit_id', $visit->id);
-
         return redirect()
             ->route('kiosk.checkin.status', $visit)
             ->with('status', 'Mã hợp lệ. Vui lòng kiểm tra thông tin và xác nhận check-in.');
     }
 
-    public function confirmCheckin(Request $request, Visit $visit): RedirectResponse
+    public function confirmCheckin(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
         if ((int) $request->session()->get('kiosk_checkin_visit_id') !== $visit->id) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Vui lòng kiểm tra mã lịch hẹn trước khi xác nhận check-in.',
+                ], 403);
+            }
+
             return redirect()
                 ->route('kiosk.index')
                 ->with('error', 'Vui lòng nhập mã QR, mã lịch hẹn hoặc tạo yêu cầu từ kiosk trước khi xác nhận check-in.');
         }
 
         if ($visit->status === 'checked_in') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => true,
+                    'message' => 'Khách đã check-in trước đó.',
+                    'visit' => $this->kioskVisitPayload($visit, false),
+                ]);
+            }
+
             return redirect()
                 ->route('kiosk.checkin.status', $visit)
                 ->with('status', 'Khách đã check-in trước đó.');
         }
 
         if ($visit->status !== 'approved') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Lịch hẹn chưa được duyệt nên chưa thể check-in.',
+                    'visit' => $this->kioskVisitPayload($visit, false),
+                ], 422);
+            }
+
             return redirect()
                 ->route('kiosk.checkin.status', $visit)
                 ->with('error', 'Lịch hẹn chưa được duyệt nên chưa thể check-in.');
         }
 
         if ($request->session()->get('kiosk_scanned_by_qr') && $visit->qr_expires_at !== null && $visit->qr_expires_at->lt(now())) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'QR đã hết hạn. Vui lòng liên hệ lễ tân để được hỗ trợ.',
+                    'visit' => $this->kioskVisitPayload($visit, false),
+                ], 422);
+            }
+
             return redirect()
                 ->route('kiosk.checkin.status', $visit)
                 ->with('error', 'QR đã hết hạn. Vui lòng liên hệ lễ tân để được hỗ trợ.');
@@ -233,6 +294,16 @@ class KioskController extends Controller
         $this->scanWatchlistForVisit($visit, 'kiosk.checked_in');
 
         $request->session()->forget(['kiosk_checkin_visit_id', 'kiosk_scanned_by_qr']);
+
+        if ($request->expectsJson()) {
+            $visit->refresh()->load(['visitor', 'hostEmployee.department']);
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Check-in thành công. Vui lòng nhận badge tại quầy lễ tân.',
+                'visit' => $this->kioskVisitPayload($visit, false),
+            ]);
+        }
 
         return redirect()
             ->route('kiosk.checkin.status', $visit)
@@ -295,6 +366,45 @@ class KioskController extends Controller
         } while (Visit::query()->where('qr_token', $token)->exists());
 
         return $token;
+    }
+
+    private function kioskVisitPayload(Visit $visit, bool $canConfirm): array
+    {
+        $visit->loadMissing(['visitor', 'hostEmployee.department']);
+
+        $statusLabels = [
+            'pending' => 'Đang chờ phê duyệt',
+            'approved' => 'Đã được duyệt',
+            'checked_in' => 'Đã check-in',
+            'checked_out' => 'Đã rời công ty',
+            'rejected' => 'Bị từ chối',
+            'cancelled' => 'Đã hủy',
+        ];
+
+        $statusHints = [
+            'pending' => 'Vui lòng chờ người tiếp khách hoặc lễ tân xác nhận.',
+            'approved' => 'Lịch hẹn đã được duyệt. Bạn có thể xác nhận check-in.',
+            'checked_in' => 'Khách đã check-in trước đó.',
+            'checked_out' => 'Lịch hẹn này đã hoàn tất check-out.',
+            'rejected' => 'Yêu cầu đã bị từ chối. Vui lòng liên hệ lễ tân nếu cần hỗ trợ.',
+            'cancelled' => 'Lịch hẹn đã bị hủy.',
+        ];
+
+        return [
+            'id' => $visit->id,
+            'code' => $visit->code,
+            'visitor_name' => $visit->visitor?->full_name ?? '-',
+            'visitor_company' => $visit->visitor?->company ?? '-',
+            'host_name' => $visit->hostEmployee?->name ?? '-',
+            'department' => $visit->hostEmployee?->department?->name ?? '-',
+            'scheduled_at' => $visit->scheduled_at?->format('H:i - d/m/Y') ?? '-',
+            'status' => $visit->status,
+            'status_label' => $statusLabels[$visit->status] ?? $visit->status,
+            'status_hint' => $statusHints[$visit->status] ?? 'Vui lòng liên hệ lễ tân để được hỗ trợ.',
+            'can_confirm' => $canConfirm,
+            'confirm_url' => $canConfirm ? route('kiosk.checkin.confirm', $visit) : null,
+            'status_url' => route('kiosk.checkin.status', $visit),
+        ];
     }
 
     private function notifyHost(Visit $visit, string $type, string $title, string $message, string $level = 'info'): void

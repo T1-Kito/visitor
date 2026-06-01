@@ -153,6 +153,41 @@ class AdminUiController extends Controller
         ]));
     }
 
+    public function searchVisitors(Request $request): JsonResponse
+    {
+        $keyword = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($keyword) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $visitors = Visitor::query()
+            ->withCount('visits')
+            ->where(function (Builder $query) use ($keyword): void {
+                $query
+                    ->where('full_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('phone', 'like', '%'.$keyword.'%')
+                    ->orWhere('email', 'like', '%'.$keyword.'%')
+                    ->orWhere('company', 'like', '%'.$keyword.'%');
+            })
+            ->orderByDesc('visits_count')
+            ->orderBy('full_name')
+            ->limit(8)
+            ->get(['id', 'full_name', 'phone', 'email', 'company', 'note']);
+
+        return response()->json([
+            'data' => $visitors->map(fn (Visitor $visitor): array => [
+                'id' => $visitor->id,
+                'full_name' => $visitor->full_name,
+                'phone' => $visitor->phone,
+                'email' => $visitor->email,
+                'company' => $visitor->company,
+                'note' => $visitor->note,
+                'visits_count' => $visitor->visits_count,
+            ])->values(),
+        ]);
+    }
+
     public function visitsStore(Request $request): RedirectResponse
     {
         $validated = $this->validateVisitPayload($request);
@@ -1849,6 +1884,7 @@ XML;
     private function validateVisitPayload(Request $request): array
     {
         return $request->validate([
+            'existing_visitor_id' => ['nullable', 'exists:visitors,id'],
             'visitor_name' => ['required', 'string', 'max:120'],
             'visitor_phone' => ['nullable', 'string', 'max:30'],
             'visitor_email' => ['nullable', 'email', 'max:160'],
@@ -1910,6 +1946,20 @@ XML;
      */
     private function firstOrCreateVisitor(array $validated): Visitor
     {
+        if (! empty($validated['existing_visitor_id'])) {
+            $visitor = Visitor::query()->findOrFail((int) $validated['existing_visitor_id']);
+
+            $visitor->update([
+                'full_name' => $validated['visitor_name'],
+                'phone' => $validated['visitor_phone'] ?? null,
+                'email' => $validated['visitor_email'] ?? null,
+                'company' => $validated['visitor_company'] ?? null,
+                'note' => $validated['visitor_note'] ?? null,
+            ]);
+
+            return $visitor;
+        }
+
         $visitor = null;
 
         if (! empty($validated['visitor_phone'])) {

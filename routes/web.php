@@ -182,6 +182,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/visitors', [CatalogController::class, 'visitorsStore'])
         ->middleware('permission:visitors.manage')
         ->name('admin.visitors.store');
+    Route::get('/visitors/search', [AdminUiController::class, 'searchVisitors'])
+        ->middleware('permission:visits.manage')
+        ->name('admin.visitors.search');
     Route::get('/visitors/{visitor}', [CatalogController::class, 'visitorsShow'])
         ->middleware('permission:visitors.manage')
         ->name('admin.visitors.show');
@@ -294,6 +297,9 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/settings/kiosk', [SystemAdminController::class, 'kioskSettingsUpdate'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.kiosk.update');
+    Route::get('/settings/printer', [SystemAdminController::class, 'printerSettingsEdit'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.printer');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
 });

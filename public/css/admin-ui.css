@@ -3062,3 +3062,561 @@ a {
     background: #f4f8fc;
     color: #6b7f98;
 }
+/* Printer setup */
+.printer-page {
+    display: grid;
+    gap: 22px;
+}
+
+.printer-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 4px 2px 0;
+}
+
+.printer-topline h1 {
+    margin: 4px 0 6px;
+    color: #0b1f3a;
+    font-size: clamp(1.65rem, 2vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.printer-topline p {
+    margin: 0;
+    max-width: 760px;
+    color: #64748b;
+    line-height: 1.55;
+}
+
+.printer-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #0b6fe8;
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.printer-health-card {
+    display: grid;
+    grid-template-columns: auto 1fr minmax(360px, 520px);
+    gap: 18px;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #d8e5f2;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at top right, rgba(20, 111, 232, .12), transparent 32%),
+        linear-gradient(135deg, #ffffff, #f7fbff);
+    box-shadow: 0 18px 48px rgba(11, 31, 58, .07);
+}
+
+.printer-health-icon {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    border-radius: 20px;
+    color: #0b6fe8;
+    background: #eaf4ff;
+    font-size: 1.5rem;
+}
+
+.printer-health-copy h2 {
+    margin: 0;
+    color: #0b1f3a;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.printer-health-copy p {
+    margin: 6px 0 0;
+    color: #64748b;
+}
+
+.printer-health-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+}
+
+.printer-config-card {
+    min-height: 100%;
+}
+
+.printer-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.printer-field {
+    min-width: 0;
+}
+
+.printer-field-wide {
+    grid-column: 1 / -1;
+}
+
+.printer-field small {
+    display: block;
+    margin-top: 8px;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.printer-action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #e5eef8;
+}
+
+.printer-setup-message {
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.printer-setup-success {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+}
+
+.printer-setup-danger {
+    background: #fff1f2;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+
+.printer-setup-info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.printer-toggle {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border: 1px solid #d8e5f2;
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #ffffff, #f8fbff);
+}
+
+.printer-toggle .form-check-input {
+    margin-top: 4px;
+}
+
+.printer-toggle strong,
+.printer-toggle small {
+    display: block;
+}
+
+.printer-toggle small {
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.printer-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.printer-status-list {
+    display: grid;
+    gap: 10px;
+}
+
+.printer-status-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid #dbeafe;
+    border-radius: 16px;
+    background: #f8fbff;
+}
+
+.printer-status-list span {
+    color: #64748b;
+    font-size: .88rem;
+}
+
+.printer-status-list strong {
+    color: #0b1f3a;
+    text-align: right;
+    word-break: break-word;
+}
+
+.printer-guide-card {
+    background:
+        radial-gradient(circle at top left, rgba(14, 165, 233, .12), transparent 28%),
+        #fff;
+}
+
+.printer-status-grid > div {
+    min-height: 104px;
+    border-radius: 20px;
+    padding: 18px;
+    background: linear-gradient(135deg, #f8fbff, #eef6ff);
+    border: 1px solid #dbeafe;
+}
+
+.printer-status-grid span {
+    display: block;
+    color: #64748b;
+    font-size: .85rem;
+    margin-bottom: 10px;
+}
+
+.printer-status-grid strong {
+    color: #0b1f3a;
+    font-size: 1.05rem;
+    word-break: break-word;
+}
+
+.printer-setup-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.printer-setup-steps li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.printer-setup-steps li > span {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: #eaf4ff;
+    color: #0b6fe8;
+    font-weight: 800;
+}
+
+.printer-setup-steps p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.45;
+}
+
+@media (max-width: 991px) {
+    .printer-topline,
+    .printer-health-card {
+        grid-template-columns: 1fr;
+    }
+
+    .printer-topline {
+        display: grid;
+    }
+
+    .printer-health-form,
+    .printer-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .printer-status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Resource directory pages */
+.resource-shell {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.resource-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.resource-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.05rem;
+    border: 1px solid #dce9f8;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(17, 39, 68, .05);
+}
+
+.resource-stat-icon {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    color: #0b6fe8;
+    background: #eaf4ff;
+    font-size: 1.25rem;
+}
+
+.resource-stat span {
+    display: block;
+    color: #64748b;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.resource-stat strong {
+    display: block;
+    color: #0b1f3a;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: -.04em;
+}
+
+.resource-card {
+    overflow: hidden;
+    border: 1px solid #dce9f8;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 16px 42px rgba(17, 39, 68, .06);
+}
+
+.resource-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid #edf3fb;
+}
+
+.resource-toolbar form {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex: 1;
+}
+
+.resource-search {
+    position: relative;
+    flex: 1;
+    max-width: 620px;
+}
+
+.resource-search i {
+    position: absolute;
+    left: .95rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7a93b0;
+}
+
+.resource-search .form-control {
+    min-height: 46px;
+    padding-left: 2.5rem;
+    border-color: #d8e5f2;
+    border-radius: 15px;
+}
+
+.resource-toolbar .form-select {
+    width: auto;
+    min-width: 220px;
+    min-height: 46px;
+    border-color: #d8e5f2;
+    border-radius: 15px;
+}
+
+.resource-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.resource-table th {
+    padding: .9rem 1.15rem;
+    color: #6f88a4;
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: #fbfdff;
+    border-bottom: 1px solid #edf3fb;
+}
+
+.resource-table td {
+    padding: 1rem 1.15rem;
+    color: #29435f;
+    font-size: .9rem;
+    border-bottom: 1px solid #edf3fb;
+    vertical-align: middle;
+}
+
+.resource-table tbody tr {
+    transition: .15s ease;
+}
+
+.resource-table tbody tr:hover {
+    background: #f6fbff;
+}
+
+.resource-person {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+}
+
+.resource-avatar {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    color: #0b6fe8;
+    background: #eaf4ff;
+    font-weight: 900;
+}
+
+.resource-name {
+    display: block;
+    color: #0b1f3a;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.resource-muted {
+    display: block;
+    color: #7a93b0;
+    font-size: .78rem;
+}
+
+.resource-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    min-height: 30px;
+    padding: .28rem .7rem;
+    border-radius: 999px;
+    color: #146bd7;
+    background: #edf5ff;
+    font-weight: 800;
+}
+
+.resource-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .45rem;
+}
+
+.resource-icon-btn {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #d8e5f2;
+    border-radius: 12px;
+    background: #fff;
+    color: #146bd7;
+    text-decoration: none;
+}
+
+.resource-icon-btn:hover {
+    background: #eff6ff;
+}
+
+.resource-icon-btn.danger {
+    color: #dc2626;
+    border-color: #fecaca;
+    background: #fff7f7;
+}
+
+.resource-empty {
+    padding: 3rem;
+    color: #7a93b0;
+    text-align: center;
+}
+
+.resource-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    color: #64748b;
+}
+
+.resource-modal .modal-content {
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(11, 31, 58, .24);
+}
+
+.resource-modal .modal-header,
+.resource-modal .modal-footer {
+    border-color: #edf3fb;
+}
+
+.resource-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.resource-field-wide {
+    grid-column: 1 / -1;
+}
+
+.resource-form-grid .form-control,
+.resource-form-grid .form-select {
+    min-height: 46px;
+    border-color: #d8e5f2;
+    border-radius: 14px;
+}
+
+@media (max-width: 991px) {
+    .resource-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .resource-toolbar,
+    .resource-toolbar form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .resource-search {
+        max-width: none;
+    }
+
+    .resource-toolbar .form-select {
+        width: 100%;
+    }
+
+    .resource-table {
+        min-width: 820px;
+    }
+}
+
+@media (max-width: 576px) {
+    .resource-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
