@@ -1,0 +1,40 @@
+﻿@extends('layouts.admin')
+
+@section('title', 'Sua phong ban | Visitor Management')
+@section('page_title', 'Sua phong ban '.$department->code)
+@section('page_subtitle', 'Cap nhat code va ten phong ban')
+
+@section('content')
+    <form class="row g-3" method="post" action="{{ route('admin.departments.update', $department) }}">
+        @csrf
+        @method('PUT')
+        <div class="col-xl-8">
+            <section class="panel-card">
+                <div class="panel-header">
+                    <div>
+                        <h3>Thong tin phong ban</h3>
+                        <p>Code nen ngan gon de dung trong bao cao.</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Code</label>
+                        <input class="form-control" name="code" value="{{ old('code', $department->code) }}" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Ten phong ban</label>
+                        <input class="form-control" name="name" value="{{ old('name', $department->name) }}" required>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-xl-4">
+            <section class="panel-card sticky-xl-top top-space">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-brand btn-lg" type="submit">Luu thay doi</button>
+                    <a class="btn btn-light" href="{{ route('admin.departments.show', $department) }}">Quay lai chi tiet</a>
+                </div>
+            </section>
+        </div>
+    </form>
+@endsection
