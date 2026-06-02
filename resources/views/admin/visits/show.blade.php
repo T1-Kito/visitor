@@ -6,7 +6,7 @@
 
 @push('styles')
 <style>
-.vd-page{display:grid;gap:1rem;min-width:0}.vd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;min-width:0}.vd-back{display:inline-flex;align-items:center;gap:.4rem;color:#29435f;text-decoration:none;font-size:.82rem;font-weight:900}.vd-title{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-top:.45rem;min-width:0}.vd-title h1{margin:0;color:#0b1f3a;font-size:clamp(1.25rem,2vw,1.45rem);font-weight:900}.vd-code{color:#146bd7;font-size:clamp(1rem,1.7vw,1.18rem);font-weight:900;word-break:break-word}.vd-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.55rem;flex:0 0 auto}.vd-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:38px;padding:.5rem .85rem;border-radius:12px;font-size:.78rem;font-weight:900;text-decoration:none;border:1px solid #d8e5f2;background:#fff;color:#29435f}.vd-btn.primary{border:0;background:linear-gradient(135deg,#146bd7,#0cb4d8);color:#fff}.vd-btn.success{border:0;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}.vd-btn.danger{border-color:#fecaca;background:#fff7f7;color:#dc2626}.vd-btn:disabled{opacity:.55}.vd-layout{display:grid;grid-template-columns:minmax(250px,300px) minmax(0,1fr) minmax(240px,280px);gap:1rem;align-items:start;min-width:0}.vd-card{background:#fff;border:1px solid #e3edf8;border-radius:20px;box-shadow:0 14px 34px rgba(17,39,68,.05);overflow:hidden;min-width:0}.vd-card-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.9rem 1rem;border-bottom:1px solid #edf3fb;background:#fbfdff}.vd-card-head h3{margin:0;color:#0b1f3a;font-size:.82rem;font-weight:900;text-transform:uppercase}.vd-card-body{padding:1rem}.vd-qr-box{display:grid;gap:.8rem}.vd-qr-visual{display:grid;place-items:center;width:min(196px,100%);margin:auto;padding:12px;border:1px solid #d8e5f2;border-radius:16px;background:#fff}.vd-qr-visual svg{width:100%;max-width:196px;height:auto}.vd-qr-token{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.65rem .75rem;border-radius:12px;background:#edf5ff;color:#146bd7;font-size:.72rem;font-weight:900;word-break:break-all}.vd-qr-meta{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}.vd-mini{min-width:0;padding:.6rem;border:1px solid #edf3fb;border-radius:12px;background:#fbfdff}.vd-mini span{display:block;color:#7a93b0;font-size:.68rem;font-weight:800}.vd-mini strong{display:block;margin-top:.15rem;color:#0b1f3a;font-size:.76rem;word-break:break-word}.vd-qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.vd-info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;min-width:0}.vd-info-list{display:grid;gap:.68rem}.vd-info-row{display:grid;grid-template-columns:28px minmax(92px,.55fr) minmax(0,1fr);gap:.55rem;align-items:center;min-width:0}.vd-info-row i{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#f0f6ff;color:#146bd7}.vd-info-row span{color:#7a93b0;font-size:.73rem;font-weight:800}.vd-info-row strong{min-width:0;color:#0b1f3a;font-size:.8rem;overflow-wrap:anywhere;word-break:break-word}.vd-timeline{display:flex;align-items:flex-start;justify-content:space-between;gap:.4rem;padding:1rem;overflow-x:auto}.vd-step{position:relative;display:grid;justify-items:center;gap:.45rem;min-width:112px;text-align:center}.vd-step:before{content:"";position:absolute;top:16px;left:-50%;right:50%;height:3px;background:#d8e5f2}.vd-step:first-child:before{display:none}.vd-step.done:before{background:#22c55e}.vd-step.active:before{background:#146bd7}.vd-step-dot{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#f1f5f9;color:#94a3b8;border:3px solid #fff;box-shadow:0 0 0 1px #d8e5f2;font-weight:900}.vd-step.done .vd-step-dot{background:#22c55e;color:#fff}.vd-step.active .vd-step-dot{background:#146bd7;color:#fff}.vd-step strong{color:#0b1f3a;font-size:.72rem}.vd-step span{color:#7a93b0;font-size:.68rem}.vd-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.vd-status-card{padding:1rem;border:1px solid #e3edf8;border-radius:18px;background:#fff;min-width:0}.vd-status-card h4{margin:0 0 .65rem;color:#0b1f3a;font-size:.82rem;font-weight:900}.vd-status-line{display:flex;align-items:center;justify-content:space-between;gap:.8rem;color:#7a93b0;font-size:.75rem}.vd-status-line strong{color:#0b1f3a;text-align:right;overflow-wrap:anywhere}.vd-log-table{width:100%;border-collapse:separate;border-spacing:0}.vd-log-table th{padding:.75rem;color:#6f88a4;font-size:.68rem;font-weight:900;text-transform:uppercase;border-bottom:1px solid #edf3fb}.vd-log-table td{padding:.75rem;color:#29435f;font-size:.76rem;border-bottom:1px solid #edf3fb}.vd-action-stack{display:grid;gap:.55rem}.vd-note-box{width:100%;min-height:96px;border:1px solid #d8e5f2;border-radius:14px;padding:.75rem}.vd-empty-qr{display:grid;place-items:center;min-height:196px;border:1px dashed #bfd7f3;border-radius:16px;background:#f8fbff;color:#7a93b0;text-align:center}.vd-emergency{display:grid;gap:.65rem}.vd-emergency-row{display:flex;align-items:center;gap:.55rem;color:#29435f;font-size:.78rem;overflow-wrap:anywhere}.vd-emergency-row i{color:#146bd7}.vd-attachment{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff;color:#7a93b0;font-size:.78rem}@media(max-width:1650px){.vd-layout{grid-template-columns:minmax(230px,280px) minmax(0,1fr);}.vd-layout>aside:last-child{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}.vd-layout>aside:last-child .vd-card{height:100%}.vd-info-row{grid-template-columns:28px minmax(78px,.45fr) minmax(0,1fr)}}@media(max-width:1300px){.vd-layout{grid-template-columns:1fr}.vd-layout>aside:last-child{grid-template-columns:repeat(2,minmax(0,1fr))}.vd-info-grid{grid-template-columns:1fr}.vd-qr-meta,.vd-qr-actions,.vd-status-grid{grid-template-columns:1fr 1fr}}@media(max-width:768px){.vd-top{flex-direction:column}.vd-actions{justify-content:flex-start}.vd-layout>aside:last-child,.vd-status-grid,.vd-qr-meta,.vd-qr-actions{grid-template-columns:1fr}.vd-info-row{grid-template-columns:28px 1fr}.vd-info-row strong{grid-column:2}.vd-card-body{padding:.85rem}}
+.vd-page{display:grid;gap:1rem;min-width:0}.vd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;min-width:0}.vd-back{display:inline-flex;align-items:center;gap:.4rem;color:#29435f;text-decoration:none;font-size:.82rem;font-weight:900}.vd-title{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-top:.45rem;min-width:0}.vd-title h1{margin:0;color:#0b1f3a;font-size:clamp(1.25rem,2vw,1.45rem);font-weight:900}.vd-code{color:#146bd7;font-size:clamp(1rem,1.7vw,1.18rem);font-weight:900;word-break:break-word}.vd-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.55rem;flex:0 0 auto}.vd-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:38px;padding:.5rem .85rem;border-radius:12px;font-size:.78rem;font-weight:900;text-decoration:none;border:1px solid #d8e5f2;background:#fff;color:#29435f}.vd-btn.primary{border:0;background:linear-gradient(135deg,#146bd7,#0cb4d8);color:#fff}.vd-btn.success{border:0;background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}.vd-btn.danger{border-color:#fecaca;background:#fff7f7;color:#dc2626}.vd-btn:disabled{opacity:.55}.vd-layout{display:grid;grid-template-columns:minmax(250px,300px) minmax(0,1fr) minmax(240px,280px);gap:1rem;align-items:start;min-width:0}.vd-card{background:#fff;border:1px solid #e3edf8;border-radius:20px;box-shadow:0 14px 34px rgba(17,39,68,.05);overflow:hidden;min-width:0}.vd-card-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.9rem 1rem;border-bottom:1px solid #edf3fb;background:#fbfdff}.vd-card-head h3{margin:0;color:#0b1f3a;font-size:.82rem;font-weight:900;text-transform:uppercase}.vd-card-body{padding:1rem}.vd-qr-box{display:grid;gap:.8rem}.vd-qr-visual{display:grid;place-items:center;width:min(230px,100%);margin:auto;padding:10px;border:1px solid #d8e5f2;border-radius:16px;background:#fff}.vd-qr-visual svg{width:100%;max-width:230px;height:auto}.vd-qr-token{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.65rem .75rem;border-radius:12px;background:#edf5ff;color:#146bd7;font-size:.72rem;font-weight:900;word-break:break-all}.vd-qr-meta{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}.vd-mini{min-width:0;padding:.6rem;border:1px solid #edf3fb;border-radius:12px;background:#fbfdff}.vd-mini span{display:block;color:#7a93b0;font-size:.68rem;font-weight:800}.vd-mini strong{display:block;margin-top:.15rem;color:#0b1f3a;font-size:.76rem;word-break:break-word}.vd-qr-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}.vd-info-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;min-width:0}.vd-info-list{display:grid;gap:.68rem}.vd-info-row{display:grid;grid-template-columns:28px minmax(92px,.55fr) minmax(0,1fr);gap:.55rem;align-items:center;min-width:0}.vd-info-row i{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#f0f6ff;color:#146bd7}.vd-info-row span{color:#7a93b0;font-size:.73rem;font-weight:800}.vd-info-row strong{min-width:0;color:#0b1f3a;font-size:.8rem;overflow-wrap:anywhere;word-break:break-word}.vd-timeline{display:flex;align-items:flex-start;justify-content:space-between;gap:.4rem;padding:1rem;overflow-x:auto}.vd-step{position:relative;display:grid;justify-items:center;gap:.45rem;min-width:112px;text-align:center}.vd-step:before{content:"";position:absolute;top:16px;left:-50%;right:50%;height:3px;background:#d8e5f2}.vd-step:first-child:before{display:none}.vd-step.done:before{background:#22c55e}.vd-step.active:before{background:#146bd7}.vd-step-dot{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#f1f5f9;color:#94a3b8;border:3px solid #fff;box-shadow:0 0 0 1px #d8e5f2;font-weight:900}.vd-step.done .vd-step-dot{background:#22c55e;color:#fff}.vd-step.active .vd-step-dot{background:#146bd7;color:#fff}.vd-step strong{color:#0b1f3a;font-size:.72rem}.vd-step span{color:#7a93b0;font-size:.68rem}.vd-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}.vd-status-card{padding:1rem;border:1px solid #e3edf8;border-radius:18px;background:#fff;min-width:0}.vd-status-card h4{margin:0 0 .65rem;color:#0b1f3a;font-size:.82rem;font-weight:900}.vd-status-line{display:flex;align-items:center;justify-content:space-between;gap:.8rem;color:#7a93b0;font-size:.75rem}.vd-status-line strong{color:#0b1f3a;text-align:right;overflow-wrap:anywhere}.vd-log-table{width:100%;border-collapse:separate;border-spacing:0}.vd-log-table th{padding:.75rem;color:#6f88a4;font-size:.68rem;font-weight:900;text-transform:uppercase;border-bottom:1px solid #edf3fb}.vd-log-table td{padding:.75rem;color:#29435f;font-size:.76rem;border-bottom:1px solid #edf3fb}.vd-action-stack{display:grid;gap:.55rem}.vd-note-box{width:100%;min-height:96px;border:1px solid #d8e5f2;border-radius:14px;padding:.75rem}.vd-empty-qr{display:grid;place-items:center;min-height:196px;border:1px dashed #bfd7f3;border-radius:16px;background:#f8fbff;color:#7a93b0;text-align:center}.vd-emergency{display:grid;gap:.65rem}.vd-emergency-row{display:flex;align-items:center;gap:.55rem;color:#29435f;font-size:.78rem;overflow-wrap:anywhere}.vd-emergency-row i{color:#146bd7}.vd-attachment{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff;color:#7a93b0;font-size:.78rem}@media(max-width:1650px){.vd-layout{grid-template-columns:minmax(230px,280px) minmax(0,1fr);}.vd-layout>aside:last-child{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}.vd-layout>aside:last-child .vd-card{height:100%}.vd-info-row{grid-template-columns:28px minmax(78px,.45fr) minmax(0,1fr)}}@media(max-width:1300px){.vd-layout{grid-template-columns:1fr}.vd-layout>aside:last-child{grid-template-columns:repeat(2,minmax(0,1fr))}.vd-info-grid{grid-template-columns:1fr}.vd-qr-meta,.vd-qr-actions,.vd-status-grid{grid-template-columns:1fr 1fr}}@media(max-width:768px){.vd-top{flex-direction:column}.vd-actions{justify-content:flex-start}.vd-layout>aside:last-child,.vd-status-grid,.vd-qr-meta,.vd-qr-actions{grid-template-columns:1fr}.vd-info-row{grid-template-columns:28px 1fr}.vd-info-row strong{grid-column:2}.vd-card-body{padding:.85rem}}
 @media (max-width: 1650px) and (min-width: 1301px) {
     .vd-layout {
         grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(210px, 240px) !important;
@@ -37,6 +37,7 @@
         padding-left: 0.65rem;
     }
 }
+.vd-share-panel{display:grid;gap:.55rem;padding:.7rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff}.vd-share-title{display:flex;align-items:center;gap:.45rem;color:#0b1f3a;font-size:.74rem;font-weight:900}.vd-share-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}.vd-share-actions form{margin:0;min-width:0}.vd-share-actions .vd-btn{width:100%}.vd-btn.zalo{border-color:#c8f0ff;background:#eefbff;color:#0078d7}.vd-btn.gmail{border-color:#fee2e2;background:#fff7f7;color:#dc2626}.vd-btn.copy{border-color:#dbeafe;background:#eff6ff;color:#146bd7}.vd-btn[aria-disabled="true"]{opacity:.55;pointer-events:none}@media(max-width:768px){.vd-share-actions{grid-template-columns:1fr}}
 </style>
 @endpush
 
@@ -71,6 +72,26 @@
         'hostName' => $visit->hostEmployee?->name ?? '-',
         'scheduledAt' => $visit->scheduled_at?->format('d/m/Y H:i') ?? '-',
         'status' => $statusText,
+    ];
+    $sharePhone = preg_replace('/\D+/', '', (string) ($visit->visitor?->phone ?? ''));
+    $zaloPhone = $sharePhone && str_starts_with($sharePhone, '0') ? '84'.substr($sharePhone, 1) : $sharePhone;
+    $shareEmail = trim((string) ($visit->visitor?->email ?? ''));
+    $shareStatusUrl = route('kiosk.checkin.status', $visit);
+    $shareMessage = implode("\n", array_filter([
+        'VMS KIOSK gửi thông tin lịch hẹn của bạn:',
+        'Mã lịch hẹn: '.$visit->code,
+        $visit->qr_token ? 'Mã QR/check-in: '.$visit->qr_token : null,
+        'Khách: '.($visit->visitor?->full_name ?? '-'),
+        'Công ty: '.($visit->visitor?->company ?? '-'),
+        'Người tiếp: '.($visit->hostEmployee?->name ?? '-'),
+        'Giờ hẹn: '.($visit->scheduled_at?->format('d/m/Y H:i') ?? '-'),
+        'Link tra cứu/check-in: '.$shareStatusUrl,
+        'Vui lòng xuất trình mã này tại quầy lễ tân.',
+    ]));
+    $zaloUrl = $zaloPhone ? 'https://zalo.me/'.$zaloPhone : null;
+    $shareQrPayload = [
+        'message' => $shareMessage,
+        'zaloUrl' => $zaloUrl,
     ];
 @endphp
 
@@ -114,7 +135,7 @@
             <div class="vd-card-body vd-qr-box">
                 @if ($visit->qr_token)
                     <div class="vd-qr-visual" aria-label="QR preview">
-                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(196)->margin(1)->errorCorrection('M')->generate($visit->qr_token) !!}
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(230)->margin(1)->errorCorrection('M')->generate($visit->qr_token) !!}
                     </div>
                     <div class="vd-qr-token">
                         <span>{{ $visit->qr_token }}</span>
@@ -145,6 +166,23 @@
                         <button class="vd-btn" type="button" disabled><i class="bi bi-qr-code"></i> Chưa thể sinh</button>
                     @endif
                 </div>
+
+                @if ($visit->qr_token)
+                    <div class="vd-share-panel">
+                        <div class="vd-share-title"><i class="bi bi-send"></i> Gửi mã QR cho khách</div>
+                        <div class="vd-share-actions">
+                            @if ($shareEmail)
+                                <form action="{{ route('admin.visits.send-qr-email', $visit) }}" method="post">
+                                    @csrf
+                                    <button class="vd-btn gmail" type="submit"><i class="bi bi-envelope"></i> Gmail</button>
+                                </form>
+                            @else
+                                <span class="vd-btn gmail" aria-disabled="true"><i class="bi bi-envelope"></i> Gmail</span>
+                            @endif
+                            <button class="vd-btn copy" id="adminQrCopyShareBtn" type="button" onclick="copyAdminQrMessage()"><i class="bi bi-clipboard"></i> Sao chép</button>
+                        </div>
+                    </div>
+                @endif
             </div>
         </aside>
 
@@ -153,7 +191,7 @@
                 <section class="vd-card">
                     <div class="vd-card-head"><h3>Thông tin khách</h3></div>
                     <div class="vd-card-body vd-info-list">
-                        <div class="vd-info-row"><i class="bi bi-person"></i><span>Họ tên</span><strong>{{ $visit->visitor?->full_name ?? '-' }}</strong></div>
+                        <div class="vd-info-row"><i class="bi bi-person"></i><span>H tên</span><strong>{{ $visit->visitor?->full_name ?? '-' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-building"></i><span>Công ty</span><strong>{{ $visit->visitor?->company ?? '-' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-telephone"></i><span>Số điện thoại</span><strong>{{ $visit->visitor?->phone ?? '-' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-envelope"></i><span>Email</span><strong>{{ $visit->visitor?->email ?? '-' }}</strong></div>
@@ -168,7 +206,7 @@
                         <div class="vd-info-row"><i class="bi bi-upc-scan"></i><span>Mã lịch hẹn</span><strong>{{ $visit->code }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-card-checklist"></i><span>Loại lịch hẹn</span><strong>{{ $visit->visitor?->company ? 'Đặt trước' : 'Khách vãng lai' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-calendar-check"></i><span>Ngày giờ vào</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
-                        <div class="vd-info-row"><i class="bi bi-clock-history"></i><span>Ngày giờ ra dự kiến</span><strong>{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+                        <div class="vd-info-row"><i class="bi bi-clock-history"></i><span>Ngày gi ra dự kiến</span><strong>{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-geo-alt"></i><span>Khu vực ra vào</span><strong>{{ $visit->access_zone ?? '-' }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-qr-code-scan"></i><span>Hình thức vào</span><strong>{{ $methodText }}</strong></div>
                         <div class="vd-info-row"><i class="bi bi-bullseye"></i><span>Mục đích đến</span><strong>{{ $visit->purpose ?? '-' }}</strong></div>
@@ -281,6 +319,38 @@
 @push('scripts')
 <script>
     const adminQrTicket = @json($printTicket, JSON_UNESCAPED_UNICODE);
+    const adminQrShare = @json($shareQrPayload, JSON_UNESCAPED_UNICODE);
+
+    async function copyAdminQrMessage() {
+        if (!adminQrShare.message) {
+            return false;
+        }
+
+        try {
+            await navigator.clipboard.writeText(adminQrShare.message);
+        } catch (error) {
+            const helper = document.createElement('textarea');
+            helper.value = adminQrShare.message;
+            helper.setAttribute('readonly', '');
+            helper.style.position = 'fixed';
+            helper.style.left = '-9999px';
+            document.body.appendChild(helper);
+            helper.select();
+            document.execCommand('copy');
+            helper.remove();
+        }
+
+        const button = document.getElementById('adminQrCopyShareBtn');
+        if (button) {
+            const oldText = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check-circle"></i> Đã sao chép';
+            window.setTimeout(() => {
+                button.innerHTML = oldText;
+            }, 1800);
+        }
+
+        return true;
+    }
 
     async function printAdminQrTicket() {
         if (!adminQrTicket.qrSvg) {
@@ -327,20 +397,20 @@
                 <meta charset="utf-8">
                 <title>In QR ${safe(adminQrTicket.code)}</title>
                 <style>
-                    @page { size: 80mm auto; margin: 5mm; }
+                    @page { size: 80mm auto; margin: 2.5mm; }
                     * { box-sizing: border-box; }
                     html, body { width: 80mm; margin: 0; padding: 0; background: #fff; color: #0b1f3a; font-family: Arial, sans-serif; }
-                    .ticket { width: 70mm; margin: 0 auto; text-align: center; }
-                    .brand { margin-bottom: 2mm; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-                    h1 { margin: 0 0 2mm; font-size: 16px; line-height: 1.2; }
-                    .muted { margin-bottom: 3mm; color: #64748b; font-size: 10px; line-height: 1.35; }
-                    .qr { display: grid; place-items: center; margin: 2mm auto; }
-                    .qr svg { width: 48mm; height: 48mm; display: block; }
-                    .code { margin: 3mm 0; padding: 2mm; border: 1px dashed #94a3b8; border-radius: 3mm; font-size: 13px; font-weight: 700; }
-                    .row { display: flex; justify-content: space-between; gap: 4mm; margin: 1.8mm 0; font-size: 10.5px; text-align: left; }
+                    .ticket { width: 74mm; margin: 0 auto; text-align: center; }
+                    .brand { margin-bottom: 1.2mm; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+                    h1 { margin: 0 0 1.2mm; font-size: 14px; line-height: 1.15; }
+                    .muted { margin-bottom: 1.8mm; color: #64748b; font-size: 9px; line-height: 1.3; }
+                    .qr { display: grid; place-items: center; margin: 1mm auto 1.5mm; }
+                    .qr svg { width: 64mm; height: 64mm; display: block; }
+                    .code { margin: 2mm 0; padding: 1.6mm; border: 1px dashed #94a3b8; border-radius: 2.5mm; font-size: 13px; font-weight: 700; }
+                    .row { display: flex; justify-content: space-between; gap: 3mm; margin: 1.35mm 0; font-size: 10px; text-align: left; }
                     .row span { color: #64748b; }
                     .row strong { max-width: 42mm; text-align: right; word-break: break-word; }
-                    .note { margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 9.5px; line-height: 1.35; }
+                    .note { margin-top: 2mm; padding-top: 1.5mm; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 8.8px; line-height: 1.3; }
                 </style>
             </head>
             <body>

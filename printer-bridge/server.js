@@ -92,8 +92,8 @@ function escapeHtml(value) {
 
 function ticketHtml(payload) {
   const paperWidth = config.paper === '58mm' ? '58mm' : '80mm';
-  const contentWidth = config.paper === '58mm' ? '50mm' : '70mm';
-  const qrSize = config.paper === '58mm' ? '38mm' : '48mm';
+  const contentWidth = config.paper === '58mm' ? '54mm' : '74mm';
+  const qrSize = config.paper === '58mm' ? '46mm' : '64mm';
 
   return `<!doctype html>
 <html lang="vi">
@@ -101,20 +101,20 @@ function ticketHtml(payload) {
   <meta charset="utf-8">
   <title>QR ${escapeHtml(payload.code)}</title>
   <style>
-    @page { size: ${paperWidth} auto; margin: 5mm; }
+    @page { size: ${paperWidth} auto; margin: 2.5mm; }
     * { box-sizing: border-box; }
     html, body { width: ${paperWidth}; margin: 0; padding: 0; background: #fff; color: #0b1f3a; font-family: Arial, sans-serif; }
     .ticket { width: ${contentWidth}; margin: 0 auto; text-align: center; }
-    .brand { margin-bottom: 2mm; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-    h1 { margin: 0 0 2mm; font-size: 16px; line-height: 1.2; }
-    .muted { margin-bottom: 3mm; color: #64748b; font-size: 10px; line-height: 1.35; }
-    .qr { display: grid; place-items: center; margin: 2mm auto; }
+    .brand { margin-bottom: 1.2mm; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    h1 { margin: 0 0 1.2mm; font-size: 14px; line-height: 1.15; }
+    .muted { margin-bottom: 1.8mm; color: #64748b; font-size: 9px; line-height: 1.3; }
+    .qr { display: grid; place-items: center; margin: 1mm auto 1.5mm; }
     .qr svg { width: ${qrSize}; height: ${qrSize}; display: block; }
-    .code { margin: 3mm 0; padding: 2mm; border: 1px dashed #94a3b8; border-radius: 3mm; font-size: 13px; font-weight: 700; }
-    .row { display: flex; justify-content: space-between; gap: 4mm; margin: 1.8mm 0; font-size: 10.5px; text-align: left; }
+    .code { margin: 2mm 0; padding: 1.6mm; border: 1px dashed #94a3b8; border-radius: 2.5mm; font-size: 13px; font-weight: 700; }
+    .row { display: flex; justify-content: space-between; gap: 3mm; margin: 1.35mm 0; font-size: 10px; text-align: left; }
     .row span { color: #64748b; }
     .row strong { max-width: 42mm; text-align: right; word-break: break-word; }
-    .note { margin-top: 3mm; padding-top: 2mm; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 9.5px; line-height: 1.35; }
+    .note { margin-top: 2mm; padding-top: 1.5mm; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 8.8px; line-height: 1.3; }
   </style>
 </head>
 <body>

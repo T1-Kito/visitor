@@ -317,6 +317,7 @@ class KioskController extends Controller
         return view('kiosk.status', [
             'visit' => $visit,
             'canConfirm' => (int) $request->session()->get('kiosk_checkin_visit_id') === $visit->id,
+            'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
         ]);
     }
 
@@ -362,7 +363,7 @@ class KioskController extends Controller
     private function generateQrToken(): string
     {
         do {
-            $token = 'kiosk-'.Str::lower(Str::random(18));
+            $token = (string) random_int(10000000, 99999999);
         } while (Visit::query()->where('qr_token', $token)->exists());
 
         return $token;

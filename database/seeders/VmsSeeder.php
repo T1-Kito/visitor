@@ -403,7 +403,7 @@ class VmsSeeder extends Seeder
                     'purpose' => $data['purpose'],
                     'access_zone' => $index % 2 === 0 ? 'Tang 2 - Van phong kinh doanh' : 'Tang 3 - Khu ky thuat',
                     'checkin_method' => 'qr',
-                    'qr_token' => 'demo-qr-token-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
+                    'qr_token' => sprintf('260529%02d', $index + 1),
                     'qr_expires_at' => $scheduledAt->copy()->addDay(),
                     'rejection_reason' => $rejectionReason,
                 ]
@@ -581,7 +581,7 @@ class VmsSeeder extends Seeder
                     'purpose' => $data['purpose'],
                     'access_zone' => $data['zone'],
                     'checkin_method' => 'qr',
-                    'qr_token' => 'demo-'.$data['code'].'-token',
+                    'qr_token' => sprintf('860601%02d', $index + 1),
                     'qr_expires_at' => $scheduledAt->copy()->addDay(),
                     'rejection_reason' => $rejectionReason,
                 ]

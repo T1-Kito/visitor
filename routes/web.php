@@ -65,6 +65,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/visits/{visit}/generate-qr', [AdminUiController::class, 'generateVisitQr'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.generate-qr');
+    Route::post('/visits/{visit}/send-qr-email', [AdminUiController::class, 'sendVisitQrEmail'])
+        ->middleware('permission:visits.manage')
+        ->name('admin.visits.send-qr-email');
 
     Route::get('/approvals', [AdminUiController::class, 'approvalsIndex'])
         ->middleware('permission:approvals.manage')

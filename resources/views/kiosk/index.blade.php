@@ -21,8 +21,12 @@
 
         * { box-sizing: border-box; }
 
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+        }
+
         body {
-            min-height: 100vh;
             margin: 0;
             color: var(--kiosk-ink);
             background:
@@ -33,13 +37,13 @@
         }
 
         .kiosk-shell {
-            min-height: 100vh;
+            height: 100vh;
             display: grid;
-            grid-template-rows: auto 1fr auto;
-            gap: .85rem;
-            width: min(1480px, calc(100vw - 28px));
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: .75rem;
+            width: min(1420px, calc(100vw - 48px));
             margin: 0 auto;
-            padding: clamp(.7rem, 1vw, 1rem) 0;
+            padding: .65rem 0;
         }
 
         .kiosk-header {
@@ -96,6 +100,38 @@
             gap: 1.05rem;
         }
 
+        .kiosk-header-help {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            padding: .15rem 0 .15rem 1rem;
+            border-left: 1px solid var(--kiosk-line);
+            color: #526b87;
+            font-size: .78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .kiosk-header-help i {
+            color: var(--kiosk-blue);
+            font-size: 1.35rem;
+        }
+
+        .kiosk-header-help strong {
+            display: block;
+            color: var(--kiosk-ink);
+            font-size: .9rem;
+            line-height: 1.1;
+        }
+
+        .kiosk-header-help small {
+            display: block;
+            color: var(--kiosk-muted);
+            font-size: .68rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
         .kiosk-tools .form-select {
             min-width: 124px;
             height: 42px;
@@ -125,22 +161,32 @@
 
         .kiosk-main {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 380px;
-            gap: 1rem;
-            align-items: start;
+            grid-template-columns: minmax(0, 920px) minmax(360px, 410px);
+            gap: 1.25rem;
+            align-items: stretch;
+            justify-content: center;
+            min-height: 0;
         }
 
         .kiosk-card {
             border: 1px solid var(--kiosk-line);
-            border-radius: 24px;
+            border-radius: 20px;
             background: rgba(255, 255, 255, .96);
             box-shadow: 0 22px 58px rgba(17, 39, 68, .08);
         }
 
         .kiosk-form-card {
             min-height: 0;
-            max-width: 1060px;
-            padding: clamp(1.05rem, 1.35vw, 1.45rem);
+            width: 100%;
+            padding: 1rem 1.2rem;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .kiosk-side {
+            min-height: 0;
+            max-height: 100%;
+            overflow-y: auto;
         }
 
         .kiosk-title {
@@ -148,7 +194,7 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: .95rem;
+            margin-bottom: .5rem;
         }
 
         .kiosk-title h1,
@@ -171,21 +217,61 @@
             font-size: .88rem;
         }
 
-        .kiosk-type-pill {
-            margin-top: .15rem;
-            padding: .42rem .75rem;
-            border: 1px solid #bcd8f8;
-            border-radius: 999px;
-            color: var(--kiosk-blue);
-            background: #eff6ff;
-            font-size: .84rem;
-            font-weight: 800;
+        .kiosk-mode-actions {
+            display: inline-grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .45rem;
+            min-width: 390px;
+            padding: .28rem;
+            border: 1px solid var(--kiosk-line);
+            border-radius: 16px;
+            background: #f8fbff;
+        }
+
+        .kiosk-mode-button {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .38rem;
+            border: 0;
+            border-radius: 12px;
+            background: #fff;
+            color: #315b89;
+            font-family: inherit;
+            font-size: .82rem;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(15, 64, 110, .06);
+            white-space: nowrap;
+        }
+
+        .kiosk-mode-button.is-active {
+            color: #fff;
+            background: linear-gradient(135deg, var(--kiosk-blue), var(--kiosk-cyan));
+            box-shadow: 0 12px 24px rgba(20, 107, 215, .16);
+        }
+
+        .kiosk-mode-button:focus-visible {
+            outline: 3px solid rgba(20, 107, 215, .18);
+            outline-offset: 2px;
         }
 
         .kiosk-flat-form {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: .68rem 1rem;
+            gap: .55rem 1.25rem;
+        }
+
+        .kiosk-form-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .45rem 1.25rem;
+            padding: .2rem 0 .1rem;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         .kiosk-section-title {
@@ -193,9 +279,9 @@
             display: flex;
             align-items: center;
             gap: .5rem;
-            margin: .05rem 0 -.2rem;
+            margin: .05rem 0 .02rem;
             color: var(--kiosk-blue);
-            font-size: .78rem;
+            font-size: .72rem;
             font-weight: 800;
             letter-spacing: .025em;
             text-transform: uppercase;
@@ -244,15 +330,15 @@
         .kiosk-flat-form .form-control,
         .kiosk-flat-form .form-select,
         .kiosk-side-card .form-control {
-            min-height: 44px;
+            min-height: 40px;
             border-color: var(--kiosk-line);
-            border-radius: 13px;
+            border-radius: 12px;
             color: var(--kiosk-ink);
-            font-size: .9rem;
+            font-size: .88rem;
         }
 
         .kiosk-flat-form textarea.form-control {
-            min-height: 62px;
+            min-height: 46px;
         }
 
         .kiosk-flat-form .form-control:focus,
@@ -267,17 +353,17 @@
             align-items: center;
             gap: .65rem;
             margin: 0;
-            padding: .55rem .75rem;
-            border: 1px solid var(--kiosk-line);
-            border-radius: 15px;
-            background: #f8fbff;
+            padding: .35rem 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
             color: #334963;
         }
 
         .kiosk-submit {
-            min-height: 46px;
+            min-height: 44px;
             border: 0;
-            border-radius: 16px;
+            border-radius: 13px;
             color: #fff;
             background: linear-gradient(135deg, var(--kiosk-blue), var(--kiosk-cyan));
             font-weight: 800;
@@ -291,34 +377,49 @@
             box-shadow: 0 18px 36px rgba(17, 39, 68, .14);
         }
 
-        .kiosk-side {
-            display: grid;
-            gap: .85rem;
+        .kiosk-flat-form > .kiosk-submit {
+            width: 100%;
+            justify-self: center;
         }
 
-        .kiosk-side-card {
-            padding: 1rem;
+        .kiosk-side-card .kiosk-submit {
+            width: 100%;
+        }
+
+        .kiosk-side {
+            display: grid;
+            gap: .75rem;
+            width: 100%;
+        }
+
+        .kiosk-side-card,
+        .kiosk-last-card {
+            padding: .9rem 1rem;
         }
 
         .kiosk-side-title {
-            margin-bottom: .75rem;
+            margin-bottom: .85rem;
             text-align: center;
         }
 
         .kiosk-side-title h2 {
-            font-size: 1.15rem;
+            font-size: 1.28rem;
         }
 
         .kiosk-side-title p {
-            font-size: .78rem;
+            font-size: .86rem;
             line-height: 1.5;
         }
 
         .kiosk-qr-box {
             position: relative;
-            min-height: 128px;
+            width: min(250px, 100%);
+            height: 118px;
+            min-height: 0;
+            margin: 0 auto;
             display: grid;
             place-items: center;
+            overflow: hidden;
             border: 1px dashed #98c4f4;
             border-radius: 16px;
             background:
@@ -329,24 +430,126 @@
             color: var(--kiosk-blue);
         }
 
+        .kiosk-qr-box .qr-camera-video {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #06172b;
+        }
+
+        .kiosk-qr-box .qr-camera-placeholder {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .22rem;
+            padding: .55rem;
+        }
+
         .kiosk-qr-box i {
-            font-size: 3.2rem;
+            font-size: 2.7rem;
             filter: drop-shadow(0 10px 18px rgba(20, 107, 215, .12));
         }
 
         .kiosk-qr-box span {
-            position: absolute;
-            bottom: .72rem;
+            position: static;
+            display: block;
+            margin-top: .35rem;
             color: #526b87;
             font-size: .72rem;
             font-weight: 800;
+        }
+
+        .kiosk-qr-box small {
+            display: block;
+            margin-top: .18rem;
+            color: #7890aa;
+            font-size: .68rem;
+            font-weight: 700;
+        }
+
+        .kiosk-scan-mode {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .55rem;
+            margin: .68rem 0 .58rem;
+        }
+
+        .kiosk-scan-chip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .38rem;
+            min-height: 36px;
+            border: 1px solid #d8e6f5;
+            border-radius: 13px;
+            background: #f8fbff;
+            color: #466585;
+            font-size: .74rem;
+            font-weight: 900;
+        }
+
+        .kiosk-camera-toolbar {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: .48rem;
+            margin-top: .6rem;
+        }
+
+        .kiosk-camera-toolbar .qr-camera-button {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid #cfe0f5;
+            border-radius: 14px;
+            background: #fff;
+            color: var(--kiosk-blue);
+            font-size: .82rem;
+            font-family: inherit;
+            line-height: 1;
+            font-weight: 900;
+            box-shadow: 0 8px 18px rgba(15, 64, 110, .06);
+        }
+
+        .kiosk-camera-toolbar .qr-camera-button.primary {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--kiosk-blue), var(--kiosk-cyan));
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(20, 107, 215, .18);
+        }
+
+        .kiosk-camera-toolbar .qr-camera-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .kiosk-camera-note {
+            display: flex;
+            gap: .45rem;
+            align-items: flex-start;
+            padding: .58rem .68rem;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            background: #f5faff;
+            color: #5a7390;
+            font-size: .72rem;
+            line-height: 1.4;
+        }
+
+        .kiosk-camera-note i {
+            color: var(--kiosk-blue);
         }
 
         .kiosk-side-divider {
             display: flex;
             align-items: center;
             gap: .62rem;
-            margin: .75rem 0 .62rem;
+            margin: .68rem 0 .58rem;
             color: #6e86a3;
             font-size: .68rem;
             font-weight: 900;
@@ -361,15 +564,11 @@
             background: var(--kiosk-line);
         }
 
-        .kiosk-last-card {
-            padding: .95rem;
-        }
-
         .kiosk-last-card h3 {
             display: flex;
             align-items: center;
             gap: .45rem;
-            margin: 0 0 .7rem;
+            margin: 0 0 .65rem;
             color: var(--kiosk-ink);
             font-size: .92rem;
             font-weight: 900;
@@ -389,7 +588,7 @@
             display: flex;
             align-items: center;
             gap: .75rem;
-            padding: .68rem;
+            padding: .6rem;
             border-radius: 16px;
             background: #eff6ff;
         }
@@ -421,8 +620,8 @@
 
         .kiosk-last-lines {
             display: grid;
-            gap: .45rem;
-            margin-top: .65rem;
+            gap: .4rem;
+            margin-top: .58rem;
         }
 
         .kiosk-last-lines div {
@@ -430,7 +629,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            padding: .55rem .7rem;
+            padding: .5rem .65rem;
             border: 1px solid var(--kiosk-line);
             border-radius: 14px;
         }
@@ -444,8 +643,17 @@
             text-align: right;
         }
 
+        .kiosk-last-card .btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            font-weight: 800;
+        }
+
         .kiosk-footer {
-            display: grid;
+            display: none;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 1rem;
             padding: .72rem 1rem;
@@ -539,41 +747,50 @@
 
         @media (max-width: 1180px) {
             .kiosk-main { grid-template-columns: 1fr; }
-            .kiosk-side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .kiosk-side { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
         @media (max-width: 760px) {
             .kiosk-header, .kiosk-tools { align-items: flex-start; flex-direction: column; }
-            .kiosk-flat-form, .kiosk-side, .kiosk-footer { grid-template-columns: 1fr; }
+            .kiosk-flat-form, .kiosk-form-section, .kiosk-side, .kiosk-footer { grid-template-columns: 1fr; }
+            .kiosk-title { flex-direction: column; }
+            .kiosk-mode-actions { width: 100%; min-width: 0; }
         }
 
         @media (max-width: 1700px) {
             .kiosk-shell {
-                width: min(1360px, calc(100vw - 22px));
-                gap: .65rem;
-                padding-top: .65rem;
-                padding-bottom: .65rem;
+                width: min(1420px, calc(100vw - 72px));
+                gap: 1.15rem;
+                padding-top: 1.15rem;
+                padding-bottom: 1.15rem;
             }
 
             .kiosk-main {
-                grid-template-columns: minmax(0, 1fr) 330px;
-                gap: .8rem;
+                grid-template-columns: minmax(0, 920px) minmax(360px, 410px);
+                gap: 1.55rem;
             }
 
             .kiosk-form-card {
-                max-width: none;
-                padding: .95rem 1rem;
-                border-radius: 21px;
+                padding: 1.25rem 1.45rem;
+                border-radius: 20px;
+            }
+
+            .kiosk-side {
+                width: 100%;
             }
 
             .kiosk-side-card,
             .kiosk-last-card {
-                padding: .82rem;
+                padding: 1.1rem;
                 border-radius: 20px;
             }
 
             .kiosk-title {
                 margin-bottom: .65rem;
+            }
+
+            .kiosk-mode-actions {
+                min-width: 360px;
             }
 
             .kiosk-title h1 {
@@ -587,7 +804,13 @@
             }
 
             .kiosk-flat-form {
-                gap: .52rem .78rem;
+                gap: .62rem 1.05rem;
+            }
+
+            .kiosk-form-section {
+                gap: .55rem 1.05rem;
+                padding: .28rem 0 .18rem;
+                border-radius: 0;
             }
 
             .kiosk-section-title {
@@ -608,9 +831,9 @@
             .kiosk-flat-form .form-control,
             .kiosk-flat-form .form-select,
             .kiosk-side-card .form-control {
-                min-height: 39px;
-                border-radius: 11px;
-                font-size: .82rem;
+                min-height: 42px;
+                border-radius: 13px;
+                font-size: .9rem;
             }
 
             .kiosk-input-wrap .form-control,
@@ -624,7 +847,7 @@
             }
 
             .kiosk-flat-form textarea.form-control {
-                min-height: 54px;
+                min-height: 56px;
             }
 
             .kiosk-policy {
@@ -634,31 +857,33 @@
             }
 
             .kiosk-submit {
-                min-height: 42px;
-                border-radius: 13px;
-                font-size: .88rem;
+                min-height: 48px;
+                border-radius: 15px;
+                font-size: .95rem;
             }
 
             .kiosk-side-title {
-                margin-bottom: .55rem;
+                margin-bottom: .75rem;
             }
 
             .kiosk-side-title h2 {
-                font-size: 1rem;
+                font-size: 1.22rem;
             }
 
             .kiosk-qr-box {
-                min-height: 108px;
-                border-radius: 14px;
+                width: min(240px, 100%);
+                height: 112px;
+                min-height: 0;
+                border-radius: 15px;
                 background-size: 20px 20px;
             }
 
             .kiosk-qr-box i {
-                font-size: 2.55rem;
+                font-size: 2.6rem;
             }
 
             .kiosk-side-divider {
-                margin: .56rem 0 .5rem;
+                margin: .62rem 0 .5rem;
                 font-size: .62rem;
             }
 
@@ -692,11 +917,22 @@
 
         @media (max-width: 1400px) {
             .kiosk-shell {
-                width: min(1200px, calc(100vw - 18px));
+                width: min(1240px, calc(100vw - 42px));
             }
 
             .kiosk-main {
-                grid-template-columns: minmax(0, 1fr) 300px;
+                grid-template-columns: minmax(0, 1fr) minmax(340px, 370px);
+                gap: 1.35rem;
+            }
+
+            .kiosk-side {
+                width: 100%;
+            }
+
+            .kiosk-qr-box {
+                width: min(230px, 100%);
+                height: 108px;
+                min-height: 0;
             }
 
             .kiosk-brand strong {
@@ -724,7 +960,46 @@
             }
 
             .kiosk-side {
+                width: 100%;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 1180px) {
+            .kiosk-shell {
+                width: min(980px, calc(100vw - 24px));
+            }
+
+            .kiosk-main {
+                grid-template-columns: 1fr;
+            }
+
+            .kiosk-form-card {
+                max-width: none;
+            }
+
+            .kiosk-side {
+                width: 100%;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .kiosk-shell {
+                width: min(100%, calc(100vw - 18px));
+            }
+
+            .kiosk-side {
+                grid-template-columns: 1fr;
+            }
+
+            .kiosk-flat-form > .kiosk-submit {
+                width: 100%;
+            }
+
+            .kiosk-header-help {
+                border-left: 0;
+                padding-left: 0;
             }
         }
     </style>
@@ -794,6 +1069,13 @@
                     <strong id="kioskClock">--:--</strong>
                     <span id="kioskDate">--</span>
                 </div>
+                <div class="kiosk-header-help">
+                    <i class="bi bi-telephone"></i>
+                    <span>
+                        <small>Hỗ trợ</small>
+                        <strong>{{ $hotline }}</strong>
+                    </span>
+                </div>
             </div>
         </header>
 
@@ -804,18 +1086,32 @@
                         <h1>Đăng ký khách</h1>
                         <p>Vui lòng nhập thông tin để được hỗ trợ nhanh chóng.</p>
                     </div>
-                    <span class="kiosk-type-pill">Walk-in</span>
+                    <div class="kiosk-mode-actions" aria-label="Tác vụ kiosk">
+                        <button class="kiosk-mode-button is-active" type="button" data-kiosk-mode-action="register">
+                            <i class="bi bi-pencil-square"></i>
+                            Đăng ký
+                        </button>
+                        <button class="kiosk-mode-button" type="button" data-kiosk-mode-action="checkin">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Check-in
+                        </button>
+                        <button class="kiosk-mode-button" type="button" data-kiosk-mode-action="checkout">
+                            <i class="bi bi-box-arrow-left"></i>
+                            Check-out
+                        </button>
+                    </div>
                 </div>
 
-                <form class="kiosk-flat-form" method="post" action="{{ route('kiosk.checkin.manual') }}">
+                <form class="kiosk-flat-form" id="kioskRegisterForm" method="post" action="{{ route('kiosk.checkin.manual') }}">
                     @csrf
-                    <div class="kiosk-section-title"><i class="bi bi-person-fill"></i>Thông tin khách</div>
+                    <div class="kiosk-form-section">
+                    <div class="kiosk-section-title"><i class="bi bi-person-fill"></i>1. Thông tin khách</div>
 
                     <div>
                         <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
                         <div class="kiosk-input-wrap">
                             <i class="bi bi-person"></i>
-                            <input class="form-control" name="visitor_name" value="{{ old('visitor_name') }}" placeholder="Nhập họ và tên" required>
+                            <input class="form-control" id="kioskVisitorName" name="visitor_name" value="{{ old('visitor_name') }}" placeholder="Nhập họ và tên" required>
                         </div>
                     </div>
                     <div>
@@ -840,7 +1136,9 @@
                         </div>
                     </div>
 
-                    <div class="kiosk-section-title"><i class="bi bi-diagram-3-fill"></i>Thông tin gặp</div>
+                    </div>
+                    <div class="kiosk-form-section">
+                    <div class="kiosk-section-title"><i class="bi bi-diagram-3-fill"></i>2. Thông tin gặp</div>
 
                     <div>
                         <label class="form-label">Người cần gặp <span class="text-danger">*</span></label>
@@ -860,7 +1158,9 @@
                         </div>
                     </div>
 
-                    <div class="kiosk-section-title"><i class="bi bi-briefcase-fill"></i>Thông tin chuyến thăm</div>
+                    </div>
+                    <div class="kiosk-form-section">
+                    <div class="kiosk-section-title"><i class="bi bi-briefcase-fill"></i>3. Thông tin chuyến thăm</div>
 
                     <div>
                         <label class="form-label">Mục đích đến <span class="text-danger">*</span></label>
@@ -882,6 +1182,7 @@
                         <label class="form-label">Ghi chú thêm nếu có</label>
                         <textarea class="form-control" name="visitor_note" rows="2" placeholder="Ghi chú thêm nếu có">{{ old('visitor_note') }}</textarea>
                     </div>
+                    </div>
 
                     <label class="form-check kiosk-policy">
                         <input class="form-check-input" type="checkbox" name="policy_accepted" value="1" required>
@@ -898,13 +1199,21 @@
             <aside class="kiosk-side">
                 <section class="kiosk-card kiosk-side-card">
                     <div class="kiosk-side-title">
-                        <h2>Check-in nhanh</h2>
-                        <p>Quét QR hoặc nhập mã lịch hẹn để check-in</p>
+                        <h2>Tra cứu / Check-in</h2>
+                        <p>Quét QR hoặc nhập mã lịch hẹn để check-in.</p>
                     </div>
 
-                    <div class="kiosk-qr-box">
-                        <i class="bi bi-qr-code"></i>
-                        <span>Đưa mã QR vào khung</span>
+                    <div class="kiosk-qr-box qr-camera-frame" id="kioskQrFrame">
+                        <video class="qr-camera-video" id="kioskQrVideo" playsinline muted></video>
+                        <div class="qr-camera-placeholder">
+                            <i class="bi bi-qr-code"></i>
+                            <span>Đưa mã QR vào khung</span>
+                        </div>
+                    </div>
+
+                    <div class="kiosk-camera-note">
+                        <i class="bi bi-info-circle"></i>
+                        <span id="kioskQrStatus">Nếu không có mã QR, khách có thể nhập mã lịch hẹn bên dưới.</span>
                     </div>
 
                     <div class="kiosk-side-divider">Hoặc nhập mã lịch hẹn</div>
@@ -913,7 +1222,7 @@
                         @csrf
                         <div class="kiosk-input-wrap mb-3">
                             <i class="bi bi-calendar2-check"></i>
-                            <input class="form-control" name="qr_token" placeholder="Nhập mã lịch hẹn hoặc mã QR">
+                            <input class="form-control" id="kioskQrInput" name="qr_token" placeholder="Nhập mã lịch hẹn hoặc mã QR">
                         </div>
                         <button class="btn kiosk-submit w-100" type="submit">
                             <i class="bi bi-search me-1"></i>
@@ -986,6 +1295,8 @@
         </section>
     </div>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="{{ asset('js/gatehouse-qr-scanner.js') }}"></script>
     <script>
         const clockNode = document.getElementById('kioskClock');
         const dateNode = document.getElementById('kioskDate');
@@ -998,6 +1309,14 @@
 
         updateClock();
         setInterval(updateClock, 30000);
+
+        GatehouseQrScanner.create({
+            frame: '#kioskQrFrame',
+            video: '#kioskQrVideo',
+            input: '#kioskQrInput',
+            form: '#kioskLookupForm',
+            status: '#kioskQrStatus'
+        });
 
         const searchInput = document.getElementById('employeeSearch');
         const resultsBox = document.getElementById('employeeResults');
@@ -1060,6 +1379,9 @@
         });
 
         const lookupForm = document.getElementById('kioskLookupForm');
+        const lookupInput = document.getElementById('kioskQrInput');
+        const registerForm = document.getElementById('kioskRegisterForm');
+        const visitorNameInput = document.getElementById('kioskVisitorName');
         const lookupModal = document.getElementById('kioskLookupModal');
         const modalTitle = document.getElementById('kioskLookupTitle');
         const modalMessage = document.getElementById('kioskModalMessage');
@@ -1068,6 +1390,67 @@
         const modalDetails = document.getElementById('kioskModalDetails');
         const modalQr = document.getElementById('kioskModalQr');
         const modalConfirm = document.getElementById('kioskModalConfirm');
+        let lookupSubmitTimer = null;
+        let lookupInProgress = false;
+
+        function submitKioskLookup() {
+            if (!lookupForm || !lookupInput || lookupInProgress) return;
+
+            const value = lookupInput.value.trim();
+            if (!value) return;
+
+            lookupForm.requestSubmit();
+        }
+
+        function looksLikeCompleteLookupCode(value) {
+            const normalized = value.trim();
+
+            return /^\d{8}$/.test(normalized)
+                || /^(WK|VO|RP)-[A-Z0-9-]{6,}$/i.test(normalized);
+        }
+
+        function scheduleKioskLookup() {
+            clearTimeout(lookupSubmitTimer);
+
+            const value = lookupInput?.value.trim() || '';
+            if (!looksLikeCompleteLookupCode(value)) return;
+
+            lookupSubmitTimer = setTimeout(submitKioskLookup, 280);
+        }
+
+        if (lookupInput) {
+            lookupInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && lookupInput.value.trim() !== '') {
+                    event.preventDefault();
+                    submitKioskLookup();
+                }
+            });
+            lookupInput.addEventListener('input', scheduleKioskLookup);
+            lookupInput.addEventListener('paste', () => setTimeout(scheduleKioskLookup, 0));
+        }
+
+        document.querySelectorAll('[data-kiosk-mode-action]').forEach((button) => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('[data-kiosk-mode-action]').forEach((item) => {
+                    item.classList.toggle('is-active', item === button);
+                });
+
+                const mode = button.dataset.kioskModeAction;
+                if (mode === 'register') {
+                    registerForm?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => visitorNameInput?.focus(), 250);
+                    return;
+                }
+
+                if (lookupInput) {
+                    lookupInput.placeholder = mode === 'checkout'
+                        ? 'Nhập mã lịch hẹn để check-out'
+                        : 'Nhập mã lịch hẹn hoặc mã QR';
+                    document.querySelector('.kiosk-side-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => lookupInput.focus(), 250);
+                }
+            });
+        });
 
         function openLookupModal() {
             lookupModal.classList.add('is-open');
@@ -1125,8 +1508,11 @@
 
         lookupForm?.addEventListener('submit', async (event) => {
             event.preventDefault();
+            if (lookupInProgress) return;
+
             const formData = new FormData(lookupForm);
             const submitButton = lookupForm.querySelector('button[type="submit"]');
+            lookupInProgress = true;
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang kiểm tra';
 
@@ -1144,6 +1530,7 @@
             } catch (error) {
                 renderLookupModal({ message: 'Không thể kiểm tra mã lúc này. Vui lòng thử lại.' }, true);
             } finally {
+                lookupInProgress = false;
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="bi bi-search me-1"></i>Kiểm tra mã';
             }

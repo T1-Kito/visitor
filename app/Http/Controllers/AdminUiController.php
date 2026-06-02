@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -409,6 +410,87 @@ class AdminUiController extends Controller
             ->with('status', "Đã sinh mã QR cho lịch {$visit->code}.");
     }
 
+    public function sendVisitQrEmail(Visit $visit): RedirectResponse
+    {
+        $visit->load(['visitor', 'hostEmployee.department']);
+
+        $email = trim((string) ($visit->visitor?->email ?? ''));
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return redirect()
+                ->route('admin.visits.show', $visit)
+                ->with('error', 'Khách chưa có email hợp lệ để gửi mã QR.');
+        }
+
+        if (in_array($visit->status, ['rejected', 'cancelled', 'checked_out'], true)) {
+            return redirect()
+                ->route('admin.visits.show', $visit)
+                ->with('error', "Không thể gửi email cho lịch {$visit->code} ở trạng thái {$this->visitStatusLabel($visit->status)}.");
+        }
+
+        if ($visit->status === 'pending') {
+            $baseTime = $visit->scheduled_at ?? now();
+            $visit->update([
+                'status' => 'approved',
+                'rejection_reason' => null,
+                'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
+                'qr_expires_at' => $visit->qr_expires_at ?? $baseTime->copy()->addDay(),
+            ]);
+
+            Approval::query()->updateOrCreate(
+                ['visit_id' => $visit->id],
+                [
+                    'approver_user_id' => $this->actingUserId(),
+                    'status' => 'approved',
+                    'note' => 'Tự động duyệt khi gửi email QR cho khách.',
+                    'acted_at' => now(),
+                ]
+            );
+
+            $this->logAudit('approval.auto_approved_on_email', 'visit', (string) $visit->id, [
+                'code' => $visit->code,
+            ]);
+        }
+
+        if (! $visit->qr_token) {
+            $baseTime = $visit->scheduled_at ?? now();
+            $visit->update([
+                'qr_token' => $this->generateQrToken(),
+                'qr_expires_at' => $visit->qr_expires_at ?? $baseTime->copy()->addDay(),
+            ]);
+        }
+
+        $qrSvg = (string) \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(180)
+            ->margin(1)
+            ->errorCorrection('M')
+            ->generate($visit->qr_token);
+        $subject = 'Mã QR lịch hẹn '.$visit->code;
+        $html = view('emails.visit-qr', [
+            'visit' => $visit,
+            'qrSvg' => $qrSvg,
+            'statusUrl' => route('kiosk.checkin.status', $visit),
+        ])->render();
+
+        try {
+            Mail::html($html, function ($message) use ($email, $subject) {
+                $message->to($email)->subject($subject);
+            });
+        } catch (\Throwable $exception) {
+            return redirect()
+                ->route('admin.visits.show', $visit)
+                ->with('error', 'Chưa gửi được email: '.$exception->getMessage());
+        }
+
+        $this->logAudit('visit.qr_emailed', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+            'email' => $email,
+        ]);
+
+        return redirect()
+            ->route('admin.visits.show', $visit)
+            ->with('status', "Đã gửi mã QR lịch {$visit->code} qua Gmail/email cho {$email}.");
+    }
+
     public function approvalsIndex(): View
     {
         $today = now()->toDateString();
@@ -416,7 +498,8 @@ class AdminUiController extends Controller
         $pendingVisits = $this->scopeVisitsForDepartmentManager(
             $this->baseVisitQuery()->where('status', 'pending')
         )
-            ->orderBy('scheduled_at')
+            ->orderByDesc('created_at')
+            ->orderByDesc('scheduled_at')
             ->get();
 
         $approvedVisits = $this->scopeVisitsForDepartmentManager(
@@ -607,13 +690,12 @@ class AdminUiController extends Controller
 
         $readyToCheckin = $this->baseVisitQuery()
             ->where('status', 'approved')
-            ->orderBy('scheduled_at')
+            ->orderByDesc('scheduled_at')
             ->get();
 
         $approvedWaitingCheckin = $this->baseVisitQuery()
             ->where('status', 'approved')
-            ->orderByRaw('CASE WHEN scheduled_at >= ? THEN 0 ELSE 1 END', [now()])
-            ->orderBy('scheduled_at')
+            ->orderByDesc('scheduled_at')
             ->limit(8)
             ->get();
 
@@ -679,6 +761,14 @@ class AdminUiController extends Controller
             return redirect()->back()->with('error', 'Không tìm thấy lịch hẹn với mã QR hoặc mã lịch hẹn này.');
         }
 
+        if (in_array($visit->status, ['checked_out', 'cancelled', 'rejected'], true)) {
+            $activeVisit = $this->findActiveVisitForVisitor($visit->visitor_id, $visit->id);
+            if ($activeVisit !== null) {
+                $visit = $activeVisit;
+                $scannedByQr = false;
+            }
+        }
+
         $redirect = redirect()
             ->route('admin.checkin.index')
             ->with('checkin_scanned_visit_id', $visit->id)
@@ -686,6 +776,10 @@ class AdminUiController extends Controller
 
         if ($scannedByQr && $visit->qr_expires_at !== null && $visit->qr_expires_at->lt(now())) {
             return $redirect->with('error', "QR của lịch {$visit->code} đã hết hạn. Vui lòng tạo QR mới hoặc liên hệ quản trị.");
+        }
+
+        if ($visit->status === 'pending') {
+            return $redirect->with('error', "Lịch {$visit->code} chưa được duyệt. Vui lòng vào trang Duyệt lịch để phê duyệt trước khi check-in.");
         }
 
         if ($visit->status !== 'approved') {
@@ -702,7 +796,8 @@ class AdminUiController extends Controller
     {
         $insideVisits = $this->baseVisitQuery()
             ->where('status', 'checked_in')
-            ->orderBy('scheduled_at')
+            ->orderByDesc('actual_checkin_at')
+            ->orderByDesc('scheduled_at')
             ->get();
 
         $scannedVisit = null;
@@ -796,6 +891,18 @@ class AdminUiController extends Controller
 
         if ($visit === null) {
             return redirect()->back()->with('error', 'Không tìm thấy lịch hẹn với mã QR hoặc mã lịch hẹn này.');
+        }
+
+        if ($visit->status !== 'checked_in') {
+            $insideVisit = Visit::query()
+                ->where('visitor_id', $visit->visitor_id)
+                ->where('status', 'checked_in')
+                ->where('id', '!=', $visit->id)
+                ->orderByDesc('actual_checkin_at')
+                ->first();
+            if ($insideVisit !== null) {
+                $visit = $insideVisit;
+            }
         }
 
         if ($visit->status !== 'checked_in') {
@@ -2016,6 +2123,21 @@ XML;
         return $visitor;
     }
 
+    private function findActiveVisitForVisitor(?int $visitorId, int $excludeVisitId): ?Visit
+    {
+        if ($visitorId === null) {
+            return null;
+        }
+
+        return Visit::query()
+            ->where('visitor_id', $visitorId)
+            ->where('id', '!=', $excludeVisitId)
+            ->whereIn('status', ['pending', 'approved', 'checked_in'])
+            ->orderByRaw("FIELD(status, 'approved', 'checked_in', 'pending')")
+            ->orderByDesc('scheduled_at')
+            ->first();
+    }
+
     private function generateVisitCode(): string
     {
         $prefix = 'VO-'.now()->format('ymd');
@@ -2041,7 +2163,7 @@ XML;
     private function generateQrToken(): string
     {
         do {
-            $token = 'vms-'.Str::lower(Str::random(20));
+            $token = (string) random_int(10000000, 99999999);
         } while (Visit::query()->where('qr_token', $token)->exists());
 
         return $token;

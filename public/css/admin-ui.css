@@ -3620,3 +3620,107 @@ a {
         grid-template-columns: 1fr;
     }
 }
+
+/* Real camera QR scanner */
+.qr-camera-frame {
+    position: relative;
+    overflow: hidden;
+}
+
+.qr-camera-video {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #06172b;
+}
+
+.qr-html5-region {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #06172b;
+}
+
+.qr-html5-region video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+.qr-html5-region img,
+.qr-html5-region button,
+.qr-html5-region select,
+.qr-html5-region span {
+    display: none !important;
+}
+
+.qr-camera-frame.is-camera-active .qr-html5-region {
+    display: block;
+}
+
+.qr-camera-placeholder {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    gap: .35rem;
+    text-align: center;
+}
+
+.qr-camera-frame.is-camera-active .qr-camera-video {
+    display: block;
+}
+
+.qr-camera-frame.is-camera-active .qr-camera-placeholder {
+    display: none;
+}
+
+.qr-camera-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .55rem;
+    margin: .75rem 1.35rem .25rem;
+}
+
+.qr-camera-actions.compact {
+    margin: .65rem 0 0;
+}
+
+.qr-camera-button {
+    min-height: 38px;
+    border: 1px solid #cfe0f5;
+    border-radius: 12px;
+    background: #fff;
+    color: #146bd7;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.qr-camera-button.primary {
+    border-color: transparent;
+    background: linear-gradient(135deg, #146bd7, #0cb4d8);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(20, 107, 215, .18);
+}
+
+.qr-camera-status {
+    min-height: 18px;
+    margin: .25rem 1.35rem .65rem;
+    color: #6e83a0;
+    font-size: .72rem;
+    text-align: center;
+}
+
+.qr-camera-status.compact {
+    margin: .45rem 0 0;
+}

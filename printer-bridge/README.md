@@ -1,44 +1,47 @@
 # Gatehouse Printer Bridge
 
-Tool local để máy lễ tân hoặc máy admin nhận lệnh in QR từ Laravel.
+Printer Bridge là tool local chạy trên máy có cắm máy in nhiệt. Laravel chạy trên server/hosting nên không thể tự nhìn thấy máy in USB ở máy lễ tân. Bridge sẽ chạy nền tại máy lễ tân và nhận lệnh in từ trang admin.
 
-## Vì sao cần bridge?
-
-Laravel chạy trên server nên không tự nhìn thấy máy in đang cắm ở máy người dùng. Printer Bridge chạy tại máy lễ tân/admin, expose API local:
+Địa chỉ mặc định:
 
 ```text
 http://127.0.0.1:9191
 ```
 
-Trang admin Laravel sẽ gọi API này để:
+## Cách dùng khi demo hoặc triển khai cho khách
 
-- Kiểm tra bridge đang chạy.
-- Liệt kê máy in Windows.
-- Chọn máy in nhiệt.
-- Lưu cấu hình giấy 58mm/80mm.
-- In thử QR.
-- In QR thật từ trang chi tiết lịch hẹn.
+### 1. Cài Node.js LTS
 
-## Chạy bridge
+Máy lễ tân/admin cần cài Node.js LTS:
 
-Yêu cầu máy có Node.js 18+.
-
-```powershell
-cd printer-bridge
-powershell -ExecutionPolicy Bypass -File .\start-printer-bridge.ps1
+```text
+https://nodejs.org/
 ```
 
-Kiểm tra nhanh:
+Sau khi cài xong, mở Command Prompt kiểm tra:
 
-```powershell
-curl http://127.0.0.1:9191/health
-curl http://127.0.0.1:9191/printers
-curl http://127.0.0.1:9191/config
+```bat
+node -v
 ```
 
-## Cấu hình bằng trang admin
+### 2. Cài Printer Bridge tự chạy nền
 
-Trong Laravel vào:
+Vào thư mục `printer-bridge`, bấm đúp:
+
+```text
+install-printer-bridge.bat
+```
+
+File này sẽ:
+
+- Tạo `config.json` nếu chưa có.
+- Tạo shortcut `Gatehouse Printer Bridge` trong Startup của Windows.
+- Tự khởi động Bridge ở chế độ nền.
+- Lần sau mở máy, Bridge tự chạy lại, không cần mở PowerShell thủ công.
+
+### 3. Cấu hình máy in trong admin
+
+Mở hệ thống Laravel, vào:
 
 ```text
 /settings/printer
@@ -48,54 +51,102 @@ Thao tác:
 
 ```text
 Kiểm tra kết nối
-→ Chọn máy in
+→ Chọn máy in nhiệt
 → Chọn khổ giấy 58mm hoặc 80mm
 → Chọn chế độ in
 → Lưu cấu hình
 → In thử QR
 ```
 
-Bridge sẽ lưu cấu hình vào:
+### 4. In QR thật
+
+Admin vào chi tiết lịch hẹn:
 
 ```text
-printer-bridge/config.json
+/visits/{id}
 ```
+
+Bấm:
+
+```text
+In QR
+```
+
+Bridge sẽ nhận lệnh và in theo cấu hình đã chọn.
 
 ## Chế độ in
 
-### `preview`
+### Xem trước rồi in
 
-Bridge tạo phiếu HTML trong `printer-bridge/jobs` và mở lên để admin in qua trình duyệt. Đây là chế độ an toàn nhất khi chưa rõ driver máy in.
+Chế độ `preview` tạo phiếu HTML rồi mở bằng trình duyệt. Phù hợp khi chưa chắc driver máy in nhiệt hỗ trợ ESC/POS.
 
-### `escpos`
+Ưu điểm:
 
-Bridge gửi lệnh RAW ESC/POS trực tiếp tới máy in nhiệt Windows. Chế độ này phù hợp máy in hóa đơn có hỗ trợ ESC/POS QR native.
+- Dễ test.
+- Ít lỗi driver.
+- Hợp với demo nhanh.
 
-Nếu máy in không in được QR, đổi lại `preview`.
+Nhược điểm:
 
-## API nội bộ
+- Người dùng vẫn cần bấm in trong trình duyệt.
+
+### In trực tiếp ESC/POS
+
+Chế độ `escpos` gửi lệnh RAW tới máy in nhiệt Windows.
+
+Ưu điểm:
+
+- Gần giống vận hành thật.
+- Ít thao tác hơn.
+
+Nhược điểm:
+
+- Phụ thuộc driver/máy in.
+- Một số máy in nhiệt không hỗ trợ QR native, khi đó nên quay về `preview`.
+
+## Kiểm tra nhanh
+
+Khi Bridge đang chạy, mở trình duyệt:
 
 ```text
-GET  /health
-GET  /printers
-GET  /config
-POST /config
-POST /print
+http://127.0.0.1:9191/health
 ```
 
-`/printers` trả về danh sách máy in Windows bằng `Get-Printer`.
+Hoặc kiểm tra danh sách máy in:
 
-`/config` cho phép trang admin lưu:
-
-```json
-{
-  "paper": "80mm",
-  "mode": "preview",
-  "printerName": "TEN MAY IN",
-  "openAfterPrint": true
-}
+```text
+http://127.0.0.1:9191/printers
 ```
 
-## Lưu ý khi demo bằng ngrok
+## Gỡ cài đặt
 
-Bridge đã cho phép origin dạng `https://*.ngrok-free.app` để tiện demo. Nếu trình duyệt vẫn chặn mixed content khi web HTTPS gọi HTTP local, demo trên URL local `http://127.0.0.1:8000` hoặc nâng cấp bridge sang HTTPS local ở giai đoạn production.
+Nếu không muốn Bridge tự chạy nữa, bấm đúp:
+
+```text
+uninstall-printer-bridge.bat
+```
+
+File này sẽ:
+
+- Xóa shortcut trong Startup.
+- Dừng Bridge đang chạy.
+
+## Lưu ý khi chạy qua hosting hoặc ngrok
+
+Nếu web chạy HTTPS nhưng Bridge chạy local HTTP, một số trình duyệt có thể chặn gọi từ web HTTPS sang `http://127.0.0.1:9191`.
+
+Khi demo nhanh:
+
+- Ưu tiên mở hệ thống bằng local `http://127.0.0.1:8000`.
+- Nếu dùng domain/hosting HTTPS, cần test trước trang `/settings/printer`.
+- Giai đoạn production có thể nâng Bridge lên HTTPS local hoặc dùng ứng dụng desktop/native.
+
+## Checklist đem qua khách
+
+- Máy đã cài Node.js LTS.
+- Máy in nhiệt đã cài driver Windows.
+- In thử được từ Windows trước.
+- Chạy `install-printer-bridge.bat` một lần.
+- Vào `/settings/printer` chọn đúng máy in.
+- Bấm `In thử QR`.
+- Vào chi tiết lịch hẹn bấm `In QR`.
