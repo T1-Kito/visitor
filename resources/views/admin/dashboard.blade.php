@@ -268,6 +268,7 @@
 .db-toolbar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.6rem;
     padding: 0.75rem 1.5rem;
     background: #f8fbff;
@@ -307,6 +308,39 @@
     background: #fff !important;
     padding: 0 0.75rem !important;
     color: #2c4a6e !important;
+}
+
+.db-filter-btn {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: 0 .85rem;
+    border: 0;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #146bd7, #0cb4d8);
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.db-reset-link {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: 0 .75rem;
+    border: 1px solid #dde8f5;
+    border-radius: 12px;
+    color: #526b87;
+    background: #fff;
+    font-size: .78rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
 }
 
 /* table cells */
@@ -530,26 +564,38 @@
             <div class="db-card-head">
                 <div>
                     <h3>Lịch hẹn gần đây</h3>
-                    <p>Danh sách khách đang được theo dõi trong ca trực.</p>
+                    <p>Mặc định hiển thị lịch mới nhất trong ngày, có thể lọc theo ngày và trạng thái.</p>
                 </div>
                 <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.visits.index') }}"
                    style="border-radius:10px;font-weight:700;font-size:.78rem;">Xem tất cả</a>
             </div>
 
-            <div class="db-toolbar">
+            @php
+                $recentStatusOptions = [
+                    'all' => 'Tất cả trạng thái',
+                    'pending' => 'Chờ duyệt',
+                    'approved' => 'Đã duyệt',
+                    'checked_in' => 'Đang trong công ty',
+                    'checked_out' => 'Đã check-out',
+                    'rejected' => 'Từ chối',
+                    'cancelled' => 'Đã hủy',
+                ];
+            @endphp
+
+            <form class="db-toolbar" method="get" action="{{ route('admin.dashboard') }}">
                 <div class="db-search">
                     <i class="bi bi-search"></i>
-                    <input class="form-control" placeholder="Tìm mã lịch, khách, người tiếp...">
+                    <input class="form-control" name="recent_q" value="{{ $recentFilters['q'] ?? '' }}" placeholder="Tìm mã lịch, khách, người tiếp...">
                 </div>
-                <input class="form-control db-filter" type="date" value="{{ now()->toDateString() }}" style="width:160px;">
-                <select class="form-select db-filter" style="width:170px;">
-                    <option>Tất cả trạng thái</option>
-                    <option>Chờ duyệt</option>
-                    <option>Đã duyệt</option>
-                    <option>Đang trong công ty</option>
-                    <option>Đã check-out</option>
+                <input class="form-control db-filter" name="recent_date" type="date" value="{{ $recentFilters['date'] ?? now()->toDateString() }}" style="width:160px;">
+                <select class="form-select db-filter" name="recent_status" style="width:180px;">
+                    @foreach($recentStatusOptions as $value => $label)
+                        <option value="{{ $value }}" @selected(($recentFilters['status'] ?? 'all') === $value)>{{ $label }}</option>
+                    @endforeach
                 </select>
-            </div>
+                <button class="db-filter-btn" type="submit"><i class="bi bi-funnel"></i>Lọc</button>
+                <a class="db-reset-link" href="{{ route('admin.dashboard') }}"><i class="bi bi-arrow-clockwise"></i>Mới nhất</a>
+            </form>
 
             <div class="table-responsive">
                 <table class="table modern-table align-middle mb-0">
@@ -587,7 +633,10 @@
                                     <span style="font-size:.83rem;font-weight:600;color:#2c4a6e">{{ $visit['host'] }}</span>
                                 </div>
                             </td>
-                            <td><span class="db-time">{{ $visit['time'] }}</span></td>
+                            <td>
+                                <span class="db-time">{{ $visit['time'] }}</span>
+                                <div class="db-visitor-company">{{ $visit['date'] }}</div>
+                            </td>
                             <td><x-status-badge :status="$visit['status']" /></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-light" href="{{ route('admin.visits.show', $visit['id']) }}"
@@ -599,8 +648,8 @@
                             <td colspan="6">
                                 <div class="gate-empty">
                                     <i class="bi bi-calendar2-check"></i>
-                                    <strong>Chưa có lịch hẹn</strong>
-                                    <span>Tạo lịch hẹn mới để bắt đầu theo dõi khách ra/vào.</span>
+                                    <strong>Không có lịch phù hợp</strong>
+                                    <span>Thử đổi ngày, trạng thái hoặc từ khóa để xem lịch khác.</span>
                                 </div>
                             </td>
                         </tr>

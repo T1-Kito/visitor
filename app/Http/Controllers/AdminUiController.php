@@ -31,9 +31,24 @@ class AdminUiController extends Controller
 {
     use HasAdminLayoutData;
 
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
-        $todayVisits = $this->todayVisitsForDashboard()->get();
+        $recentFilters = [
+            'q' => trim((string) $request->query('recent_q', '')),
+            'date' => $request->query('recent_date', now()->toDateString()),
+            'status' => $request->query('recent_status', 'all'),
+        ];
+
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $recentFilters['date'])) {
+            $recentFilters['date'] = now()->toDateString();
+        }
+
+        $allowedRecentStatuses = ['all', 'pending', 'approved', 'checked_in', 'checked_out', 'rejected', 'cancelled'];
+        if (! in_array($recentFilters['status'], $allowedRecentStatuses, true)) {
+            $recentFilters['status'] = 'all';
+        }
+
+        $recentVisits = $this->recentVisitsForDashboard($recentFilters)->limit(8)->get();
         $summary = $this->dashboardSummaryData();
 
         $alertsData = collect($this->dashboardAlertsData())->take(5)->values()->all();
@@ -46,7 +61,8 @@ class AdminUiController extends Controller
                 'checked_out'  => $summary['checked_out_today'],
                 'overstay'     => $summary['overstay'] ?? 0,
             ],
-            'visits' => $this->mapVisitRows($todayVisits),
+            'visits' => $this->mapVisitRows($recentVisits),
+            'recentFilters' => $recentFilters,
             'alerts' => $alertsData,
         ]));
     }
@@ -2244,11 +2260,39 @@ XML;
         return $alerts;
     }
 
-    private function todayVisitsForDashboard(): Builder
+    /**
+     * @param  array{q: string, date: string, status: string}  $filters
+     */
+    private function recentVisitsForDashboard(array $filters): Builder
     {
-        return $this->baseVisitQuery()
-            ->whereDate('scheduled_at', now()->toDateString())
-            ->orderBy('scheduled_at');
+        $query = $this->baseVisitQuery()
+            ->whereDate('scheduled_at', $filters['date']);
+
+        if ($filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        if ($filters['q'] !== '') {
+            $keyword = $filters['q'];
+            $query->where(function (Builder $query) use ($keyword): void {
+                $query->where('code', 'like', "%{$keyword}%")
+                    ->orWhere('purpose', 'like', "%{$keyword}%")
+                    ->orWhereHas('visitor', function (Builder $visitorQuery) use ($keyword): void {
+                        $visitorQuery->where('full_name', 'like', "%{$keyword}%")
+                            ->orWhere('company', 'like', "%{$keyword}%")
+                            ->orWhere('phone', 'like', "%{$keyword}%")
+                            ->orWhere('email', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('hostEmployee', function (Builder $hostQuery) use ($keyword): void {
+                        $hostQuery->where('name', 'like', "%{$keyword}%");
+                    });
+            });
+        }
+
+        return $query
+            ->orderByRaw('COALESCE(actual_checkout_at, actual_checkin_at, updated_at, scheduled_at) desc')
+            ->orderByDesc('scheduled_at')
+            ->orderByDesc('id');
     }
 
     private function baseVisitQuery(): Builder
@@ -2537,6 +2581,8 @@ XML;
             ],
         ]);
 
+        $this->sendHostCheckinEmail($visit);
+
         return null;
     }
 
@@ -2632,8 +2678,8 @@ XML;
                     ->map(fn (Visit $visit): array => [
                         'type' => 'watchlist_match',
                         'level' => $watchlist->level === 'critical' ? 'danger' : 'warning',
-                        'title' => "Watchlist: {$visit->code}",
-                        'message' => ($visit->visitor?->full_name ?? 'Khach').' match rule '.$watchlist->keyword.'.',
+                        'title' => "Khách trùng danh sách cảnh báo: {$visit->code}",
+                        'message' => ($visit->visitor?->full_name ?? 'Khách').' trùng từ khóa cảnh báo "'.$watchlist->keyword.'". Vui lòng kiểm tra trước khi xử lý.',
                         'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                         'visit_id' => $visit->id,
                         'visit_code' => $visit->code,
@@ -2647,8 +2693,8 @@ XML;
                 return [
                     'type' => 'overstay',
                     'level' => 'danger',
-                    'title' => "Qua gio: {$visit->code}",
-                    'message' => ($visit->visitor?->full_name ?? 'Khach').' chua check-out sau gio du kien.',
+                    'title' => "Khách quá giờ: {$visit->code}",
+                    'message' => ($visit->visitor?->full_name ?? 'Khách').' chưa check-out sau giờ dự kiến. Vui lòng liên hệ người tiếp.',
                     'time' => $visit->expected_checkout_at->format('H:i'),
                     'visit_id' => $visit->id,
                     'visit_code' => $visit->code,
@@ -2660,8 +2706,8 @@ XML;
                 return [
                     'type' => 'approved_not_checked_in',
                     'level' => 'warning',
-                    'title' => "Chua check-in: {$visit->code}",
-                    'message' => ($visit->visitor?->full_name ?? 'Khach').' da duyet nhung chua check-in.',
+                    'title' => "Chưa check-in: {$visit->code}",
+                    'message' => ($visit->visitor?->full_name ?? 'Khách').' đã được duyệt nhưng chưa làm thủ tục vào.',
                     'time' => $visit->scheduled_at->format('H:i'),
                     'visit_id' => $visit->id,
                     'visit_code' => $visit->code,
@@ -2673,8 +2719,8 @@ XML;
                 return [
                     'type' => 'pending_near_schedule',
                     'level' => 'warning',
-                    'title' => "Sap den gio: {$visit->code}",
-                    'message' => 'Lich hen sap den gio nhung van cho phe duyet.',
+                    'title' => "Sắp đến giờ hẹn: {$visit->code}",
+                    'message' => 'Lịch hẹn sắp đến giờ nhưng vẫn đang chờ phê duyệt.',
                     'time' => $visit->scheduled_at->format('H:i'),
                     'visit_id' => $visit->id,
                     'visit_code' => $visit->code,
@@ -2849,6 +2895,40 @@ XML;
         }
 
         $this->createNotification($user, $type, $title, $message, $level, $visit);
+    }
+
+    private function sendHostCheckinEmail(Visit $visit): void
+    {
+        $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department']);
+
+        $email = trim((string) ($visit->hostEmployee?->email ?: $visit->hostEmployee?->user?->email ?: ''));
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return;
+        }
+
+        $visitorName = $visit->visitor?->full_name ?? 'Khách';
+        $subject = "Khách đã check-in: {$visitorName} - {$visit->code}";
+        $html = view('emails.host-checkin', [
+            'visit' => $visit,
+            'visitUrl' => route('admin.visits.show', $visit),
+        ])->render();
+
+        try {
+            Mail::html($html, function ($message) use ($email, $subject): void {
+                $message->to($email)->subject($subject);
+            });
+
+            $this->logAudit('visit.host_checkin_email_sent', 'visit', (string) $visit->id, [
+                'code' => $visit->code,
+                'email' => $email,
+            ]);
+        } catch (\Throwable $exception) {
+            $this->logAudit('visit.host_checkin_email_failed', 'visit', (string) $visit->id, [
+                'code' => $visit->code,
+                'email' => $email,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function notifyUsersWithPermission(

@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -282,6 +283,8 @@ class KioskController extends Controller
             'meta' => ['badge_no' => $badge?->badge_no],
         ]);
 
+        $this->sendHostCheckinEmail($visit);
+
         AuditLog::query()->create([
             'user_id' => null,
             'action' => 'kiosk.checked_in',
@@ -418,6 +421,49 @@ class KioskController extends Controller
         }
 
         $this->createNotification($user, $type, $title, $message, $level, $visit);
+    }
+
+    private function sendHostCheckinEmail(Visit $visit): void
+    {
+        $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department']);
+
+        $email = trim((string) ($visit->hostEmployee?->email ?: $visit->hostEmployee?->user?->email ?: ''));
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return;
+        }
+
+        $visitorName = $visit->visitor?->full_name ?? 'Khách';
+        $subject = "Khách đã check-in: {$visitorName} - {$visit->code}";
+        $html = view('emails.host-checkin', [
+            'visit' => $visit,
+            'visitUrl' => route('admin.visits.show', $visit),
+        ])->render();
+
+        try {
+            Mail::html($html, function ($message) use ($email, $subject): void {
+                $message->to($email)->subject($subject);
+            });
+
+            AuditLog::query()->create([
+                'user_id' => null,
+                'action' => 'kiosk.host_checkin_email_sent',
+                'entity_type' => 'visit',
+                'entity_id' => (string) $visit->id,
+                'meta' => ['code' => $visit->code, 'email' => $email],
+            ]);
+        } catch (\Throwable $exception) {
+            AuditLog::query()->create([
+                'user_id' => null,
+                'action' => 'kiosk.host_checkin_email_failed',
+                'entity_type' => 'visit',
+                'entity_id' => (string) $visit->id,
+                'meta' => [
+                    'code' => $visit->code,
+                    'email' => $email,
+                    'error' => $exception->getMessage(),
+                ],
+            ]);
+        }
     }
 
     private function notifyUsersWithPermission(
