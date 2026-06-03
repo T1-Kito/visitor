@@ -82,7 +82,17 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:approvals.manage')
         ->name('admin.approvals.wait');
 
-    Route::get('/checkin', [AdminUiController::class, 'checkinIndex'])
+    Route::get('/access', [AdminUiController::class, 'accessIndex'])
+        ->middleware('permission:checkin.manage')
+        ->name('admin.access.index');
+    Route::get('/access/lists', [AdminUiController::class, 'accessListsIndex'])
+        ->middleware('permission:checkin.manage')
+        ->name('admin.access.lists');
+    Route::get('/access/lists/export', [AdminUiController::class, 'accessListsExport'])
+        ->middleware('permission:checkin.manage')
+        ->name('admin.access.lists.export');
+
+    Route::get('/checkin', fn () => redirect()->route('admin.access.index', ['mode' => 'checkin']))
         ->middleware('permission:checkin.manage')
         ->name('admin.checkin.index');
     Route::post('/checkin/scan-qr', [AdminUiController::class, 'scanCheckinQr'])
@@ -92,7 +102,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:checkin.manage')
         ->name('admin.checkin.confirm');
 
-    Route::get('/checkout', [AdminUiController::class, 'checkoutIndex'])
+    Route::get('/checkout', fn () => redirect()->route('admin.access.index', ['mode' => 'checkout']))
         ->middleware('permission:checkin.manage')
         ->name('admin.checkout.index');
     Route::post('/checkout/scan-qr', [AdminUiController::class, 'scanCheckoutQr'])

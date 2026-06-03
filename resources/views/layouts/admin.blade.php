@@ -16,10 +16,15 @@
     <div class="dashboard-shell">
         <aside class="sidebar-panel d-none d-lg-flex">
             <div class="brand-block">
-                <div class="brand-badge">VMS</div>
+                <div class="brand-badge {{ ! empty($adminBrand['logo_url']) ? 'has-logo' : '' }}">
+                    @if (! empty($adminBrand['logo_url']))
+                        <img src="{{ $adminBrand['logo_url'] }}" alt="{{ $adminBrand['name'] ?? 'Logo' }}">
+                    @else
+                        {{ $adminBrand['initials'] ?? 'VMS' }}
+                    @endif
+                </div>
                 <div>
-                    <h1 class="brand-title">Gatehouse Pro</h1>
-                    <p class="brand-subtitle">Quản lý khách ra vào</p>
+                    <h1 class="brand-title">{{ $adminBrand['name'] ?? 'Gatehouse Pro' }}</h1>
                 </div>
             </div>
 

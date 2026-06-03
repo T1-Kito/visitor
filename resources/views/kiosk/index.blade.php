@@ -60,21 +60,35 @@
         }
 
         .kiosk-logo {
-            width: 46px;
+            width: auto;
+            min-width: 54px;
+            max-width: 118px;
             height: 46px;
             place-items: center;
             display: grid;
-            border-radius: 15px;
+            border-radius: 14px;
             color: #fff;
             background: linear-gradient(135deg, var(--kiosk-blue), var(--kiosk-cyan));
             box-shadow: 0 16px 34px rgba(20, 107, 215, .18);
+            overflow: hidden;
+        }
+
+        .kiosk-logo.has-logo {
+            min-width: 0;
+            max-width: 128px;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            overflow: visible;
         }
 
         .kiosk-logo img {
-            width: 100%;
-            height: 100%;
+            width: auto;
+            max-width: 128px;
+            height: 42px;
+            max-height: 42px;
             object-fit: contain;
-            padding: .45rem;
+            padding: 0;
         }
 
         .kiosk-brand strong {
@@ -944,9 +958,17 @@
             }
 
             .kiosk-logo {
-                width: 40px;
+                min-width: 48px;
+                max-width: 96px;
                 height: 40px;
                 border-radius: 13px;
+            }
+
+            .kiosk-logo img {
+                max-width: 96px;
+                height: 34px;
+                max-height: 34px;
+                padding: 0;
             }
 
             .kiosk-clock strong {
@@ -1048,7 +1070,7 @@
 
         <header class="kiosk-header">
             <div class="kiosk-brand">
-                <div class="kiosk-logo">
+                <div class="kiosk-logo {{ $logoUrl ? 'has-logo' : '' }}">
                     @if ($logoUrl)
                         <img src="{{ $logoUrl }}" alt="Logo">
                     @else

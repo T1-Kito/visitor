@@ -508,11 +508,11 @@
         <div class="db-action-icon"><i class="bi bi-check2-square"></i></div>
         <div><div class="db-action-title">Duyệt lịch</div><div class="db-action-sub">Xử lý yêu cầu chờ</div></div>
     </a>
-    <a href="{{ route('admin.checkin.index') }}" class="db-action-btn">
+    <a href="{{ route('admin.access.index', ['mode' => 'checkin']) }}" class="db-action-btn">
         <div class="db-action-icon" style="background:linear-gradient(135deg,#059669,#10b981)"><i class="bi bi-qr-code-scan"></i></div>
         <div><div class="db-action-title">Check-in</div><div class="db-action-sub">Scan QR, cấp badge</div></div>
     </a>
-    <a href="{{ route('admin.checkout.index') }}" class="db-action-btn">
+    <a href="{{ route('admin.access.index', ['mode' => 'checkout']) }}" class="db-action-btn">
         <div class="db-action-icon" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><i class="bi bi-box-arrow-left"></i></div>
         <div><div class="db-action-title">Check-out</div><div class="db-action-sub">Thu hồi quyền ra/vào</div></div>
     </a>

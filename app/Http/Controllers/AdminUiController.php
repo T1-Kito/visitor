@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\AccessControlLog;
 use App\Models\AuditLog;
 use App\Models\Badge;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Notification;
 use App\Models\User;
@@ -684,6 +685,263 @@ class AdminUiController extends Controller
         return redirect()->back()->with('status', "Da danh dau lich {$visit->code} la cho khach doi.");
     }
 
+    public function accessIndex(Request $request): View
+    {
+        $today = now()->toDateString();
+        $requestedMode = (string) $request->query('mode', '');
+        $activeMode = in_array($requestedMode, ['checkin', 'checkout'], true)
+            ? $requestedMode
+            : ($request->session()->has('checkout_scanned_visit_id') ? 'checkout' : 'checkin');
+
+        $readyToCheckin = $this->baseVisitQuery()
+            ->where('status', 'approved')
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        $checkinScannedVisit = null;
+        $checkinScannedVisitId = $request->session()->get('checkin_scanned_visit_id');
+        $checkinScannedByQr = (bool) $request->session()->get('checkin_scanned_by_qr', false);
+        if (is_numeric($checkinScannedVisitId)) {
+            $checkinScannedVisit = $this->baseVisitQuery()->find((int) $checkinScannedVisitId);
+        }
+
+        $insideVisits = $this->baseVisitQuery()
+            ->where('status', 'checked_in')
+            ->orderByDesc('actual_checkin_at')
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        $checkoutScannedVisit = null;
+        $checkoutScannedVisitId = $request->session()->get('checkout_scanned_visit_id');
+        if (is_numeric($checkoutScannedVisitId)) {
+            $checkoutScannedVisit = $this->baseVisitQuery()->find((int) $checkoutScannedVisitId);
+        }
+
+        $checkedOutToday = Visit::query()
+            ->where('status', 'checked_out')
+            ->whereDate('actual_checkout_at', $today)
+            ->count();
+        $checkedInToday = Visit::query()
+            ->where('status', 'checked_in')
+            ->whereDate('actual_checkin_at', $today)
+            ->count();
+        $overstayInside = Visit::query()
+            ->where('status', 'checked_in')
+            ->whereNotNull('expected_checkout_at')
+            ->where('expected_checkout_at', '<', now())
+            ->count();
+        $historyDate = Carbon::parse((string) $request->query('history_date', $today))->toDateString();
+        $historyType = in_array($request->query('history'), ['in', 'out'], true)
+            ? (string) $request->query('history')
+            : null;
+        $accessHistory = $historyType === null
+            ? []
+            : $this->baseVisitQuery()
+                ->whereDate($historyType === 'in' ? 'actual_checkin_at' : 'actual_checkout_at', $historyDate)
+                ->get()
+                ->map(function (Visit $visit) use ($historyType): array {
+                    $time = $historyType === 'in' ? $visit->actual_checkin_at : $visit->actual_checkout_at;
+
+                    return [
+                        'id' => $visit->id,
+                        'code' => $visit->code,
+                        'type' => $historyType,
+                        'label' => $historyType === 'in' ? 'Khách vào' : 'Khách ra',
+                        'time' => $time?->format('H:i') ?? '-',
+                        'sort_at' => $time?->timestamp ?? 0,
+                        'visitor' => $visit->visitor?->full_name ?? '-',
+                        'company' => $visit->visitor?->company ?? '-',
+                        'host' => $visit->hostEmployee?->name ?? '-',
+                        'department' => $visit->hostEmployee?->department?->name ?? '-',
+                        'detail_url' => route('admin.visits.show', $visit),
+                    ];
+                })
+                ->sortByDesc('sort_at')
+                ->values()
+                ->all();
+
+        return view('admin.access.index', $this->withBase([
+            'activeMode' => $activeMode,
+            'readyToCheckin' => $this->mapVisitRows($readyToCheckin),
+            'checkinScannedVisit' => $checkinScannedVisit,
+            'checkinScannedQrExpired' => $checkinScannedByQr && ($checkinScannedVisit?->qr_expires_at?->lt(now()) ?? false),
+            'insideVisits' => $insideVisits->map(function (Visit $visit): array {
+                $isOverstay = $visit->expected_checkout_at?->lt(now()) ?? false;
+
+                return [
+                    'id' => $visit->id,
+                    'code' => $visit->code,
+                    'visitor' => $visit->visitor?->full_name ?? '-',
+                    'company' => $visit->visitor?->company ?? '-',
+                    'host' => $visit->hostEmployee?->name ?? '-',
+                    'department' => $visit->hostEmployee?->department?->name ?? '-',
+                    'checkin_time' => $visit->actual_checkin_at?->format('H:i') ?? '-',
+                    'remaining' => $visit->expected_checkout_at === null
+                        ? '-'
+                        : ($isOverstay ? 'Quá giờ' : $this->humanDuration(now(), $visit->expected_checkout_at)),
+                    'is_overstay' => $isOverstay,
+                ];
+            })->all(),
+            'checkoutScannedVisit' => $checkoutScannedVisit,
+            'accessStats' => [
+                'waiting_in' => $readyToCheckin->count(),
+                'inside' => $insideVisits->count(),
+                'checked_in_today' => $checkedInToday,
+                'checked_out_today' => $checkedOutToday,
+                'overstay' => $overstayInside,
+            ],
+            'accessHistory' => $accessHistory,
+            'accessHistoryDate' => $historyDate,
+            'accessHistoryType' => $historyType,
+            'accessHistoryOpen' => $historyType !== null,
+        ]));
+    }
+
+    public function accessListsIndex(Request $request): View
+    {
+        $data = $this->accessListData($request);
+
+        return view('admin.access.lists', $this->withBase($data));
+    }
+
+    public function accessListsExport(Request $request): StreamedResponse
+    {
+        $data = $this->accessListData($request);
+        $rows = $data['accessRows'];
+        $filename = 'danh-sach-ra-vao-'.$data['filters']['type'].'-'.$data['filters']['from'].'-'.$data['filters']['to'].'.csv';
+
+        return response()->streamDownload(function () use ($rows): void {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($handle, ['Mã lịch', 'Trạng thái', 'Khách', 'Công ty', 'Người gặp', 'Phòng ban', 'Giờ vào', 'Giờ ra', 'Mục đích']);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, [
+                    $row['code'],
+                    $row['label'],
+                    $row['visitor'],
+                    $row['company'],
+                    $row['host'],
+                    $row['department'],
+                    $row['checkin_at'],
+                    $row['checkout_at'],
+                    $row['purpose'],
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function accessListData(Request $request): array
+    {
+        $type = in_array($request->query('type'), ['inside', 'in', 'out', 'all'], true)
+            ? (string) $request->query('type')
+            : 'inside';
+        $from = Carbon::parse((string) $request->query('from', now()->toDateString()))->startOfDay();
+        $to = Carbon::parse((string) $request->query('to', now()->toDateString()))->endOfDay();
+        $keyword = trim((string) $request->query('q', ''));
+        $department = trim((string) $request->query('department', ''));
+
+        $query = $this->baseVisitQuery();
+
+        match ($type) {
+            'inside' => $query->where('status', 'checked_in'),
+            'in' => $query->whereBetween('actual_checkin_at', [$from, $to]),
+            'out' => $query->whereBetween('actual_checkout_at', [$from, $to]),
+            default => $query->where(function ($nested) use ($from, $to): void {
+                $nested->whereBetween('actual_checkin_at', [$from, $to])
+                    ->orWhereBetween('actual_checkout_at', [$from, $to])
+                    ->orWhere('status', 'checked_in');
+            }),
+        };
+
+        if ($keyword !== '') {
+            $query->where(function ($nested) use ($keyword): void {
+                $nested->where('code', 'like', "%{$keyword}%")
+                    ->orWhereHas('visitor', function ($visitorQuery) use ($keyword): void {
+                        $visitorQuery->where('full_name', 'like', "%{$keyword}%")
+                            ->orWhere('company', 'like', "%{$keyword}%")
+                            ->orWhere('phone', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('hostEmployee', function ($hostQuery) use ($keyword): void {
+                        $hostQuery->where('name', 'like', "%{$keyword}%");
+                    });
+            });
+        }
+
+        if ($department !== '') {
+            $query->whereHas('hostEmployee.department', function ($departmentQuery) use ($department): void {
+                $departmentQuery->where('name', $department);
+            });
+        }
+
+        match ($type) {
+            'inside', 'in' => $query->orderByDesc('actual_checkin_at'),
+            'out' => $query->orderByDesc('actual_checkout_at'),
+            default => $query->orderByRaw('COALESCE(actual_checkout_at, actual_checkin_at, scheduled_at) DESC'),
+        };
+
+        $visits = $query->get();
+
+        $rows = $visits->map(function (Visit $visit) use ($type): array {
+            $label = match ($type) {
+                'inside' => 'Đang trong công ty',
+                'in' => 'Khách vào',
+                'out' => 'Khách ra',
+                default => $visit->status === 'checked_in'
+                    ? 'Đang trong công ty'
+                    : ($visit->actual_checkout_at !== null ? 'Khách ra' : 'Khách vào'),
+            };
+            $badgeType = match ($label) {
+                'Khách vào' => 'in',
+                'Khách ra' => 'out',
+                default => 'inside',
+            };
+
+            return [
+                'id' => $visit->id,
+                'code' => $visit->code,
+                'label' => $label,
+                'badge_type' => $badgeType,
+                'visitor' => $visit->visitor?->full_name ?? '-',
+                'company' => $visit->visitor?->company ?? '-',
+                'phone' => $visit->visitor?->phone ?? '-',
+                'host' => $visit->hostEmployee?->name ?? '-',
+                'department' => $visit->hostEmployee?->department?->name ?? '-',
+                'purpose' => $visit->purpose ?? '-',
+                'checkin_at' => $visit->actual_checkin_at?->format('H:i d/m/Y') ?? '-',
+                'checkout_at' => $visit->actual_checkout_at?->format('H:i d/m/Y') ?? '-',
+                'detail_url' => route('admin.visits.show', $visit),
+            ];
+        })->all();
+
+        $today = now()->toDateString();
+
+        return [
+            'accessRows' => $rows,
+            'filters' => [
+                'type' => $type,
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                'q' => $keyword,
+                'department' => $department,
+            ],
+            'listStats' => [
+                'inside' => Visit::query()->where('status', 'checked_in')->count(),
+                'in_today' => Visit::query()->whereDate('actual_checkin_at', $today)->count(),
+                'out_today' => Visit::query()->whereDate('actual_checkout_at', $today)->count(),
+                'all_range' => count($rows),
+            ],
+            'departments' => Department::query()->orderBy('name')->pluck('name')->all(),
+        ];
+    }
+
     public function checkinIndex(Request $request): View
     {
         $today = now()->toDateString();
@@ -770,7 +1028,7 @@ class AdminUiController extends Controller
         }
 
         $redirect = redirect()
-            ->route('admin.checkin.index')
+            ->route('admin.access.index', ['mode' => 'checkin'])
             ->with('checkin_scanned_visit_id', $visit->id)
             ->with('checkin_scanned_by_qr', $scannedByQr);
 
@@ -790,7 +1048,25 @@ class AdminUiController extends Controller
             'code' => $visit->code,
         ]);
 
-        return $redirect->with('status', "Mã hợp lệ cho lịch {$visit->code}. Vui lòng kiểm tra thông tin và bấm xác nhận khách vào.");
+        $error = $this->performCheckin($visit);
+        if ($error !== null) {
+            return $redirect
+                ->with('checkin_scanned_visit_id', $visit->id)
+                ->with('checkin_scanned_by_qr', $scannedByQr)
+                ->with('error', $error);
+        }
+
+        $this->logAudit('visit.checked_in', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+        ]);
+        $this->notifyHost($visit, 'visit.checked_in', 'Khách đã check-in', "Khách của lịch {$visit->code} đã vào công ty.", 'success');
+        $this->notifyUsersWithPermission('alerts.view', 'visit.checked_in', 'Khách đang trong công ty', "Lịch {$visit->code} đã check-in.", 'info', $visit);
+        $this->scanWatchlistForVisit($visit, 'visit.checked_in');
+
+        return $redirect
+            ->with('checkin_scanned_visit_id', $visit->id)
+            ->with('checkin_scanned_by_qr', $scannedByQr)
+            ->with('status', "Đã tự động xác nhận khách vào cho lịch {$visit->code}.");
     }
     public function checkoutIndex(): View
     {
@@ -907,7 +1183,7 @@ class AdminUiController extends Controller
 
         if ($visit->status !== 'checked_in') {
             return redirect()
-                ->route('admin.checkout.index')
+                ->route('admin.access.index', ['mode' => 'checkout'])
                 ->with('checkout_scanned_visit_id', $visit->id)
                 ->with('error', "Đã tìm thấy lịch {$visit->code}, nhưng trạng thái hiện tại là {$this->visitStatusLabel($visit->status)}. Chỉ khách đang trong công ty mới được làm thủ tục ra.");
         }
@@ -917,10 +1193,23 @@ class AdminUiController extends Controller
             'qr_token' => $validated['qr_token'],
         ]);
 
+        $error = $this->performCheckout($visit);
+        if ($error !== null) {
+            return redirect()
+                ->route('admin.access.index', ['mode' => 'checkout'])
+                ->with('checkout_scanned_visit_id', $visit->id)
+                ->with('error', $error);
+        }
+
+        $this->logAudit('visit.checked_out', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+        ]);
+        $this->notifyHost($visit, 'visit.checked_out', 'Khách đã rời công ty', "Khách của lịch {$visit->code} đã ra khỏi công ty.", 'info');
+
         return redirect()
-            ->route('admin.checkout.index')
+            ->route('admin.access.index', ['mode' => 'checkout'])
             ->with('checkout_scanned_visit_id', $visit->id)
-            ->with('status', "Đã tìm thấy lịch {$visit->code}. Vui lòng kiểm tra thông tin trước khi xác nhận khách ra.");
+            ->with('status', "Đã tự động xác nhận khách ra cho lịch {$visit->code}.");
     }
     public function scanCheckoutBadge(Request $request): RedirectResponse
     {
@@ -947,10 +1236,23 @@ class AdminUiController extends Controller
             'badge_no' => $badge->badge_no,
         ]);
 
+        $error = $this->performCheckout($badge->visit);
+        if ($error !== null) {
+            return redirect()
+                ->route('admin.access.index', ['mode' => 'checkout'])
+                ->with('checkout_scanned_visit_id', $badge->visit->id)
+                ->with('error', $error);
+        }
+
+        $this->logAudit('visit.checked_out', 'visit', (string) $badge->visit->id, [
+            'code' => $badge->visit->code,
+        ]);
+        $this->notifyHost($badge->visit, 'visit.checked_out', 'Khách đã rời công ty', "Khách của lịch {$badge->visit->code} đã ra khỏi công ty.", 'info');
+
         return redirect()
-            ->route('admin.checkout.index')
+            ->route('admin.access.index', ['mode' => 'checkout'])
             ->with('checkout_scanned_visit_id', $badge->visit->id)
-            ->with('status', "Đã tìm thấy thẻ {$badge->badge_no}. Vui lòng kiểm tra thông tin trước khi xác nhận khách ra.");
+            ->with('status', "Đã tự động xác nhận khách ra bằng thẻ {$badge->badge_no}.");
     }
     public function alertsIndex(): View
     {

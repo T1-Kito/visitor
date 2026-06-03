@@ -61,21 +61,35 @@
         .ks-brand { gap: .9rem; }
 
         .ks-logo {
-            width: 46px;
+            width: auto;
+            min-width: 54px;
+            max-width: 118px;
             height: 46px;
             display: grid;
             place-items: center;
-            border-radius: 15px;
+            border-radius: 14px;
             color: #fff;
             background: linear-gradient(135deg, var(--blue), var(--cyan));
             box-shadow: 0 16px 34px rgba(20, 107, 215, .18);
+            overflow: hidden;
+        }
+
+        .ks-logo.has-logo {
+            min-width: 0;
+            max-width: 128px;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            overflow: visible;
         }
 
         .ks-logo img {
-            width: 100%;
-            height: 100%;
+            width: auto;
+            max-width: 128px;
+            height: 42px;
+            max-height: 42px;
             object-fit: contain;
-            padding: .45rem;
+            padding: 0;
         }
 
         .ks-brand strong {
@@ -223,6 +237,11 @@
             align-items: center;
             gap: .8rem;
             text-align: left;
+        }
+
+        .ks-code-content.is-plain {
+            grid-template-columns: 1fr;
+            text-align: center;
         }
 
         .ks-code-box span {
@@ -538,14 +557,15 @@
     $isJustSubmitted = $visit->status === 'pending';
     $title = $isJustSubmitted ? 'Gửi yêu cầu thành công!' : ($statusLabels[$visit->status] ?? 'Trạng thái yêu cầu');
     $lead = $isJustSubmitted
-        ? 'Cảm ơn bạn đã cung cấp thông tin. Chúng tôi đã gửi yêu cầu của bạn đến lễ tân.'
-        : 'Vui lòng lưu lại mã lịch hẹn để tra cứu hoặc check-in khi được mời.';
+        ? 'Cảm ơn bạn đã cung cấp thông tin. Yêu cầu đã được gửi đến lễ tân và đang chờ duyệt.'
+        : 'Vui lòng lưu lại mã lịch hẹn để tra cứu trạng thái khi cần.';
+    $canShowQr = ! $isJustSubmitted && in_array($visit->status, ['approved', 'checked_in', 'checked_out'], true);
 @endphp
 <body style="--kiosk-primary: {{ $primaryColor }};">
     <main class="ks-shell">
         <header class="ks-header">
             <div class="ks-brand">
-                <div class="ks-logo">
+                <div class="ks-logo {{ $logoUrl ? 'has-logo' : '' }}">
                     @if ($logoUrl)
                         <img src="{{ $logoUrl }}" alt="{{ $systemName }}">
                     @else
@@ -590,16 +610,20 @@
                 </div>
 
                 <div class="ks-code-box">
-                    <div class="ks-code-content">
+                    <div class="ks-code-content {{ $canShowQr && $visit->qr_token ? '' : 'is-plain' }}">
                         <div>
                             <span>Mã lịch hẹn của bạn</span>
                             <strong>{{ $visit->code }}</strong>
-                            <p>Vui lòng lưu lại mã này để tra cứu hoặc check-in khi được mời.</p>
-                            @if ($visit->qr_token)
+                            @if($isJustSubmitted)
+                                <p>Sau khi lễ tân duyệt, mã QR/check-in sẽ được gửi qua Gmail của bạn. Vui lòng kiểm tra hộp thư trong vài phút tới.</p>
+                            @else
+                                <p>Vui lòng lưu lại mã này để tra cứu trạng thái khi cần.</p>
+                            @endif
+                            @if ($canShowQr && $visit->qr_token)
                                 <p>Mã QR/check-in: {{ $visit->qr_token }}</p>
                             @endif
                         </div>
-                        @if ($visit->qr_token)
+                        @if ($canShowQr && $visit->qr_token)
                             <div class="ks-guest-qr" aria-label="Mã QR check-in">
                                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(106)->margin(1)->errorCorrection('M')->generate($visit->qr_token) !!}
                             </div>
@@ -627,7 +651,13 @@
 
                 <div class="ks-note">
                     <i class="bi bi-bell-fill"></i>
-                    <span>Khi lễ tân xác nhận, bạn sẽ được hướng dẫn tiếp theo.<br>Vui lòng ngồi chờ tại khu vực tiếp khách.</span>
+                    <span>
+                        @if($isJustSubmitted)
+                            Lễ tân sẽ kiểm tra yêu cầu. Nếu lịch được duyệt, mã QR/check-in sẽ được gửi qua Gmail của bạn trong vài phút tới.
+                        @else
+                            Khi lễ tân xác nhận, bạn sẽ được hướng dẫn tiếp theo.<br>Vui lòng ngồi chờ tại khu vực tiếp khách.
+                        @endif
+                    </span>
                 </div>
 
                 <div class="ks-actions">

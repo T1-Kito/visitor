@@ -15,7 +15,9 @@
             @php
                 $routeName = $item['route'];
                 $activePattern = preg_replace('/\.index$/', '.*', $routeName);
-                $isActive = request()->routeIs($routeName) || request()->routeIs($activePattern);
+                $isActive = $routeName === 'admin.access.index'
+                    ? request()->routeIs($routeName)
+                    : (request()->routeIs($routeName) || request()->routeIs($activePattern));
             @endphp
             <a href="{{ route($item['route']) }}"
                class="sidebar-link {{ $isActive ? 'active' : '' }}">

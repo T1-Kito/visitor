@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Notification;
+use App\Models\SystemSetting;
 use App\Models\User;
 
 trait HasAdminLayoutData
@@ -34,6 +35,15 @@ trait HasAdminLayoutData
             }
         }
 
+        $kioskSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+        $brandName = trim((string) ($kioskSettings['kiosk.system_name'] ?? 'Gatehouse Pro'));
+        $brandSubtitle = trim((string) ($kioskSettings['kiosk.subtitle'] ?? 'Quản lý khách ra vào'));
+        $brandInitials = collect(preg_split('/\s+/', $brandName) ?: [])
+            ->filter()
+            ->take(3)
+            ->map(fn (string $word) => mb_substr($word, 0, 1))
+            ->implode('');
+
         return array_merge([
             'currentUser' => [
                 'name' => $user?->name ?? 'Người dùng',
@@ -41,6 +51,12 @@ trait HasAdminLayoutData
             ],
             'notificationUnreadCount' => $user === null ? 0 : $this->adminLayoutUnreadNotificationCount((int) $user->id),
             'sidebarMenu' => $sidebarMenu,
+            'adminBrand' => [
+                'name' => $brandName !== '' ? $brandName : 'Gatehouse Pro',
+                'subtitle' => $brandSubtitle !== '' ? $brandSubtitle : 'Quản lý khách ra vào',
+                'logo_url' => $kioskSettings['kiosk.logo_url'] ?? null,
+                'initials' => mb_strtoupper($brandInitials !== '' ? $brandInitials : 'VMS'),
+            ],
         ], $data);
     }
 
@@ -53,8 +69,8 @@ trait HasAdminLayoutData
             ['label' => 'Tổng quan', 'route' => 'admin.dashboard', 'icon' => 'bi-grid-1x2-fill', 'permission' => 'dashboard.view', 'group' => null],
             ['label' => 'Lịch hẹn', 'route' => 'admin.visits.index', 'icon' => 'bi-calendar-check-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Phê duyệt', 'route' => 'admin.approvals.index', 'icon' => 'bi-patch-check-fill', 'permission' => 'approvals.manage', 'group' => 'VẬN HÀNH'],
-            ['label' => 'Khách vào', 'route' => 'admin.checkin.index', 'icon' => 'bi-box-arrow-in-right', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
-            ['label' => 'Khách ra', 'route' => 'admin.checkout.index', 'icon' => 'bi-box-arrow-left', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
+            ['label' => 'Khách ra/vào', 'route' => 'admin.access.index', 'icon' => 'bi-arrow-left-right', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
+            ['label' => 'Danh sách ra/vào', 'route' => 'admin.access.lists', 'icon' => 'bi-list-check', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách', 'route' => 'admin.visitors.index', 'icon' => 'bi-person-lines-fill', 'permission' => 'visitors.manage', 'group' => 'QUẢN LÝ'],
             ['label' => 'Nhân viên', 'route' => 'admin.employees.index', 'icon' => 'bi-people-fill', 'permission' => 'employees.manage', 'group' => 'QUẢN LÝ'],
             ['label' => 'Phòng ban', 'route' => 'admin.departments.index', 'icon' => 'bi-building-fill', 'permission' => 'departments.manage', 'group' => 'QUẢN LÝ'],
