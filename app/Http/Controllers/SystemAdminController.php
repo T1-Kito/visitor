@@ -473,18 +473,30 @@ class SystemAdminController extends Controller
             'working_hours' => ['required', 'string', 'max:80'],
             'logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'remove_logo' => ['nullable', 'boolean'],
+            'remove_background' => ['nullable', 'boolean'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
 
         $logoUrl = $currentSettings['kiosk.logo_url'] ?? null;
+        if ($request->boolean('remove_logo')) {
+            $this->deleteKioskUpload($logoUrl);
+            $logoUrl = null;
+        }
         if ($request->hasFile('logo_file')) {
+            $this->deleteKioskUpload($logoUrl);
             $logoUrl = $this->storeKioskUpload($request, 'logo_file', 'logo');
         }
 
         $backgroundUrl = $currentSettings['kiosk.background_url'] ?? null;
+        if ($request->boolean('remove_background')) {
+            $this->deleteKioskUpload($backgroundUrl);
+            $backgroundUrl = null;
+        }
         if ($request->hasFile('background_file')) {
+            $this->deleteKioskUpload($backgroundUrl);
             $backgroundUrl = $this->storeKioskUpload($request, 'background_file', 'background');
         }
 
@@ -521,6 +533,27 @@ class SystemAdminController extends Controller
         $path = $file->storeAs('kiosk', $filename, 'public');
 
         return Storage::disk('public')->url($path);
+    }
+
+    private function deleteKioskUpload(?string $url): void
+    {
+        if (! $url) {
+            return;
+        }
+
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+        $storagePrefix = '/storage/';
+        $position = strpos($path, $storagePrefix);
+
+        if ($position === false) {
+            return;
+        }
+
+        $relativePath = ltrim(substr($path, $position + strlen($storagePrefix)), '/');
+
+        if (str_starts_with($relativePath, 'kiosk/')) {
+            Storage::disk('public')->delete($relativePath);
+        }
     }
 
 
