@@ -23,16 +23,25 @@
                         {{ $adminBrand['initials'] ?? 'VMS' }}
                     @endif
                 </div>
-                <div>
-                    <h1 class="brand-title">{{ $adminBrand['name'] ?? 'Gatehouse Pro' }}</h1>
-                </div>
             </div>
 
             @include('admin.partials.sidebar-menu')
 
             <div class="sidebar-footer">
-                <p class="sidebar-footer-label">Ca trực</p>
-                <p class="sidebar-footer-value">{{ $currentUser['name'] }} - {{ $currentUser['role'] }}</p>
+                <div class="sidebar-account">
+                    <div class="user-avatar sidebar-user-avatar">{{ strtoupper(substr($currentUser['name'], 0, 1)) }}</div>
+                    <div class="sidebar-account-meta">
+                        <p class="user-name">{{ $currentUser['name'] }}</p>
+                        <p class="user-role">{{ $currentUser['role'] }}</p>
+                    </div>
+                </div>
+                <form action="{{ route('admin.logout') }}" method="post">
+                    @csrf
+                    <button class="sidebar-logout" type="submit">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Thoát
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -62,20 +71,6 @@
                         <i class="bi bi-plus-circle"></i>
                         Tạo lịch
                     </a>
-                    <div class="user-chip">
-                        <div class="user-avatar">{{ strtoupper(substr($currentUser['name'], 0, 1)) }}</div>
-                        <div>
-                            <p class="user-name">{{ $currentUser['name'] }}</p>
-                            <p class="user-role">{{ $currentUser['role'] }}</p>
-                        </div>
-                    </div>
-                    <form action="{{ route('admin.logout') }}" method="post">
-                        @csrf
-                        <button class="btn btn-soft-danger" type="submit">
-                            <i class="bi bi-box-arrow-right"></i>
-                            Thoát
-                        </button>
-                    </form>
                 </div>
             </header>
 
@@ -125,6 +120,22 @@
         </div>
         <div class="offcanvas-body">
             @include('admin.partials.sidebar-menu')
+            <div class="sidebar-footer">
+                <div class="sidebar-account">
+                    <div class="user-avatar sidebar-user-avatar">{{ strtoupper(substr($currentUser['name'], 0, 1)) }}</div>
+                    <div class="sidebar-account-meta">
+                        <p class="user-name">{{ $currentUser['name'] }}</p>
+                        <p class="user-role">{{ $currentUser['role'] }}</p>
+                    </div>
+                </div>
+                <form action="{{ route('admin.logout') }}" method="post">
+                    @csrf
+                    <button class="sidebar-logout" type="submit">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Thoát
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Visitor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -38,10 +39,10 @@ class CatalogController extends Controller
     public function departmentsStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:32', 'unique:departments,code'],
             'name' => ['required', 'string', 'max:120'],
         ]);
 
+        $validated['code'] = $this->generateDepartmentCode($validated['name']);
         $department = Department::query()->create($validated);
         $this->logAudit('department.created', 'department', (string) $department->id, $validated);
 
@@ -70,10 +71,10 @@ class CatalogController extends Controller
     public function departmentsUpdate(Request $request, Department $department): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:32', Rule::unique('departments', 'code')->ignore($department->id)],
             'name' => ['required', 'string', 'max:120'],
         ]);
 
+        $validated['code'] = $this->generateDepartmentCode($validated['name'], $department->id);
         $department->update($validated);
         $this->logAudit('department.updated', 'department', (string) $department->id, $validated);
 
@@ -312,6 +313,38 @@ class CatalogController extends Controller
             ->with('status', 'Da xoa ho so khach.');
     }
 
+
+    private function generateDepartmentCode(string $name, ?int $ignoreDepartmentId = null): string
+    {
+        $name = trim($name);
+        $ascii = Str::ascii($name);
+        $words = preg_split('/[^A-Za-z0-9]+/', $ascii, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if (count($words) >= 2) {
+            $base = collect($words)
+                ->map(fn (string $word): string => Str::upper(Str::substr($word, 0, 1)))
+                ->implode('');
+        } else {
+            $base = Str::upper(Str::slug($ascii, ''));
+        }
+
+        $base = Str::substr(preg_replace('/[^A-Z0-9]/', '', $base) ?: 'PB', 0, 24);
+        $candidate = $base;
+        $index = 2;
+
+        while (
+            Department::query()
+                ->where('code', $candidate)
+                ->when($ignoreDepartmentId !== null, fn ($query) => $query->whereKeyNot($ignoreDepartmentId))
+                ->exists()
+        ) {
+            $suffix = '-'.$index;
+            $candidate = Str::substr($base, 0, 32 - strlen($suffix)).$suffix;
+            $index++;
+        }
+
+        return $candidate;
+    }
 
     /**
      * @param  array<string, mixed>  $meta

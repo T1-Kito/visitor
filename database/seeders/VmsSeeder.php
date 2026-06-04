@@ -53,7 +53,7 @@ class VmsSeeder extends Seeder
             ['name' => 'Admin', 'slug' => 'admin'],
             ['name' => 'Le tan', 'slug' => 'receptionist'],
             ['name' => 'Bao ve', 'slug' => 'guard'],
-            ['name' => 'Nhan vien', 'slug' => 'employee'],
+            ['name' => 'Host', 'slug' => 'employee'],
             ['name' => 'Quan ly phong ban', 'slug' => 'department_manager'],
             ['name' => 'An ninh/Hanh chinh', 'slug' => 'security_admin'],
         ])->mapWithKeys(function (array $role): array {

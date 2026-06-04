@@ -130,8 +130,8 @@ class KioskController extends Controller
             'entity_id' => (string) $visit->id,
             'meta' => ['code' => $visit->code],
         ]);
-        $this->notifyHost($visit, 'kiosk.walk_in_created', 'Khach walk-in dang cho duyet', "Yeu cau walk-in {$visit->code} vua duoc tao tu kiosk.", 'warning');
-        $this->notifyUsersWithPermission('approvals.manage', 'kiosk.walk_in_created', 'Co khach walk-in can duyet', "Yeu cau walk-in {$visit->code} dang cho phe duyet.", 'warning', $visit);
+        $this->notifyHost($visit, 'kiosk.walk_in_created', 'Khách walk-in đang chờ bạn duyệt', "Yêu cầu walk-in {$visit->code} vừa được tạo từ kiosk.", 'warning');
+        $this->notifyApprovalAdmins('kiosk.walk_in_created', 'Có khách walk-in cần duyệt', "Yêu cầu walk-in {$visit->code} đang chờ host duyệt.", 'warning', $visit);
         $this->scanWatchlistForVisit($visit, 'kiosk.walk_in_created');
 
         $request->session()->put('kiosk_checkin_visit_id', $visit->id);
@@ -181,13 +181,20 @@ class KioskController extends Controller
             if ($visit->status === 'approved') {
                 $request->session()->put('kiosk_checkin_visit_id', $visit->id);
                 $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
+
+                return $this->confirmCheckin($request, $visit);
             }
 
             return response()->json([
                 'ok' => true,
-                'message' => $visit->status === 'approved'
-                    ? 'Mã hợp lệ. Khách có thể xác nhận check-in.'
-                    : 'Đã tìm thấy lịch hẹn. Vui lòng kiểm tra trạng thái hiện tại.',
+                'message' => match ($visit->status) {
+                    'pending' => "Lịch {$visit->code} chưa được duyệt. Vui lòng chờ lễ tân hoặc người tiếp khách xác nhận.",
+                    'checked_in' => "Đã tìm thấy lịch {$visit->code}, nhưng trạng thái hiện tại là Đang trong công ty. Chưa thể check-in.",
+                    'checked_out' => "Lịch {$visit->code} đã check-out, không thể check-in lại.",
+                    'rejected' => "Lịch {$visit->code} đã bị từ chối, không thể check-in.",
+                    'cancelled' => "Lịch {$visit->code} đã bị hủy, không thể check-in.",
+                    default => "Không thể check-in lịch {$visit->code} ở trạng thái hiện tại.",
+                },
                 'visit' => $this->kioskVisitPayload($visit, $visit->status === 'approved'),
             ]);
         }
@@ -206,9 +213,8 @@ class KioskController extends Controller
 
         $request->session()->put('kiosk_checkin_visit_id', $visit->id);
         $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
-        return redirect()
-            ->route('kiosk.checkin.status', $visit)
-            ->with('status', 'Mã hợp lệ. Vui lòng kiểm tra thông tin và xác nhận check-in.');
+
+        return $this->confirmCheckin($request, $visit);
     }
 
     public function confirmCheckin(Request $request, Visit $visit): RedirectResponse|JsonResponse
@@ -313,6 +319,118 @@ class KioskController extends Controller
             ->with('status', 'Check-in thành công. Vui lòng nhận badge tại quầy lễ tân.');
     }
 
+    public function scanCheckoutQr(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'qr_token' => ['required', 'string', 'max:80'],
+        ]);
+
+        $lookup = trim($validated['qr_token']);
+        $visit = Visit::query()
+            ->where('qr_token', $lookup)
+            ->orWhere('code', $lookup)
+            ->first();
+
+        if ($visit === null) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Không tìm thấy lịch hẹn với mã vừa nhập.',
+                ], 404);
+            }
+
+            return redirect()->back()->with('error', 'Không tìm thấy lịch hẹn với mã QR hoặc mã lịch hẹn này.');
+        }
+
+        if ($visit->status !== 'checked_in') {
+            $insideVisit = Visit::query()
+                ->where('visitor_id', $visit->visitor_id)
+                ->where('status', 'checked_in')
+                ->where('id', '!=', $visit->id)
+                ->orderByDesc('actual_checkin_at')
+                ->first();
+
+            if ($insideVisit !== null) {
+                $visit = $insideVisit;
+            }
+        }
+
+        $request->session()->put('kiosk_last_visit_id', $visit->id);
+
+        if ($visit->status !== 'checked_in') {
+            $message = match ($visit->status) {
+                'pending' => "Lịch {$visit->code} chưa được duyệt, khách chưa check-in nên không thể check-out.",
+                'approved' => "Lịch {$visit->code} đã được duyệt nhưng khách chưa check-in, không thể check-out.",
+                'checked_out' => "Đã tìm thấy lịch {$visit->code}, nhưng trạng thái hiện tại là Đã rời công ty. Chưa thể check-out.",
+                'rejected' => "Lịch {$visit->code} đã bị từ chối, không thể check-out.",
+                'cancelled' => "Lịch {$visit->code} đã bị hủy, không thể check-out.",
+                default => "Chỉ khách đang trong công ty mới được check-out. Trạng thái hiện tại chưa phù hợp.",
+            };
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => $message,
+                    'visit' => $this->kioskVisitPayload($visit, false),
+                ], 422);
+            }
+
+            return redirect()
+                ->route('kiosk.checkin.status', $visit)
+                ->with('error', $message);
+        }
+
+        $visit->update([
+            'status' => 'checked_out',
+            'actual_checkout_at' => now(),
+        ]);
+
+        $badge = Badge::query()
+            ->where('visit_id', $visit->id)
+            ->where('status', 'active')
+            ->first();
+
+        if ($badge !== null) {
+            $badge->update([
+                'status' => 'revoked',
+                'revoked_at' => now(),
+            ]);
+        }
+
+        AccessControlLog::query()->create([
+            'visit_id' => $visit->id,
+            'badge_id' => $badge?->id,
+            'event' => 'CHECK_OUT',
+            'source' => 'kiosk',
+            'meta' => [
+                'visit_code' => $visit->code,
+                'badge_no' => $badge?->badge_no,
+            ],
+        ]);
+
+        AuditLog::query()->create([
+            'user_id' => null,
+            'action' => 'kiosk.checked_out',
+            'entity_type' => 'visit',
+            'entity_id' => (string) $visit->id,
+            'meta' => ['code' => $visit->code],
+        ]);
+
+        $this->notifyHost($visit, 'visit.checked_out', 'Khách đã rời công ty', "Khách của lịch {$visit->code} đã check-out tại kiosk.", 'info');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => "Check-out thành công cho lịch {$visit->code}. Cảm ơn quý khách.",
+                'visit' => $this->kioskVisitPayload($visit->refresh(), false),
+            ]);
+        }
+
+        return redirect()
+            ->route('kiosk.checkin.status', $visit)
+            ->with('status', "Đã check-out cho lịch {$visit->code}.");
+    }
+
     public function status(Request $request, Visit $visit): View
     {
         $visit->load(['visitor', 'hostEmployee.department', 'activeBadge']);
@@ -386,9 +504,9 @@ class KioskController extends Controller
         ];
 
         $statusHints = [
-            'pending' => 'Vui lòng chờ người tiếp khách hoặc lễ tân xác nhận.',
-            'approved' => 'Lịch hẹn đã được duyệt. Bạn có thể xác nhận check-in.',
-            'checked_in' => 'Khách đã check-in trước đó.',
+            'pending' => 'Lịch hẹn chưa được duyệt. Vui lòng chờ lễ tân hoặc người tiếp khách xác nhận.',
+            'approved' => 'Lịch hẹn đã được duyệt và sẵn sàng check-in.',
+            'checked_in' => 'Khách đang trong công ty.',
             'checked_out' => 'Lịch hẹn này đã hoàn tất check-out.',
             'rejected' => 'Yêu cầu đã bị từ chối. Vui lòng liên hệ lễ tân nếu cần hỗ trợ.',
             'cancelled' => 'Lịch hẹn đã bị hủy.',
@@ -483,6 +601,22 @@ class KioskController extends Controller
             });
     }
 
+    private function notifyApprovalAdmins(
+        string $type,
+        string $title,
+        string $message,
+        string $level,
+        Visit $visit
+    ): void {
+        User::query()
+            ->where('is_active', true)
+            ->whereHas('roles', fn ($query) => $query->whereIn('slug', ['super_admin', 'admin']))
+            ->get()
+            ->each(function (User $user) use ($type, $title, $message, $level, $visit): void {
+                $this->createNotification($user, $type, $title, $message, $level, $visit);
+            });
+    }
+
     private function createNotification(
         User $user,
         string $type,
@@ -491,6 +625,8 @@ class KioskController extends Controller
         string $level,
         Visit $visit
     ): void {
+        $approvalActionTypes = ['visit.pending', 'visit.updated', 'kiosk.walk_in_created'];
+
         Notification::query()->create([
             'user_id' => $user->id,
             'type' => $type,
@@ -499,7 +635,9 @@ class KioskController extends Controller
             'message' => $message,
             'entity_type' => 'visit',
             'entity_id' => (string) $visit->id,
-            'action_url' => route('admin.visits.show', $visit),
+            'action_url' => in_array($type, $approvalActionTypes, true)
+                ? route('admin.approvals.index')
+                : route('admin.visits.show', $visit),
             'data' => [
                 'visit_code' => $visit->code,
                 'status' => $visit->status,

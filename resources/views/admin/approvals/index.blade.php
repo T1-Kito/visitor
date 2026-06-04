@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Phê duyệt tiếp khách | Quản lý khách')
-@section('page_title', 'Phê duyệt yêu cầu tiếp khách')
-@section('page_subtitle', 'Xem thông tin, duyệt hoặc từ chối các yêu cầu tiếp khách')
+@section('title', 'Khách cần duyệt | Quản lý khách')
+@section('page_title', 'Khách cần duyệt')
+@section('page_subtitle', 'Duyệt hoặc từ chối yêu cầu tiếp khách được gửi đến bạn')
 
 @push('styles')
 <style>

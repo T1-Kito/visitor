@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasAdminLayoutData;
 use App\Models\AuditLog;
+use App\Models\Employee;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SystemSetting;
@@ -12,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -21,11 +23,6 @@ class SystemAdminController extends Controller
 
     public function rbacIndex(): View
     {
-        $users = User::query()
-            ->with('roles')
-            ->orderBy('id')
-            ->get();
-
         $roles = Role::query()
             ->with('permissions')
             ->withCount('users')
@@ -38,24 +35,73 @@ class SystemAdminController extends Controller
             ->get();
 
         return view('admin.rbac.index', $this->withBase([
-            'users' => $users,
             'roles' => $roles,
             'permissions' => $permissions,
+        ]));
+    }
+
+    public function accountsIndex(): View
+    {
+        $users = User::query()
+            ->with(['roles', 'employeeProfile.department'])
+            ->orderBy('name')
+            ->get();
+
+        $employees = Employee::query()
+            ->with(['department', 'user.roles'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $roles = Role::query()
+            ->whereIn('slug', ['admin', 'receptionist', 'guard', 'employee', 'department_manager', 'security_admin'])
+            ->orderBy('name')
+            ->get();
+        $roleOrder = ['admin', 'receptionist', 'guard', 'employee', 'department_manager', 'security_admin'];
+        $roles = $roles->sortBy(function (Role $role) use ($roleOrder): int {
+            $index = array_search($role->slug, $roleOrder, true);
+
+            return $index === false ? 100 : $index;
+        })->values();
+
+        return view('admin.rbac.accounts', $this->withBase([
+            'users' => $users,
+            'employees' => $employees,
+            'roles' => $roles,
         ]));
     }
 
     public function storeUser(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'employee_id' => ['required', 'exists:employees,id'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
             'role_id' => ['required', 'exists:roles,id'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $employee = Employee::query()->findOrFail((int) $validated['employee_id']);
+        if ($employee->user_id !== null) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', "Nhân viên {$employee->name} đã có tài khoản đăng nhập.");
+        }
+
+        $emailUsedByOtherEmployee = Employee::query()
+            ->where('email', $validated['email'])
+            ->whereKeyNot($employee->id)
+            ->exists();
+        if ($emailUsedByOtherEmployee) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Email đăng nhập này đang thuộc về nhân viên khác.');
+        }
+
         $user = User::query()->create([
-            'name' => $validated['name'],
+            'name' => $employee->name,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'is_active' => (bool) ($validated['is_active'] ?? true),
@@ -63,15 +109,20 @@ class SystemAdminController extends Controller
 
         $role = Role::query()->findOrFail((int) $validated['role_id']);
         $user->roles()->sync([$role->id]);
+        $employee->update([
+            'user_id' => $user->id,
+            'email' => $validated['email'],
+        ]);
 
         $this->logAudit('user.created', 'user', (string) $user->id, [
             'email' => $user->email,
             'role' => $role->slug,
+            'employee_id' => $employee->id,
         ]);
 
         return redirect()
-            ->route('admin.rbac.users.show', $user)
-            ->with('status', "Da tao user {$user->email}.");
+            ->route('admin.rbac.accounts.index')
+            ->with('status', "Đã tạo tài khoản {$user->email} cho nhân viên {$employee->name}.");
     }
 
     public function showUser(User $user): View
@@ -126,6 +177,12 @@ class SystemAdminController extends Controller
         $user->update($payload);
 
         $role = Role::query()->findOrFail((int) $validated['role_id']);
+        if ($role->slug === 'employee' && $user->employeeProfile()->doesntExist()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Role Host phải được gán cho tài khoản đã liên kết với nhân viên nội bộ.');
+        }
+
         $user->roles()->sync([$role->id]);
 
         $this->logAudit('user.updated', 'user', (string) $user->id, [
@@ -167,14 +224,13 @@ class SystemAdminController extends Controller
     {
         $validated = $request->validate([
             'role_name' => ['required', 'string', 'max:100', 'unique:roles,name'],
-            'role_slug' => ['required', 'string', 'max:120', 'regex:/^[a-z0-9_-]+$/', 'unique:roles,slug'],
             'permission_ids' => ['nullable', 'array'],
             'permission_ids.*' => ['integer', 'exists:permissions,id'],
         ]);
 
         $role = Role::query()->create([
             'name' => $validated['role_name'],
-            'slug' => $validated['role_slug'],
+            'slug' => $this->generateRoleSlug($validated['role_name']),
         ]);
 
         $permissionIds = $validated['permission_ids'] ?? [];
@@ -377,6 +433,12 @@ class SystemAdminController extends Controller
         ]);
 
         $role = Role::query()->findOrFail((int) $validated['role_id']);
+        if ($role->slug === 'employee' && $user->employeeProfile()->doesntExist()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Role Host phải được gán cho tài khoản đã liên kết với nhân viên nội bộ.');
+        }
+
         $user->roles()->sync([$role->id]);
 
         AuditLog::query()->create([
@@ -415,6 +477,46 @@ class SystemAdminController extends Controller
         ]);
 
         return redirect()->back()->with('status', "Da cap nhat permissions cho role {$role->name}.");
+    }
+
+    public function updatePermissionMatrix(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'role_ids' => ['required', 'array'],
+            'role_ids.*' => ['integer', 'exists:roles,id'],
+            'matrix' => ['nullable', 'array'],
+            'matrix.*' => ['nullable', 'array'],
+            'matrix.*.*' => ['integer', 'exists:permissions,id'],
+        ]);
+
+        $roleIds = collect($validated['role_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+        $matrix = collect($validated['matrix'] ?? []);
+
+        Role::query()
+            ->whereIn('id', $roleIds)
+            ->get()
+            ->each(function (Role $role) use ($matrix): void {
+                $permissionIds = collect($matrix->get((string) $role->id, $matrix->get($role->id, [])))
+                    ->map(fn ($id) => (int) $id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $role->permissions()->sync($permissionIds);
+
+                AuditLog::query()->create([
+                    'user_id' => auth()->id(),
+                    'action' => 'rbac.permission_matrix_updated',
+                    'entity_type' => 'role',
+                    'entity_id' => (string) $role->id,
+                    'meta' => [
+                        'role' => $role->slug,
+                        'permission_count' => count($permissionIds),
+                    ],
+                ]);
+            });
+
+        return redirect()->back()->with('status', 'Da cap nhat ma tran phan quyen.');
     }
 
     public function auditLogsIndex(Request $request): View
@@ -573,6 +675,22 @@ class SystemAdminController extends Controller
             ->count();
 
         return $adminCount === 0;
+    }
+
+    private function generateRoleSlug(string $name): string
+    {
+        $base = Str::slug(Str::ascii($name), '-');
+        $base = Str::substr($base !== '' ? $base : 'vai-tro', 0, 100);
+        $candidate = $base;
+        $index = 2;
+
+        while (Role::query()->where('slug', $candidate)->exists()) {
+            $suffix = '-'.$index;
+            $candidate = Str::substr($base, 0, 120 - strlen($suffix)).$suffix;
+            $index++;
+        }
+
+        return $candidate;
     }
 
     /**

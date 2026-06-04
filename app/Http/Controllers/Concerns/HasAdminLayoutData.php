@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Notification;
+use App\Models\Employee;
 use App\Models\SystemSetting;
 use App\Models\User;
 
@@ -20,12 +21,24 @@ trait HasAdminLayoutData
         if ($user === null) {
             $user = User::query()->with('roles')->orderBy('id')->first();
         } else {
-            $user->loadMissing('roles');
+            $user->loadMissing(['roles', 'employeeProfile']);
         }
 
         $sidebarMenu = [];
         foreach ($this->adminMenuConfig() as $item) {
-            if ($user !== null && ($item['permission'] === null || $user->hasPermission($item['permission']))) {
+            $canSeeHostApproval = $item['route'] === 'admin.approvals.index'
+                && $user !== null
+                && $user->roles->contains(fn ($role): bool => $role->slug === 'employee')
+                && Employee::query()
+                    ->where(function ($query) use ($user): void {
+                        $query->where('user_id', $user->id);
+
+                        if (trim((string) $user->email) !== '') {
+                            $query->orWhere('email', $user->email);
+                        }
+                    })
+                    ->exists();
+            if ($user !== null && ($item['permission'] === null || $user->hasPermission($item['permission']) || $canSeeHostApproval)) {
                 $sidebarMenu[] = [
                     'label' => $item['label'],
                     'route' => $item['route'],
@@ -68,7 +81,7 @@ trait HasAdminLayoutData
         return [
             ['label' => 'Tổng quan', 'route' => 'admin.dashboard', 'icon' => 'bi-grid-1x2-fill', 'permission' => 'dashboard.view', 'group' => null],
             ['label' => 'Lịch hẹn', 'route' => 'admin.visits.index', 'icon' => 'bi-calendar-check-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
-            ['label' => 'Phê duyệt', 'route' => 'admin.approvals.index', 'icon' => 'bi-patch-check-fill', 'permission' => 'approvals.manage', 'group' => 'VẬN HÀNH'],
+            ['label' => 'Khách cần duyệt', 'route' => 'admin.approvals.index', 'icon' => 'bi-patch-check-fill', 'permission' => 'approvals.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách ra/vào', 'route' => 'admin.access.index', 'icon' => 'bi-arrow-left-right', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Danh sách ra/vào', 'route' => 'admin.access.lists', 'icon' => 'bi-list-check', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách', 'route' => 'admin.visitors.index', 'icon' => 'bi-person-lines-fill', 'permission' => 'visitors.manage', 'group' => 'QUẢN LÝ'],
@@ -82,6 +95,7 @@ trait HasAdminLayoutData
             ['label' => 'Cài đặt', 'route' => 'admin.settings.kiosk', 'icon' => 'bi-sliders', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
             ['label' => 'Cài đặt máy in', 'route' => 'admin.settings.printer', 'icon' => 'bi-printer-fill', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
             ['label' => 'Phân quyền', 'route' => 'admin.rbac.index', 'icon' => 'bi-shield-lock-fill', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
+            ['label' => 'Tài khoản nhân viên', 'route' => 'admin.rbac.accounts.index', 'icon' => 'bi-person-gear', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
             ['label' => 'Nhật ký hệ thống', 'route' => 'admin.audit-logs.index', 'icon' => 'bi-journal-text', 'permission' => 'system.manage', 'group' => 'HỆ THỐNG'],
         ];
     }

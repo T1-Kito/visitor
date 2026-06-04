@@ -11,6 +11,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Notification;
 use App\Models\User;
+use App\Models\UserMobileFavorite;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
@@ -31,8 +32,12 @@ class AdminUiController extends Controller
 {
     use HasAdminLayoutData;
 
-    public function dashboard(Request $request): View
+    public function dashboard(Request $request): View|RedirectResponse
     {
+        if ($this->isMobileRequest($request)) {
+            return redirect()->route('mobile.home');
+        }
+
         $recentFilters = [
             'q' => trim((string) $request->query('recent_q', '')),
             'date' => $request->query('recent_date', now()->toDateString()),
@@ -65,6 +70,208 @@ class AdminUiController extends Controller
             'recentFilters' => $recentFilters,
             'alerts' => $alertsData,
         ]));
+    }
+
+    public function mobileHome(Request $request): View
+    {
+        $user = $request->user();
+        $summary = $this->dashboardSummaryData();
+        $today = now()->toDateString();
+
+        $recentVisits = $this->recentVisitsForDashboard([
+            'q' => '',
+            'date' => $today,
+            'status' => 'all',
+        ])->limit(4)->get();
+
+        $pendingApprovals = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'pending')
+        )->count();
+        $unreadNotifications = $user === null
+            ? 0
+            : Notification::query()->where('user_id', $user->id)->whereNull('read_at')->count();
+
+        $modules = collect([
+            [
+                'key' => 'visits',
+                'label' => 'Lịch hẹn',
+                'hint' => 'Tạo và xem lịch',
+                'icon' => 'bi-calendar-check',
+                'tone' => 'blue',
+                'route' => route('admin.visits.index'),
+                'enabled' => $user?->hasPermission('visits.manage') ?? false,
+            ],
+            [
+                'key' => 'approvals',
+                'label' => 'Khách cần duyệt',
+                'hint' => $pendingApprovals.' yêu cầu',
+                'icon' => 'bi-patch-check',
+                'tone' => 'green',
+                'route' => route('admin.approvals.index'),
+                'enabled' => ($user?->hasPermission('approvals.manage') ?? false) || $pendingApprovals > 0,
+                'count' => $pendingApprovals,
+            ],
+            [
+                'key' => 'checkin',
+                'label' => 'Check-in',
+                'hint' => $summary['pending_checkin'].' chờ vào',
+                'icon' => 'bi-box-arrow-in-right',
+                'tone' => 'cyan',
+                'route' => route('admin.access.index', ['mode' => 'checkin']),
+                'enabled' => $user?->hasPermission('checkin.manage') ?? false,
+                'count' => $summary['pending_checkin'],
+            ],
+            [
+                'key' => 'checkout',
+                'label' => 'Check-out',
+                'hint' => $summary['in_company'].' trong công ty',
+                'icon' => 'bi-box-arrow-left',
+                'tone' => 'purple',
+                'route' => route('admin.access.index', ['mode' => 'checkout']),
+                'enabled' => $user?->hasPermission('checkin.manage') ?? false,
+                'count' => $summary['in_company'],
+            ],
+            [
+                'key' => 'current_visitors',
+                'label' => 'Khách trong công ty',
+                'hint' => 'Danh sách hiện tại',
+                'icon' => 'bi-person-walking',
+                'tone' => 'teal',
+                'route' => route('admin.access.lists', ['type' => 'inside']),
+                'enabled' => $user?->hasPermission('checkin.manage') ?? false,
+            ],
+            [
+                'key' => 'access_logs',
+                'label' => 'Danh sách ra/vào',
+                'hint' => 'Tra cứu lịch sử',
+                'icon' => 'bi-list-check',
+                'tone' => 'orange',
+                'route' => route('admin.access.lists'),
+                'enabled' => $user?->hasPermission('checkin.manage') ?? false,
+            ],
+            [
+                'key' => 'reports',
+                'label' => 'Báo cáo',
+                'hint' => 'Theo dõi dữ liệu',
+                'icon' => 'bi-file-earmark-bar-graph',
+                'tone' => 'slate',
+                'route' => route('admin.reports.index'),
+                'enabled' => $user?->hasPermission('reports.export') ?? false,
+            ],
+            [
+                'key' => 'notifications',
+                'label' => 'Thông báo',
+                'hint' => $unreadNotifications.' chưa đọc',
+                'icon' => 'bi-bell',
+                'tone' => 'rose',
+                'route' => route('admin.notifications.index'),
+                'enabled' => true,
+                'count' => $unreadNotifications,
+            ],
+        ])->filter(fn (array $module): bool => (bool) $module['enabled'])->values();
+
+        $favoriteKeys = $user === null
+            ? collect()
+            : UserMobileFavorite::query()
+                ->where('user_id', $user->id)
+                ->orderBy('sort_order')
+                ->pluck('module_key');
+
+        $favoriteModules = $favoriteKeys->isEmpty()
+            ? $modules
+            : $favoriteKeys
+                ->map(fn (string $key) => $modules->firstWhere('key', $key))
+                ->filter()
+                ->values();
+
+        if ($favoriteModules->isEmpty()) {
+            $favoriteModules = $modules;
+        }
+
+        return view('mobile.home', $this->withBase([
+            'stats' => [
+                'today' => $summary['today_visits'],
+                'pending' => $summary['pending'],
+                'pending_checkin' => $summary['pending_checkin'],
+                'in_company' => $summary['in_company'],
+                'checked_out_today' => $summary['checked_out_today'],
+                'overstay' => $summary['overstay'] ?? 0,
+            ],
+            'modules' => $favoriteModules,
+            'availableModules' => $modules,
+            'favoriteKeys' => $favoriteKeys,
+            'visits' => $this->mapVisitRows($recentVisits),
+            'pendingApprovals' => $pendingApprovals,
+        ]));
+    }
+
+    public function updateMobileFavorites(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return redirect()->route('login');
+        }
+
+        $allowedKeys = $this->mobileModuleKeysForUser($user, $request);
+        $keys = collect($request->input('modules', []))
+            ->filter(fn ($key): bool => is_string($key) && in_array($key, $allowedKeys, true))
+            ->unique()
+            ->values();
+
+        UserMobileFavorite::query()
+            ->where('user_id', $user->id)
+            ->delete();
+
+        $keys->each(function (string $key, int $index) use ($user): void {
+            UserMobileFavorite::query()->create([
+                'user_id' => $user->id,
+                'module_key' => $key,
+                'sort_order' => $index + 1,
+            ]);
+        });
+
+        return redirect()
+            ->route('mobile.home')
+            ->with('status', 'Đã lưu cài đặt yêu thích.');
+    }
+
+    private function mobileModuleKeysForUser(User $user, Request $request): array
+    {
+        $pendingApprovals = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'pending')
+        )->count();
+
+        return collect([
+            'visits' => $user->hasPermission('visits.manage'),
+            'approvals' => $user->hasPermission('approvals.manage') || $pendingApprovals > 0,
+            'checkin' => $user->hasPermission('checkin.manage'),
+            'checkout' => $user->hasPermission('checkin.manage'),
+            'current_visitors' => $user->hasPermission('checkin.manage'),
+            'access_logs' => $user->hasPermission('checkin.manage'),
+            'reports' => $user->hasPermission('reports.export'),
+            'notifications' => true,
+        ])
+            ->filter()
+            ->keys()
+            ->all();
+    }
+
+    private function isMobileRequest(Request $request): bool
+    {
+        $userAgent = strtolower((string) $request->userAgent());
+
+        if ($userAgent === '') {
+            return false;
+        }
+
+        return str_contains($userAgent, 'android')
+            || str_contains($userAgent, 'iphone')
+            || str_contains($userAgent, 'ipad')
+            || str_contains($userAgent, 'ipod')
+            || str_contains($userAgent, 'mobile')
+            || str_contains($userAgent, 'opera mini')
+            || str_contains($userAgent, 'windows phone');
     }
 
     public function dashboardSummary(): JsonResponse
@@ -252,8 +459,8 @@ class AdminUiController extends Controller
             'status' => $visit->status,
             'qr_expires_at' => $visit->qr_expires_at?->toDateTimeString(),
         ]);
-        $this->notifyHost($visit, 'visit.pending', 'Lich hen can phe duyet', "Lich {$visit->code} dang cho ban phe duyet va da co ma QR.", 'warning');
-        $this->notifyUsersWithPermission('approvals.manage', 'visit.pending', 'Co lich hen moi can duyet', "Lich {$visit->code} vua duoc tao, da sinh QR va dang cho phe duyet.", 'warning', $visit);
+        $this->notifyHost($visit, 'visit.pending', 'Lịch hẹn cần bạn duyệt', "Lịch {$visit->code} đang chờ bạn duyệt trước khi lễ tân check-in.", 'warning');
+        $this->notifyApprovalAdmins('visit.pending', 'Có lịch hẹn mới cần duyệt', "Lịch {$visit->code} vừa được tạo và đang chờ host duyệt.", 'warning', $visit);
         $this->scanWatchlistForVisit($visit, 'visit.created');
 
         return redirect()
@@ -355,7 +562,8 @@ class AdminUiController extends Controller
             'new_status' => 'pending',
         ]);
         $this->notifyHost($visit, 'visit.updated', 'Lich hen da cap nhat', "Lich {$visit->code} da cap nhat va can phe duyet lai.", 'warning');
-        $this->notifyUsersWithPermission('approvals.manage', 'visit.updated', 'Lich hen can duyet lai', "Lich {$visit->code} da cap nhat va quay ve cho duyet.", 'warning', $visit);
+        $this->notifyHost($visit, 'visit.updated', 'Lịch hẹn cần duyệt lại', "Lịch {$visit->code} đã cập nhật và đang chờ bạn duyệt lại.", 'warning');
+        $this->notifyApprovalAdmins('visit.updated', 'Lịch hẹn cần duyệt lại', "Lịch {$visit->code} đã cập nhật và quay về trạng thái chờ duyệt.", 'warning', $visit);
 
         return redirect()
             ->route('admin.visits.show', $visit)
@@ -445,107 +653,62 @@ class AdminUiController extends Controller
         }
 
         if ($visit->status === 'pending') {
-            $baseTime = $visit->scheduled_at ?? now();
-            $visit->update([
-                'status' => 'approved',
-                'rejection_reason' => null,
-                'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
-                'qr_expires_at' => $visit->qr_expires_at ?? $baseTime->copy()->addDay(),
-            ]);
-
-            Approval::query()->updateOrCreate(
-                ['visit_id' => $visit->id],
-                [
-                    'approver_user_id' => $this->actingUserId(),
-                    'status' => 'approved',
-                    'note' => 'Tự động duyệt khi gửi email QR cho khách.',
-                    'acted_at' => now(),
-                ]
-            );
-
-            $this->logAudit('approval.auto_approved_on_email', 'visit', (string) $visit->id, [
-                'code' => $visit->code,
-            ]);
+            return redirect()
+                ->route('admin.visits.show', $visit)
+                ->with('error', "Lịch {$visit->code} đang chờ host duyệt. Chỉ gửi mã QR cho khách sau khi lịch đã được duyệt.");
         }
-
-        if (! $visit->qr_token) {
-            $baseTime = $visit->scheduled_at ?? now();
-            $visit->update([
-                'qr_token' => $this->generateQrToken(),
-                'qr_expires_at' => $visit->qr_expires_at ?? $baseTime->copy()->addDay(),
-            ]);
-        }
-
-        $qrSvg = (string) \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
-            ->size(180)
-            ->margin(1)
-            ->errorCorrection('M')
-            ->generate($visit->qr_token);
-        $subject = 'Mã QR lịch hẹn '.$visit->code;
-        $html = view('emails.visit-qr', [
-            'visit' => $visit,
-            'qrSvg' => $qrSvg,
-            'statusUrl' => route('kiosk.checkin.status', $visit),
-        ])->render();
 
         try {
-            Mail::html($html, function ($message) use ($email, $subject) {
-                $message->to($email)->subject($subject);
-            });
+            $sentEmail = $this->sendQrEmailToVisitor($visit);
         } catch (\Throwable $exception) {
             return redirect()
                 ->route('admin.visits.show', $visit)
                 ->with('error', 'Chưa gửi được email: '.$exception->getMessage());
         }
 
-        $this->logAudit('visit.qr_emailed', 'visit', (string) $visit->id, [
-            'code' => $visit->code,
-            'email' => $email,
-        ]);
-
         return redirect()
             ->route('admin.visits.show', $visit)
-            ->with('status', "Đã gửi mã QR lịch {$visit->code} qua Gmail/email cho {$email}.");
+            ->with('status', "Đã gửi mã QR lịch {$visit->code} qua Gmail/email cho {$sentEmail}.");
     }
 
     public function approvalsIndex(): View
     {
         $today = now()->toDateString();
 
-        $pendingVisits = $this->scopeVisitsForDepartmentManager(
+        $pendingVisits = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()->where('status', 'pending')
         )
             ->orderByDesc('created_at')
             ->orderByDesc('scheduled_at')
             ->get();
 
-        $approvedVisits = $this->scopeVisitsForDepartmentManager(
+        $approvedVisits = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()->where('status', 'approved')
         )
             ->orderByDesc('updated_at')
             ->limit(30)
             ->get();
 
-        $rejectedVisits = $this->scopeVisitsForDepartmentManager(
+        $rejectedVisits = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()->where('status', 'rejected')
         )
             ->orderByDesc('updated_at')
             ->limit(20)
             ->get();
 
-        $approvedToday = $this->scopeVisitsForDepartmentManager(
+        $approvedToday = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()
                 ->where('status', 'approved')
                 ->whereDate('updated_at', $today)
         )->count();
 
-        $rejectedToday = $this->scopeVisitsForDepartmentManager(
+        $rejectedToday = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()
                 ->where('status', 'rejected')
                 ->whereDate('updated_at', $today)
         )->count();
 
-        $todayVisits = $this->scopeVisitsForDepartmentManager(
+        $todayVisits = $this->scopeVisitsForApproval(
             $this->baseVisitQuery()->whereDate('scheduled_at', $today)
         )->count();
 
@@ -634,7 +797,24 @@ class AdminUiController extends Controller
         ]);
         $this->notifyUsersWithPermission('checkin.manage', 'approval.approved', 'Lịch đã duyệt, sẵn sàng làm thủ tục vào', "Lịch {$visit->code} đã được duyệt và mã QR đã sẵn sàng.", 'success', $visit);
 
-        return redirect()->back()->with('status', "Đã duyệt lịch {$visit->code}. Mã QR đã sẵn sàng.");
+        $statusMessage = "Đã duyệt lịch {$visit->code}. Mã QR đã sẵn sàng.";
+        $errorMessage = null;
+
+        try {
+            $sentEmail = $this->sendQrEmailToVisitor($visit);
+            $statusMessage .= $sentEmail
+                ? " Đã gửi mã QR cho khách qua {$sentEmail}."
+                : ' Khách chưa có email hợp lệ nên hệ thống chưa gửi được mã QR.';
+        } catch (\Throwable $exception) {
+            $errorMessage = 'Lịch đã được duyệt nhưng chưa gửi được email QR: '.$exception->getMessage();
+        }
+
+        $redirect = redirect()->back()->with('status', $statusMessage);
+        if ($errorMessage !== null) {
+            $redirect->with('error', $errorMessage);
+        }
+
+        return $redirect;
     }
 
     public function rejectVisit(Request $request, Visit $visit): RedirectResponse
@@ -2177,6 +2357,7 @@ XML;
             'in_company' => Visit::query()->where('status', 'checked_in')->count(),
             'pending' => Visit::query()->where('status', 'pending')->count(),
             'approved' => Visit::query()->where('status', 'approved')->count(),
+            'pending_checkin' => Visit::query()->where('status', 'approved')->count(),
             'checked_out_today' => Visit::query()
                 ->where('status', 'checked_out')
                 ->whereDate('actual_checkout_at', $today)
@@ -2365,33 +2546,89 @@ XML;
         ];
     }
 
-    private function scopeVisitsForDepartmentManager(Builder $query): Builder
+    private function scopeVisitsForApproval(Builder $query): Builder
     {
         /** @var User|null $user */
         $user = auth()->user();
-        if ($user === null || ! $user->roles()->where('slug', 'department_manager')->exists()) {
-            return $query;
-        }
-
-        $departmentId = $user->employeeProfile?->department_id;
-        if ($departmentId === null) {
+        if ($user === null) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->whereHas('hostEmployee', fn (Builder $employeeQuery): Builder => $employeeQuery->where('department_id', $departmentId));
+        $user->loadMissing(['roles', 'employeeProfile']);
+
+        if ($this->userCanManageAllApprovals($user)) {
+            return $query;
+        }
+
+        if (! $this->userCanApproveOwnHostVisits($user)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $hostEmployeeIds = $this->hostEmployeeIdsForUser($user);
+        if ($hostEmployeeIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('host_employee_id', $hostEmployeeIds);
     }
 
     private function canActOnVisit(Visit $visit): bool
     {
         /** @var User|null $user */
         $user = auth()->user();
-        if ($user === null || ! $user->roles()->where('slug', 'department_manager')->exists()) {
+        if ($user === null) {
+            return false;
+        }
+
+        $user->loadMissing(['roles', 'employeeProfile']);
+        if ($this->userCanManageAllApprovals($user)) {
             return true;
         }
 
-        $visit->loadMissing('hostEmployee');
+        if (! $this->userCanApproveOwnHostVisits($user)) {
+            return false;
+        }
 
-        return $user->employeeProfile?->department_id === $visit->hostEmployee?->department_id;
+        $hostEmployeeIds = $this->hostEmployeeIdsForUser($user);
+        if ($hostEmployeeIds === []) {
+            return false;
+        }
+
+        return in_array((int) $visit->host_employee_id, $hostEmployeeIds, true);
+    }
+
+    private function userCanManageAllApprovals(User $user): bool
+    {
+        $user->loadMissing('roles');
+
+        return $user->roles->contains(fn ($role): bool => in_array($role->slug, ['super_admin', 'admin'], true));
+    }
+
+    private function userCanApproveOwnHostVisits(User $user): bool
+    {
+        $user->loadMissing('roles');
+
+        return $user->roles->contains(fn ($role): bool => $role->slug === 'employee');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function hostEmployeeIdsForUser(User $user): array
+    {
+        $email = trim((string) $user->email);
+
+        return Employee::query()
+            ->where(function (Builder $query) use ($user, $email): void {
+                $query->where('user_id', $user->id);
+
+                if ($email !== '') {
+                    $query->orWhere('email', $email);
+                }
+            })
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
     }
 
     /**
@@ -2931,6 +3168,51 @@ XML;
         }
     }
 
+    private function sendQrEmailToVisitor(Visit $visit): ?string
+    {
+        $visit->loadMissing(['visitor', 'hostEmployee.department']);
+
+        $email = trim((string) ($visit->visitor?->email ?? ''));
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return null;
+        }
+
+        if (! $visit->qr_token) {
+            $baseTime = $visit->scheduled_at ?? now();
+            if ($baseTime->lt(now())) {
+                $baseTime = now();
+            }
+
+            $visit->update([
+                'qr_token' => $this->generateQrToken(),
+                'qr_expires_at' => $visit->qr_expires_at ?? $baseTime->copy()->addDay(),
+            ]);
+        }
+
+        $qrSvg = (string) \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(180)
+            ->margin(1)
+            ->errorCorrection('M')
+            ->generate($visit->qr_token);
+        $subject = 'Mã QR lịch hẹn '.$visit->code;
+        $html = view('emails.visit-qr', [
+            'visit' => $visit,
+            'qrSvg' => $qrSvg,
+            'statusUrl' => route('kiosk.checkin.status', $visit),
+        ])->render();
+
+        Mail::html($html, function ($message) use ($email, $subject): void {
+            $message->to($email)->subject($subject);
+        });
+
+        $this->logAudit('visit.qr_emailed', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+            'email' => $email,
+        ]);
+
+        return $email;
+    }
+
     private function notifyUsersWithPermission(
         string $permission,
         string $type,
@@ -2948,6 +3230,22 @@ XML;
             });
     }
 
+    private function notifyApprovalAdmins(
+        string $type,
+        string $title,
+        string $message,
+        string $level,
+        Visit $visit
+    ): void {
+        User::query()
+            ->where('is_active', true)
+            ->whereHas('roles', fn ($query) => $query->whereIn('slug', ['super_admin', 'admin']))
+            ->get()
+            ->each(function (User $user) use ($type, $title, $message, $level, $visit): void {
+                $this->createNotification($user, $type, $title, $message, $level, $visit);
+            });
+    }
+
     private function createNotification(
         User $user,
         string $type,
@@ -2956,6 +3254,8 @@ XML;
         string $level,
         Visit $visit
     ): void {
+        $approvalActionTypes = ['visit.pending', 'visit.updated', 'kiosk.walk_in_created'];
+
         Notification::query()->create([
             'user_id' => $user->id,
             'type' => $type,
@@ -2964,7 +3264,9 @@ XML;
             'message' => $message,
             'entity_type' => 'visit',
             'entity_id' => (string) $visit->id,
-            'action_url' => route('admin.visits.show', $visit),
+            'action_url' => in_array($type, $approvalActionTypes, true)
+                ? route('admin.approvals.index')
+                : route('admin.visits.show', $visit),
             'data' => [
                 'visit_code' => $visit->code,
                 'status' => $visit->status,

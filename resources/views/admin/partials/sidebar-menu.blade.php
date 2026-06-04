@@ -15,7 +15,8 @@
             @php
                 $routeName = $item['route'];
                 $activePattern = preg_replace('/\.index$/', '.*', $routeName);
-                $isActive = $routeName === 'admin.access.index'
+                $isExactOnly = in_array($routeName, ['admin.access.index', 'admin.rbac.index'], true);
+                $isActive = $isExactOnly
                     ? request()->routeIs($routeName)
                     : (request()->routeIs($routeName) || request()->routeIs($activePattern));
             @endphp

@@ -11,6 +11,7 @@ Route::get('/kiosk', [KioskController::class, 'index'])->name('kiosk.index');
 Route::get('/kiosk/employees/search', [KioskController::class, 'searchEmployees'])->name('kiosk.employees.search');
 Route::post('/kiosk/checkin/manual', [KioskController::class, 'storeWalkIn'])->name('kiosk.checkin.manual');
 Route::post('/kiosk/checkin/scan-qr', [KioskController::class, 'scanQr'])->name('kiosk.checkin.scan-qr');
+Route::post('/kiosk/checkout/scan-qr', [KioskController::class, 'scanCheckoutQr'])->name('kiosk.checkout.scan-qr');
 Route::get('/kiosk/checkin/status/{visit}', [KioskController::class, 'status'])->name('kiosk.checkin.status');
 Route::post('/kiosk/checkin/{visit}/confirm', [KioskController::class, 'confirmCheckin'])->name('kiosk.checkin.confirm');
 Route::post('/kiosk/walk-in', [KioskController::class, 'storeWalkIn'])->name('kiosk.walk-in.store');
@@ -41,6 +42,13 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:dashboard.view')
         ->name('admin.dashboard.events');
 
+    Route::get('/m', [AdminUiController::class, 'mobileHome'])
+        ->middleware('permission:dashboard.view')
+        ->name('mobile.home');
+    Route::post('/m/favorites', [AdminUiController::class, 'updateMobileFavorites'])
+        ->middleware('permission:dashboard.view')
+        ->name('mobile.favorites.update');
+
     Route::get('/visits', [AdminUiController::class, 'visitsIndex'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.index');
@@ -70,16 +78,12 @@ Route::middleware('auth')->group(function (): void {
         ->name('admin.visits.send-qr-email');
 
     Route::get('/approvals', [AdminUiController::class, 'approvalsIndex'])
-        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.index');
     Route::post('/approvals/{visit}/approve', [AdminUiController::class, 'approveVisit'])
-        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.approve');
     Route::post('/approvals/{visit}/reject', [AdminUiController::class, 'rejectVisit'])
-        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.reject');
     Route::post('/approvals/{visit}/wait', [AdminUiController::class, 'waitVisit'])
-        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.wait');
 
     Route::get('/access', [AdminUiController::class, 'accessIndex'])
@@ -248,6 +252,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/rbac', [SystemAdminController::class, 'rbacIndex'])
         ->middleware('permission:system.manage')
         ->name('admin.rbac.index');
+    Route::get('/rbac/accounts', [SystemAdminController::class, 'accountsIndex'])
+        ->middleware('permission:system.manage')
+        ->name('admin.rbac.accounts.index');
     Route::post('/rbac/users', [SystemAdminController::class, 'storeUser'])
         ->middleware('permission:system.manage')
         ->name('admin.rbac.users.store');
@@ -284,6 +291,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/rbac/roles/{role}/permissions', [SystemAdminController::class, 'updateRolePermissions'])
         ->middleware('permission:system.manage')
         ->name('admin.rbac.role-permissions.update');
+    Route::post('/rbac/permission-matrix', [SystemAdminController::class, 'updatePermissionMatrix'])
+        ->middleware('permission:system.manage')
+        ->name('admin.rbac.permission-matrix.update');
     Route::post('/rbac/permissions', [SystemAdminController::class, 'storePermission'])
         ->middleware('permission:system.manage')
         ->name('admin.rbac.permissions.store');

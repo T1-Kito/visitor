@@ -46,33 +46,29 @@ a {
 }
 
 .sidebar-panel {
-    width: 292px;
+    width: 268px;
     flex-shrink: 0;
-    color: #d7e7f8;
-    padding: 1.25rem;
+    color: #1f2f46;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
-    background:
-        radial-gradient(circle at 20% 0%, rgba(12, 180, 216, 0.22), transparent 30%),
-        linear-gradient(180deg, #071421 0%, #0d2034 55%, #10283f 100%);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 0.85rem;
+    background: linear-gradient(180deg, #f6fbff 0%, #eef6fc 100%);
+    border-right: 1px solid #d8e6f3;
+    box-shadow: 10px 0 32px rgba(17, 39, 68, 0.045);
 }
 
 .brand-block {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
-    padding: 0.9rem;
-
-
-
-
+    justify-content: center;
+    min-height: 92px;
+    padding: 0.7rem 0.5rem 1rem;
 }
 
 .brand-badge {
-    width: 48px;
-    height: 48px;
+    width: 68px;
+    height: 68px;
     border-radius: 18px;
     display: grid;
     place-items: center;
@@ -87,27 +83,31 @@ a {
 .brand-badge.has-logo {
     background: transparent;
     box-shadow: none;
-    overflow: visible;
+    overflow: hidden;
+    border-radius: 0;
 }
 
-.brand-badge.has-logo img {
+.brand-badge img {
+    max-width: 100%;
+    max-height: 100%;
     width: 100%;
     height: 100%;
     object-fit: contain;
+    display: block;
 }
 
 .brand-title {
     margin: 0;
     font-family: "Plus Jakarta Sans", sans-serif;
-    font-size: 1rem;
-    font-weight: 800;
-    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #10233d;
 }
 
 .brand-subtitle {
     margin: 0.12rem 0 0;
-    font-size: 0.76rem;
-    color: #9fbada;
+    font-size: 0.68rem;
+    color: #7a8ea8;
 }
 
 .sidebar-nav {
@@ -117,69 +117,102 @@ a {
 }
 
 .sidebar-group-label {
-    margin: 0.9rem 0 0.3rem 0.82rem;
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
+    margin: 0.75rem 0 0.25rem 0.75rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.28);
+    color: #99a8ba;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 0.72rem;
-    padding: 0.76rem 0.82rem;
-    border-radius: 16px;
-    color: #b9c9dd;
+    gap: 0.62rem;
+    padding: 0.62rem 0.75rem;
+    border-radius: 12px;
+    color: #4b6078;
     text-decoration: none;
-    font-weight: 700;
+    font-size: 0.86rem;
+    font-weight: 500;
     transition: 0.18s ease;
 }
 
 .sidebar-link i {
-    width: 22px;
-    font-size: 1.03rem;
-    color: #8eb3d9;
+    width: 20px;
+    font-size: 0.95rem;
+    color: #6f86a1;
 }
 
 .sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: #eaf4ff;
+    color: #146bd7;
 }
 
 .sidebar-link.active {
-    color: #fff;
-    background: linear-gradient(135deg, rgba(20, 107, 215, 0.95), rgba(12, 180, 216, 0.9));
-    box-shadow: 0 16px 36px rgba(7, 20, 33, 0.28);
+    color: #0d5fc7;
+    background: #dceeff;
+    box-shadow: inset 3px 0 0 #146bd7;
 }
 
 .sidebar-link.active i {
-    color: #fff;
+    color: #146bd7;
 }
 
 .sidebar-footer {
     margin-top: auto;
-    padding: 1rem;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
+    padding: 0.75rem;
+    border-radius: 18px;
+    border: 1px solid #dce9f6;
+    background: rgba(255, 255, 255, 0.74);
+    box-shadow: 0 12px 26px rgba(19, 45, 72, 0.06);
 }
 
-.sidebar-footer-label {
-    margin: 0;
-    color: #8eb3d9;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 800;
+.sidebar-account {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
 }
 
-.sidebar-footer-value {
-    margin: 0.3rem 0 0;
-    color: #fff;
-    font-weight: 700;
+.sidebar-user-avatar {
+    width: 34px;
+    height: 34px;
     font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.sidebar-account-meta {
+    min-width: 0;
+}
+
+.sidebar-account .user-name,
+.sidebar-account .user-role {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-logout {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-top: 0.65rem;
+    padding: 0.56rem 0.75rem;
+    border: 1px solid #f5b9c0;
+    border-radius: 14px;
+    color: #c83245;
+    background: #fff7f8;
+    font-size: 0.86rem;
+    font-weight: 500;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.sidebar-logout:hover {
+    border-color: #ef8f9b;
+    background: #fff1f3;
+    transform: translateY(-1px);
 }
 
 .content-panel {
@@ -448,7 +481,7 @@ a {
     margin-top: 0.55rem;
     color: rgba(255, 255, 255, 0.78);
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .metric-blue {
@@ -1912,6 +1945,12 @@ a {
     background: #f8fbff;
 }
 
+.mobile-sidebar .offcanvas-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
 @media (max-width: 1199.98px) {
     .gate-action-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2967,7 +3006,7 @@ a {
 }
 
 .sidebar-panel::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.18);
+    background: #cbd8e7;
     border-radius: 999px;
 }
 
@@ -3393,15 +3432,15 @@ a {
     display: block;
     color: #64748b;
     font-size: .82rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .resource-stat strong {
     display: block;
     color: #0b1f3a;
     font-size: 1.8rem;
-    font-weight: 900;
-    letter-spacing: -.04em;
+    font-weight: 600;
+    letter-spacing: 0;
 }
 
 .resource-card {
@@ -3457,6 +3496,14 @@ a {
     border-radius: 15px;
 }
 
+.resource-toolbar .btn,
+.resource-footer .btn,
+.resource-modal .btn,
+.resource-modal .modal-title,
+.resource-modal .form-label {
+    font-weight: 500;
+}
+
 .resource-table {
     width: 100%;
     border-collapse: separate;
@@ -3467,7 +3514,7 @@ a {
     padding: .9rem 1.15rem;
     color: #6f88a4;
     font-size: .72rem;
-    font-weight: 900;
+    font-weight: 600;
     text-transform: uppercase;
     background: #fbfdff;
     border-bottom: 1px solid #edf3fb;
@@ -3503,13 +3550,13 @@ a {
     border-radius: 16px;
     color: #0b6fe8;
     background: #eaf4ff;
-    font-weight: 900;
+    font-weight: 600;
 }
 
 .resource-name {
     display: block;
     color: #0b1f3a;
-    font-weight: 900;
+    font-weight: 600;
     text-decoration: none;
 }
 
@@ -3528,7 +3575,7 @@ a {
     border-radius: 999px;
     color: #146bd7;
     background: #edf5ff;
-    font-weight: 800;
+    font-weight: 500;
 }
 
 .resource-actions {
@@ -3740,6 +3787,36 @@ a {
 .topbar-right .btn {
     font-weight: 600;
     letter-spacing: 0;
+}
+
+.sidebar-panel .brand-block {
+    min-height: 96px;
+    overflow: hidden;
+}
+
+.sidebar-panel .brand-badge {
+    width: 72px;
+    height: 72px;
+    max-width: 72px;
+    max-height: 72px;
+    flex: 0 0 72px;
+    overflow: hidden;
+}
+
+.sidebar-panel .brand-badge.has-logo {
+    display: grid;
+    place-items: center;
+    background: transparent;
+    box-shadow: none;
+}
+
+.sidebar-panel .brand-badge.has-logo img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 .topbar-right .btn:not(.btn-brand):not(.btn-soft-danger) {

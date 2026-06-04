@@ -128,53 +128,64 @@
     padding: 1.25rem;
     position: relative;
     overflow: hidden;
-    color: #fff;
+    color: #10233d;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #e1ebf6;
+    box-shadow: 0 10px 28px rgba(17, 39, 68, 0.045);
 }
 
 .db-metric::after {
     content: '';
     position: absolute;
-    right: -30px; bottom: -30px;
-    width: 110px; height: 110px;
+    right: -34px; bottom: -34px;
+    width: 104px; height: 104px;
     border-radius: 50%;
-    border: 24px solid rgba(255,255,255,0.1);
+    background: var(--db-metric-soft);
+    z-index: 0;
 }
 
-.db-metric-blue   { background: linear-gradient(135deg, #1565c0, #1976d2); }
-.db-metric-cyan   { background: linear-gradient(135deg, #00838f, #0097a7); }
-.db-metric-amber  { background: linear-gradient(135deg, #e65100, #f57c00); }
-.db-metric-red    { background: linear-gradient(135deg, #b71c1c, #c62828); }
-.db-metric-slate  { background: linear-gradient(135deg, #455a64, #546e7a); }
+.db-metric > * {
+    position: relative;
+    z-index: 1;
+}
+
+.db-metric-blue   { --db-metric-color: #146bd7; --db-metric-soft: #eaf4ff; }
+.db-metric-cyan   { --db-metric-color: #078b82; --db-metric-soft: #e8fbf8; }
+.db-metric-amber  { --db-metric-color: #d97706; --db-metric-soft: #fff4e5; }
+.db-metric-red    { --db-metric-color: #c83245; --db-metric-soft: #fff0f2; }
+.db-metric-slate  { --db-metric-color: #526b7a; --db-metric-soft: #eef4f7; }
 
 .db-metric-label {
     font-size: 0.7rem;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
-    opacity: 0.82;
+    letter-spacing: 0.04em;
+    color: #7187a3;
     margin-bottom: 0.55rem;
 }
 
 .db-metric-value {
     font-family: "Plus Jakarta Sans", sans-serif;
-    font-weight: 800;
+    font-weight: 650;
     font-size: 2.4rem;
-    letter-spacing: -0.05em;
+    letter-spacing: 0;
     line-height: 1;
     margin-bottom: 0.4rem;
+    color: var(--db-metric-color);
 }
 
 .db-metric-note {
     font-size: 0.75rem;
-    opacity: 0.72;
-    font-weight: 600;
+    color: #7187a3;
+    font-weight: 500;
 }
 
 .db-metric-icon {
     position: absolute;
     right: 1.1rem; top: 1.1rem;
     width: 42px; height: 42px;
-    background: rgba(255,255,255,0.15);
+    background: var(--db-metric-soft);
+    color: var(--db-metric-color);
     border-radius: 14px;
     display: grid;
     place-items: center;
@@ -556,10 +567,10 @@
     </a>
 </div>
 
-{{-- TABLE + ALERTS --}}
+{{-- RECENT VISITS --}}
 <div class="row g-3">
 
-    <div class="col-xl-8">
+    <div class="col-12">
         <div class="db-card">
             <div class="db-card-head">
                 <div>
@@ -657,54 +668,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-
-    <div class="col-xl-4">
-        <div class="db-card h-100 d-flex flex-column">
-            <div class="db-card-head">
-                <div>
-                    <h3>Cảnh báo ca trực</h3>
-                    <p>Ưu tiên các việc cần xử lý ngay.</p>
-                </div>
-                <span class="db-alert-badge">
-                    <i class="bi bi-exclamation-circle"></i>
-                    {{ count($alerts) }} cảnh báo
-                </span>
-            </div>
-
-            <div style="flex:1;">
-                @forelse ($alerts as $alert)
-                    @php
-                        $level = $alert['level'] ?? 'warning';
-                        $title = $alert['title'] ?? '';
-                        $msg   = $alert['message'] ?? '';
-                        $time  = $alert['time'] ?? '';
-                    @endphp
-                    <div class="db-alert-item">
-                        <div class="db-alert-dot {{ $level }}"></div>
-                        <div style="flex:1;min-width:0;">
-                            <div class="db-alert-title {{ $level }}">{{ $title }}</div>
-                            <div class="db-alert-msg">{{ $msg }}</div>
-                        </div>
-                        @if ($time)
-                            <div class="db-alert-time">{{ $time }}</div>
-                        @endif
-                    </div>
-                @empty
-                    <div class="db-alert-item">
-                        <div class="db-alert-dot info"></div>
-                        <div>
-                            <div class="db-alert-title" style="color:#3b82f6">Tất cả ổn</div>
-                            <div class="db-alert-msg">Không có cảnh báo bất thường trong ca trực hiện tại.</div>
-                        </div>
-                    </div>
-                @endforelse
-            </div>
-
-            <a class="db-view-all" href="{{ route('admin.alerts.index') }}">
-                Xem tất cả cảnh báo <i class="bi bi-arrow-right"></i>
-            </a>
         </div>
     </div>
 

@@ -112,15 +112,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
             </div>
             <div class="modal-body">
-                <div class="resource-form-grid">
-                    <div>
-                        <label class="form-label">Mã phòng ban <span class="text-danger">*</span></label>
-                        <input class="form-control" name="code" value="{{ old('code') }}" placeholder="Ví dụ: HR" required>
-                    </div>
-                    <div>
-                        <label class="form-label">Tên phòng ban <span class="text-danger">*</span></label>
-                        <input class="form-control" name="name" value="{{ old('name') }}" placeholder="Nhân sự" required>
-                    </div>
+                <div>
+                    <label class="form-label">Tên phòng ban <span class="text-danger">*</span></label>
+                    <input class="form-control" name="name" value="{{ old('name') }}" placeholder="Nhân sự" required>
+                    <div class="form-text">Mã phòng ban sẽ được hệ thống tự sinh từ tên phòng ban.</div>
                 </div>
             </div>
             <div class="modal-footer">

@@ -739,25 +739,37 @@
         }
 
         .kiosk-modal-backdrop.is-open { display: grid; }
-        .kiosk-modal { width: min(560px, 100%); border: 1px solid #dbe8f6; border-radius: 28px; background: #fff; box-shadow: 0 28px 80px rgba(8,28,52,.24); overflow: hidden; }
-        .kiosk-modal-head { display: flex; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.35rem; background: linear-gradient(135deg, #eff6ff, #f8fdff); border-bottom: 1px solid #e4edf8; }
-        .kiosk-modal-title { display: flex; gap: .85rem; align-items: center; }
-        .kiosk-modal-mark { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 18px; color: #0f6bdc; background: #dbeafe; font-size: 1.45rem; }
-        .kiosk-modal-title h3 { margin: 0; color: var(--kiosk-ink); font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.35rem; font-weight: 800; }
-        .kiosk-modal-title p { margin: .25rem 0 0; color: var(--kiosk-muted); }
-        .kiosk-modal-close { width: 38px; height: 38px; border: 1px solid #dbe8f6; border-radius: 14px; background: #fff; color: #526b87; }
-        .kiosk-modal-body { padding: 1.25rem 1.35rem 1.35rem; }
-        .kiosk-modal-status { display: inline-flex; align-items: center; gap: .45rem; margin-bottom: 1rem; padding: .5rem .75rem; border-radius: 999px; color: #b45309; background: #fff3cd; font-weight: 800; }
+        .kiosk-modal { width: min(760px, 100%); border: 1px solid #dbe8f6; border-radius: 30px; background: #fff; box-shadow: 0 34px 90px rgba(8,28,52,.28); overflow: hidden; }
+        .kiosk-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.65rem 1.9rem 1rem; background: #fff; }
+        .kiosk-modal-title { display: block; }
+        .kiosk-modal-mark { display: none; }
+        .kiosk-modal-title h3 { margin: 0; color: var(--kiosk-ink); font-family: "Plus Jakarta Sans", sans-serif; font-size: clamp(1.55rem, 2vw, 2rem); font-weight: 650; letter-spacing: -.02em; }
+        .kiosk-modal-title p { display: none; }
+        .kiosk-modal-close { width: 48px; height: 48px; border: 1px solid #dbe8f6; border-radius: 999px; background: #fff; color: #526b87; font-size: 1.2rem; }
+        .kiosk-modal-body { padding: .75rem 1.9rem 1.9rem; }
+        .kiosk-modal-status { display: none; }
         .kiosk-modal-status.is-approved,.kiosk-modal-status.is-checked_in { color: #047857; background: #dcfce7; }
+        .kiosk-modal-status.is-checked_out { color: #0f6bdc; background: #dbeafe; }
         .kiosk-modal-status.is-rejected,.kiosk-modal-status.is-cancelled { color: #be123c; background: #ffe4e6; }
-        .kiosk-modal-grid { display: grid; gap: .65rem; }
-        .kiosk-modal-row { display: flex; justify-content: space-between; gap: 1rem; padding: .72rem .85rem; border: 1px solid #dbe8f6; border-radius: 15px; background: #fbfdff; color: var(--kiosk-muted); }
-        .kiosk-modal-row strong { color: var(--kiosk-ink); text-align: right; }
+        .kiosk-modal-alert { display: grid; grid-template-columns: 86px 1fr; gap: 1rem; align-items: center; margin-bottom: 1.3rem; padding: 1.08rem 1.15rem; border-radius: 22px; border: 1px solid #dbeafe; background: #eff6ff; color: #1d4ed8; }
+        .kiosk-modal-alert i { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 999px; background: rgba(255,255,255,.68); font-size: 2rem; }
+        .kiosk-modal-alert strong { display: block; color: inherit; font-size: 1.1rem; font-weight: 650; }
+        .kiosk-modal-alert span { display: block; margin-top: .38rem; color: #142945; font-size: .96rem; line-height: 1.5; }
+        .kiosk-modal-alert.is-success { border-color: #bbf7d0; background: #ecfdf5; color: #047857; }
+        .kiosk-modal-alert.is-warning { border-color: #fde68a; background: #fffbeb; color: #b45309; }
+        .kiosk-modal-alert.is-danger { border-color: #fecaca; background: #fff1f2; color: #be123c; }
+        .kiosk-modal-grid { display: grid; gap: 0; border: 1px solid #dbe8f6; border-radius: 20px; overflow: hidden; background: #fff; }
+        .kiosk-modal-row { display: grid; grid-template-columns: 34px minmax(130px, 1fr) minmax(180px, 1.4fr); align-items: center; gap: .85rem; padding: .9rem 1rem; border-bottom: 1px solid #e4edf8; background: #fbfdff; color: var(--kiosk-muted); }
+        .kiosk-modal-row:last-child { border-bottom: 0; }
+        .kiosk-modal-row i { color: #617895; font-size: 1.1rem; text-align: center; }
+        .kiosk-modal-row strong { color: var(--kiosk-ink); text-align: right; font-size: .98rem; font-weight: 600; }
         .kiosk-modal-qr { display: none; place-items: center; margin-bottom: 1rem; padding: 1rem; border: 1px solid #dbe8f6; border-radius: 20px; background: #f8fbff; }
         .kiosk-modal-qr.has-qr { display: grid; }
         .kiosk-modal-qr svg { width: 150px; height: 150px; }
-        .kiosk-modal-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 1rem; }
-        .kiosk-modal-actions .btn { min-height: 46px; border-radius: 15px; font-weight: 800; }
+        .kiosk-modal-actions { display: grid; grid-template-columns: 1fr; gap: .75rem; margin-top: 1.25rem; }
+        .kiosk-modal-actions .btn { min-height: 54px; border-radius: 16px; font-weight: 650; }
+        .kiosk-modal-actions .btn-outline-primary { border-color: #071f3d; color: #fff; background: #071f3d; }
+        .kiosk-modal-actions .btn-outline-primary:hover { border-color: #0b2a50; color: #fff; background: #0b2a50; }
 
         @media (max-width: 1180px) {
             .kiosk-main { grid-template-columns: 1fr; }
@@ -1221,8 +1233,8 @@
             <aside class="kiosk-side">
                 <section class="kiosk-card kiosk-side-card">
                     <div class="kiosk-side-title">
-                        <h2>Tra cứu / Check-in</h2>
-                        <p>Quét QR hoặc nhập mã lịch hẹn để check-in.</p>
+                        <h2 id="kioskLookupHeading">Check-in trực tiếp</h2>
+                        <p id="kioskLookupHelp">Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.</p>
                     </div>
 
                     <div class="kiosk-qr-box qr-camera-frame" id="kioskQrFrame">
@@ -1238,17 +1250,24 @@
                         <span id="kioskQrStatus">Nếu không có mã QR, khách có thể nhập mã lịch hẹn bên dưới.</span>
                     </div>
 
-                    <div class="kiosk-side-divider">Hoặc nhập mã lịch hẹn</div>
+                    <div class="kiosk-side-divider" id="kioskLookupDivider">Hoặc nhập mã check-in</div>
 
-                    <form id="kioskLookupForm" method="post" action="{{ route('kiosk.checkin.scan-qr') }}">
+                    <form
+                        id="kioskLookupForm"
+                        method="post"
+                        action="{{ route('kiosk.checkin.scan-qr') }}"
+                        data-checkin-url="{{ route('kiosk.checkin.scan-qr') }}"
+                        data-checkout-url="{{ route('kiosk.checkout.scan-qr') }}"
+                    >
                         @csrf
+                        <input type="hidden" id="kioskLookupMode" name="mode" value="checkin">
                         <div class="kiosk-input-wrap mb-3">
                             <i class="bi bi-calendar2-check"></i>
                             <input class="form-control" id="kioskQrInput" name="qr_token" placeholder="Nhập mã lịch hẹn hoặc mã QR">
                         </div>
-                        <button class="btn kiosk-submit w-100" type="submit">
+                        <button class="btn kiosk-submit w-100" type="submit" id="kioskLookupSubmit">
                             <i class="bi bi-search me-1"></i>
-                            Kiểm tra mã
+                            Check-in ngay
                         </button>
                     </form>
                 </section>
@@ -1303,6 +1322,13 @@
                 <div class="kiosk-modal-status" id="kioskModalStatus">
                     <i class="bi bi-hourglass-split"></i>
                     <span>Đang kiểm tra</span>
+                </div>
+                <div class="kiosk-modal-alert" id="kioskModalAlert">
+                    <i class="bi bi-info-circle"></i>
+                    <div>
+                        <strong>Thông báo</strong>
+                        <span>Đang kiểm tra mã lịch hẹn.</span>
+                    </div>
                 </div>
                 <div class="kiosk-modal-qr" id="kioskModalQr"></div>
                 <div class="kiosk-modal-grid" id="kioskModalDetails"></div>
@@ -1402,18 +1428,73 @@
 
         const lookupForm = document.getElementById('kioskLookupForm');
         const lookupInput = document.getElementById('kioskQrInput');
+        const lookupSubmitButton = document.getElementById('kioskLookupSubmit');
+        const lookupModeInput = document.getElementById('kioskLookupMode');
+        const lookupHeading = document.getElementById('kioskLookupHeading');
+        const lookupHelp = document.getElementById('kioskLookupHelp');
+        const lookupDivider = document.getElementById('kioskLookupDivider');
         const registerForm = document.getElementById('kioskRegisterForm');
         const visitorNameInput = document.getElementById('kioskVisitorName');
         const lookupModal = document.getElementById('kioskLookupModal');
         const modalTitle = document.getElementById('kioskLookupTitle');
         const modalMessage = document.getElementById('kioskModalMessage');
         const modalStatus = document.getElementById('kioskModalStatus');
+        const modalAlert = document.getElementById('kioskModalAlert');
         const modalIcon = document.getElementById('kioskModalIcon');
         const modalDetails = document.getElementById('kioskModalDetails');
         const modalQr = document.getElementById('kioskModalQr');
         const modalConfirm = document.getElementById('kioskModalConfirm');
         let lookupSubmitTimer = null;
         let lookupInProgress = false;
+        let lookupModalAutoCloseTimer = null;
+
+        function currentLookupMode() {
+            return lookupModeInput?.value === 'checkout' ? 'checkout' : 'checkin';
+        }
+
+        function lookupButtonHtml() {
+            return currentLookupMode() === 'checkout'
+                ? '<i class="bi bi-box-arrow-left me-1"></i>Check-out ngay'
+                : '<i class="bi bi-box-arrow-in-right me-1"></i>Check-in ngay';
+        }
+
+        function setLookupMode(mode) {
+            const normalizedMode = mode === 'checkout' ? 'checkout' : 'checkin';
+
+            if (lookupModeInput) {
+                lookupModeInput.value = normalizedMode;
+            }
+
+            if (lookupForm) {
+                lookupForm.action = normalizedMode === 'checkout'
+                    ? lookupForm.dataset.checkoutUrl
+                    : lookupForm.dataset.checkinUrl;
+            }
+
+            if (lookupInput) {
+                lookupInput.placeholder = normalizedMode === 'checkout'
+                    ? 'Nhập mã lịch hẹn để check-out'
+                    : 'Nhập mã lịch hẹn hoặc mã QR';
+            }
+
+            if (lookupSubmitButton) {
+                lookupSubmitButton.innerHTML = lookupButtonHtml();
+            }
+
+            if (lookupHeading) {
+                lookupHeading.textContent = normalizedMode === 'checkout' ? 'Check-out trực tiếp' : 'Check-in trực tiếp';
+            }
+
+            if (lookupHelp) {
+                lookupHelp.textContent = normalizedMode === 'checkout'
+                    ? 'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.'
+                    : 'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.';
+            }
+
+            if (lookupDivider) {
+                lookupDivider.textContent = normalizedMode === 'checkout' ? 'Hoặc nhập mã check-out' : 'Hoặc nhập mã check-in';
+            }
+        }
 
         function submitKioskLookup() {
             if (!lookupForm || !lookupInput || lookupInProgress) return;
@@ -1465,9 +1546,7 @@
                 }
 
                 if (lookupInput) {
-                    lookupInput.placeholder = mode === 'checkout'
-                        ? 'Nhập mã lịch hẹn để check-out'
-                        : 'Nhập mã lịch hẹn hoặc mã QR';
+                    setLookupMode(mode);
                     document.querySelector('.kiosk-side-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     setTimeout(() => lookupInput.focus(), 250);
                 }
@@ -1475,44 +1554,74 @@
         });
 
         function openLookupModal() {
+            clearTimeout(lookupModalAutoCloseTimer);
             lookupModal.classList.add('is-open');
             lookupModal.setAttribute('aria-hidden', 'false');
         }
 
         function closeLookupModal() {
+            clearTimeout(lookupModalAutoCloseTimer);
             lookupModal.classList.remove('is-open');
             lookupModal.setAttribute('aria-hidden', 'true');
+            if (lookupInput) {
+                lookupInput.value = '';
+                setTimeout(() => lookupInput.focus(), 150);
+            }
         }
 
         function renderLookupModal(payload, isError = false) {
             const visit = payload.visit ?? null;
             const status = visit?.status ?? 'error';
             const statusLabel = visit?.status_label ?? 'Không tìm thấy';
+            const mode = currentLookupMode();
+            const message = payload.message ?? visit?.status_hint ?? 'Vui lòng kiểm tra lại mã vừa nhập.';
+            const normalizedMessage = message.toLowerCase();
+            const isSuccess = Boolean(payload.ok) && (
+                mode === 'checkout'
+                    ? normalizedMessage.includes('check-out thành công')
+                    : normalizedMessage.includes('check-in thành công')
+            );
+            const alertType = isSuccess ? 'success' : (isError ? 'danger' : 'warning');
+            const alertTitle = isSuccess
+                ? (mode === 'checkout' ? 'Check-out thành công' : 'Check-in thành công')
+                : (mode === 'checkout' ? 'Check-out thất bại' : 'Check-in thất bại');
+            const alertIcon = isSuccess
+                ? 'bi-check-circle'
+                : (isError ? 'bi-exclamation-triangle' : 'bi-info-circle');
             const rows = visit ? [
-                ['Mã lịch hẹn', visit.code],
-                ['Khách', visit.visitor_name],
-                ['Công ty', visit.visitor_company],
-                ['Người tiếp khách', visit.host_name],
-                ['Phòng ban', visit.department],
-                ['Giờ hẹn', visit.scheduled_at],
+                ['bi-calendar2-check', 'Mã lịch hẹn', visit.code],
+                ['bi-person', 'Khách', visit.visitor_name],
+                ['bi-buildings', 'Công ty', visit.visitor_company],
+                ['bi-person-badge', 'Người tiếp khách', visit.host_name],
+                ['bi-briefcase', 'Phòng ban', visit.department],
+                ['bi-clock', 'Giờ hẹn', visit.scheduled_at],
             ] : [
-                ['Kết quả', payload.message ?? 'Không tìm thấy thông tin phù hợp.'],
+                ['bi-info-circle', 'Kết quả', payload.message ?? 'Không tìm thấy thông tin phù hợp.'],
             ];
 
-            modalTitle.textContent = isError && !visit ? 'Không tìm thấy lịch hẹn' : 'Thông tin lịch hẹn';
-            modalMessage.textContent = visit?.status_hint ?? payload.message ?? 'Vui lòng kiểm tra lại mã vừa nhập.';
+            modalTitle.textContent = isError && !visit
+                ? 'Không tìm thấy lịch hẹn'
+                : (currentLookupMode() === 'checkout' ? 'Kết quả check-out' : 'Kết quả check-in');
+            modalMessage.textContent = message;
             modalStatus.className = `kiosk-modal-status is-${status}`;
             modalStatus.querySelector('span').textContent = statusLabel;
+            modalAlert.className = `kiosk-modal-alert is-${alertType}`;
+            modalAlert.querySelector('i').className = `bi ${alertIcon}`;
+            modalAlert.querySelector('strong').textContent = alertTitle;
+            modalAlert.querySelector('span').textContent = message;
             modalIcon.innerHTML = status === 'approved'
                 ? '<i class="bi bi-check2-circle"></i>'
                 : status === 'checked_in'
                     ? '<i class="bi bi-person-check"></i>'
-                    : isError
-                        ? '<i class="bi bi-exclamation-triangle"></i>'
-                        : '<i class="bi bi-hourglass-split"></i>';
+                    : status === 'checked_out'
+                        ? '<i class="bi bi-box-arrow-left"></i>'
+                        : isError
+                            ? '<i class="bi bi-exclamation-triangle"></i>'
+                            : '<i class="bi bi-hourglass-split"></i>';
 
-            modalDetails.innerHTML = rows.map(([label, value]) => `
+            modalDetails.innerHTML = rows.map(([icon, label, value]) => `
                 <div class="kiosk-modal-row">
+                    <i class="bi ${icon}"></i>
                     <span>${label}</span>
                     <strong>${value ?? '-'}</strong>
                 </div>
@@ -1526,6 +1635,7 @@
             modalConfirm.disabled = false;
             modalConfirm.innerHTML = '<i class="bi bi-box-arrow-in-right me-1"></i>Xác nhận check-in';
             openLookupModal();
+            lookupModalAutoCloseTimer = setTimeout(closeLookupModal, 15000);
         }
 
         lookupForm?.addEventListener('submit', async (event) => {
@@ -1536,7 +1646,9 @@
             const submitButton = lookupForm.querySelector('button[type="submit"]');
             lookupInProgress = true;
             submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang kiểm tra';
+            submitButton.innerHTML = currentLookupMode() === 'checkout'
+                ? '<span class="spinner-border spinner-border-sm me-2"></span>Đang check-out'
+                : '<span class="spinner-border spinner-border-sm me-2"></span>Đang check-in';
 
             try {
                 const response = await fetch(lookupForm.action, {
@@ -1554,7 +1666,7 @@
             } finally {
                 lookupInProgress = false;
                 submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="bi bi-search me-1"></i>Kiểm tra mã';
+                submitButton.innerHTML = lookupButtonHtml();
             }
         });
 

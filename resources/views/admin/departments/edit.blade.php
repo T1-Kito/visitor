@@ -1,8 +1,8 @@
 ﻿@extends('layouts.admin')
 
 @section('title', 'Sua phong ban | Visitor Management')
-@section('page_title', 'Sua phong ban '.$department->code)
-@section('page_subtitle', 'Cap nhat code va ten phong ban')
+@section('page_title', 'Sửa phòng ban '.$department->code)
+@section('page_subtitle', 'Cập nhật tên phòng ban, mã sẽ được tự đồng bộ')
 
 @section('content')
     <form class="row g-3" method="post" action="{{ route('admin.departments.update', $department) }}">
@@ -13,16 +13,16 @@
                 <div class="panel-header">
                     <div>
                         <h3>Thong tin phong ban</h3>
-                        <p>Code nen ngan gon de dung trong bao cao.</p>
+                        <p>Mã phòng ban được hệ thống tự sinh từ tên.</p>
                     </div>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">Code</label>
-                        <input class="form-control" name="code" value="{{ old('code', $department->code) }}" required>
+                        <label class="form-label">Mã phòng ban</label>
+                        <div class="form-control bg-light">{{ $department->code }}</div>
                     </div>
                     <div class="col-md-8">
-                        <label class="form-label">Ten phong ban</label>
+                        <label class="form-label">Tên phòng ban</label>
                         <input class="form-control" name="name" value="{{ old('name', $department->name) }}" required>
                     </div>
                 </div>
