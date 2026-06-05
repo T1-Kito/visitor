@@ -606,12 +606,16 @@ class SystemAdminController extends Controller
             'welcome_description' => ['required', 'string', 'max:280'],
             'hotline' => ['required', 'string', 'max:60'],
             'working_hours' => ['required', 'string', 'max:80'],
+            'login_title' => ['required', 'string', 'max:120'],
+            'login_subtitle' => ['required', 'string', 'max:180'],
             'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'login_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_admin_logo' => ['nullable', 'boolean'],
+            'remove_login_logo' => ['nullable', 'boolean'],
             'remove_owner_logo' => ['nullable', 'boolean'],
             'remove_customer_logo' => ['nullable', 'boolean'],
             'remove_favicon' => ['nullable', 'boolean'],
@@ -622,6 +626,7 @@ class SystemAdminController extends Controller
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
 
         $adminLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['admin.logo_url'] ?? null, 'admin_logo', 'admin_logo_file', 'admin-logo');
+        $loginLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['login.logo_url'] ?? null, 'login_logo', 'login_logo_file', 'login-logo');
         $ownerLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['kiosk.owner_logo_url'] ?? null, 'owner_logo', 'owner_logo_file', 'owner-logo');
         $customerLogoUrl = $this->resolveUploadedSetting(
             $request,
@@ -651,6 +656,9 @@ class SystemAdminController extends Controller
             'kiosk.hotline' => $validated['hotline'],
             'kiosk.working_hours' => $validated['working_hours'],
             'admin.logo_url' => $adminLogoUrl,
+            'login.logo_url' => $loginLogoUrl,
+            'login.title' => $validated['login_title'],
+            'login.subtitle' => $validated['login_subtitle'],
             'kiosk.owner_logo_url' => $ownerLogoUrl,
             'kiosk.customer_logo_url' => $customerLogoUrl,
             'kiosk.logo_url' => $customerLogoUrl,
@@ -662,6 +670,7 @@ class SystemAdminController extends Controller
         $this->logAudit('settings.kiosk_updated', 'system_setting', 'kiosk', [
             'company_name' => $validated['company_name'],
             'system_name' => $validated['system_name'],
+            'login_title' => $validated['login_title'],
         ]);
 
         return redirect()

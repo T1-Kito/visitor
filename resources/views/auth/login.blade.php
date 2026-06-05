@@ -1,9 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login | Visitor Management</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $loginBrand['title'] ?? 'Đăng nhập' }}</title>
+    @if (! empty($loginBrand['favicon_url']))
+        <link rel="icon" href="{{ $loginBrand['favicon_url'] }}">
+        <link rel="shortcut icon" href="{{ $loginBrand['favicon_url'] }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,8 +31,8 @@
             box-shadow: 0 18px 35px rgba(17, 44, 76, 0.1);
         }
         .brand-pill {
-            width: 50px;
-            height: 50px;
+            width: 58px;
+            height: 58px;
             border-radius: 14px;
             display: grid;
             place-items: center;
@@ -35,6 +40,18 @@
             color: #fff;
             font-weight: 800;
             letter-spacing: 0.05em;
+            overflow: hidden;
+            flex: 0 0 auto;
+        }
+        .brand-pill.has-logo {
+            background: #fff;
+            border: 1px solid #e4ebf4;
+        }
+        .brand-pill img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 5px;
         }
         .btn-brand {
             background: linear-gradient(130deg, #0f7ec7, #0b5f97);
@@ -55,14 +72,20 @@
         <div class="card login-card">
             <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="brand-pill">VMS</div>
+                    <div class="brand-pill {{ ! empty($loginBrand['logo_url']) ? 'has-logo' : '' }}">
+                        @if (! empty($loginBrand['logo_url']))
+                            <img src="{{ $loginBrand['logo_url'] }}" alt="{{ $loginBrand['title'] ?? 'Logo' }}">
+                        @else
+                            VMS
+                        @endif
+                    </div>
                     <div>
-                        <h1 class="h5 mb-1 fw-bold">Visitor Management System</h1>
-                        <p class="text-secondary mb-0">Dang nhap vao he thong van hanh</p>
+                        <h1 class="h5 mb-1 fw-bold">{{ $loginBrand['title'] ?? 'Visitor Management System' }}</h1>
+                        <p class="text-secondary mb-0">{{ $loginBrand['subtitle'] ?? 'Đăng nhập vào hệ thống vận hành' }}</p>
                     </div>
                 </div>
 
-                <form method="post" action="{{ route('login.attempt') }}" class="d-grid gap-3">
+                <form method="post" action="{{ route('login.attempt') }}" class="d-grid gap-3" data-login-form data-csrf-url="{{ route('csrf-token') }}">
                     @csrf
                     <div>
                         <label class="form-label">Email</label>
@@ -72,7 +95,7 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="form-label">Mat khau</label>
+                        <label class="form-label">Mật khẩu</label>
                         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
                         @error('password')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -80,9 +103,9 @@
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                        <label class="form-check-label" for="remember">Ghi nho dang nhap</label>
+                        <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
                     </div>
-                    <button class="btn btn-brand py-2" type="submit">Dang nhap</button>
+                    <button class="btn btn-brand py-2" type="submit" data-login-submit>Đăng nhập</button>
                 </form>
 
                 <div class="alert alert-light border mt-4 mb-0">
@@ -91,5 +114,52 @@
             </div>
         </div>
     </div>
+    <script>
+        (() => {
+            const form = document.querySelector('[data-login-form]');
+            const submitButton = document.querySelector('[data-login-submit]');
+            const tokenInput = form?.querySelector('input[name="_token"]');
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            let isSubmitting = false;
+
+            form?.addEventListener('submit', async (event) => {
+                if (isSubmitting) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Dang kiem tra...';
+                }
+
+                try {
+                    const response = await fetch(form.dataset.csrfUrl, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'Cache-Control': 'no-cache',
+                        },
+                    });
+                    const payload = await response.json();
+
+                    if (payload.token && tokenInput) {
+                        tokenInput.value = payload.token;
+                    }
+
+                    if (payload.token && tokenMeta) {
+                        tokenMeta.setAttribute('content', payload.token);
+                    }
+                } catch (error) {
+                    // If token refresh fails, still submit with the token rendered by Laravel.
+                }
+
+                isSubmitting = true;
+                form.submit();
+            });
+        })();
+    </script>
 </body>
 </html>

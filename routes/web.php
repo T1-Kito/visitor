@@ -19,6 +19,7 @@ Route::get('/kiosk/status/{visit}', [KioskController::class, 'status'])->name('k
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/csrf-token', [AuthController::class, 'csrfToken'])->name('csrf-token');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 });
 

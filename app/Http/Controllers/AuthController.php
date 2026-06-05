@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SystemSetting;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -11,11 +13,30 @@ class AuthController extends Controller
 {
     public function showLogin(): Response
     {
+        $settings = SystemSetting::values(SystemSetting::kioskDefaults());
+
         return response()
-            ->view('auth.login')
+            ->view('auth.login', [
+                'loginBrand' => [
+                    'logo_url' => $settings['login.logo_url'] ?? ($settings['admin.logo_url'] ?? null),
+                    'title' => $settings['login.title'] ?? 'Visitor Management System',
+                    'subtitle' => $settings['login.subtitle'] ?? 'Đăng nhập vào hệ thống vận hành',
+                    'favicon_url' => $settings['app.favicon_url'] ?? ($settings['login.logo_url'] ?? null),
+                ],
+            ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+    }
+
+    public function csrfToken(Request $request): JsonResponse
+    {
+        $request->session()->regenerateToken();
+
+        return response()
+            ->json(['token' => csrf_token()])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     public function login(Request $request): RedirectResponse

@@ -15,6 +15,9 @@
 @php
     $value = static fn (string $key, ?string $fallback = '') => old(str_replace('kiosk.', '', $key), $settings[$key] ?? $fallback);
     $adminLogoUrl = $value('admin.logo_url');
+    $loginLogoUrl = $settings['login.logo_url'] ?? null;
+    $loginTitle = old('login_title', $settings['login.title'] ?? 'Visitor Management System');
+    $loginSubtitle = old('login_subtitle', $settings['login.subtitle'] ?? 'Đăng nhập vào hệ thống vận hành');
     $ownerLogoUrl = $value('kiosk.owner_logo_url');
     $customerLogoUrl = $value('kiosk.customer_logo_url') ?: $value('kiosk.logo_url');
     $faviconUrl = $value('app.favicon_url');
@@ -74,6 +77,14 @@
                         <label>Mô tả ngắn <span class="required">*</span></label>
                         <textarea name="welcome_description" required>{{ $value('kiosk.welcome_description', 'Vui lòng đăng ký thông tin hoặc check-in bằng QR để được hỗ trợ nhanh chóng.') }}</textarea>
                     </div>
+                    <div class="ks-field">
+                        <label>Tiêu đề trang đăng nhập <span class="required">*</span></label>
+                        <input name="login_title" value="{{ $loginTitle }}" required>
+                    </div>
+                    <div class="ks-field">
+                        <label>Mô tả trang đăng nhập <span class="required">*</span></label>
+                        <input name="login_subtitle" value="{{ $loginSubtitle }}" required>
+                    </div>
                 </div>
             </section>
 
@@ -122,6 +133,25 @@
                             @endif
                             <input class="ks-file" type="file" name="admin_logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
                             <div class="ks-help">Dùng cho sidebar admin và mobile app. Khuyến nghị 240x80px.</div>
+                        </div>
+
+                        <div class="ks-field ks-upload">
+                            <label>Logo trang đăng nhập</label>
+                            <input type="hidden" name="remove_login_logo" value="0" data-remove-input="login_logo">
+                            @if ($loginLogoUrl)
+                                <div class="ks-media-row" data-media-row="login_logo">
+                                    <div class="ks-current-media">
+                                        <img src="{{ $loginLogoUrl }}" alt="Logo trang đăng nhập hiện tại">
+                                        <span>Logo login</span>
+                                    </div>
+                                    <button class="ks-remove-media" type="button" data-remove-media="login_logo" data-file-input="login_logo_file">
+                                        <i class="bi bi-trash3"></i><span>Xóa logo</span>
+                                    </button>
+                                </div>
+                                <div class="ks-remove-note">Logo trang đăng nhập sẽ được xóa sau khi bạn bấm lưu cấu hình.</div>
+                            @endif
+                            <input class="ks-file" type="file" name="login_logo_file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                            <div class="ks-help">Dùng riêng cho màn hình đăng nhập. Khuyến nghị logo ngang 240x80px.</div>
                         </div>
 
                         <div class="ks-field ks-upload">
