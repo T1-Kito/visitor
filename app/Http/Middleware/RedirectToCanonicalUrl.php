@@ -25,10 +25,12 @@ class RedirectToCanonicalUrl
         $currentHost = $request->getHost();
         $currentScheme = $request->getScheme();
 
-        if ($currentHost !== $targetHost || $currentScheme !== $targetScheme) {
-            $targetUrl = $targetScheme.'://'.$targetHost.$request->getRequestUri();
+        if ($currentHost !== $targetHost) {
+            return redirect()->to($targetScheme.'://'.$targetHost.$request->getRequestUri(), 302);
+        }
 
-            return redirect()->to($targetUrl, 302);
+        if ($currentScheme !== $targetScheme && ! $request->headers->has('x-forwarded-proto')) {
+            return redirect()->to($targetScheme.'://'.$targetHost.$request->getRequestUri(), 302);
         }
 
         return $next($request);
