@@ -47,14 +47,17 @@
             inset: 0;
             z-index: 80;
             display: grid;
-            place-items: end center;
-            padding: 16px;
+            place-items: center;
+            padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(14px, env(safe-area-inset-bottom, 0px));
             background: rgba(15, 23, 42, .58);
             backdrop-filter: blur(8px);
         }
 
         .m-camera-panel {
-            width: min(100%, 440px);
+            width: min(100%, 420px);
+            max-height: min(760px, calc(100dvh - 28px));
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
             border-radius: 24px;
             background: #fff;
             box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
@@ -91,6 +94,7 @@
             overflow: hidden;
             background: #0f172a;
             aspect-ratio: 1 / 1;
+            max-height: min(58dvh, 420px);
         }
 
         .m-camera-view video {
@@ -149,6 +153,31 @@
         .m-camera-status.danger {
             background: #fff1f2;
             color: #be123c;
+        }
+
+        @media (max-width: 520px) {
+            .m-camera-sheet {
+                padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+            }
+
+            .m-camera-panel {
+                width: min(100%, 390px);
+                border-radius: 22px;
+            }
+
+            .m-camera-head {
+                padding: 12px 14px;
+            }
+
+            .m-camera-view {
+                margin: 14px;
+                max-height: 54dvh;
+            }
+
+            .m-camera-status {
+                margin: 0 14px 14px;
+                font-size: .78rem;
+            }
         }
     </style>
 @endpush

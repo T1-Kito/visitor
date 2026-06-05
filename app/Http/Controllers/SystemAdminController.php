@@ -529,7 +529,40 @@ class SystemAdminController extends Controller
             ->orderByDesc('id');
 
         if ($action !== '') {
-            $query->where('action', 'like', '%'.$action.'%');
+            $normalizedAction = mb_strtolower($action);
+            $actionKeywordMap = [
+                'duyệt' => ['approval.approved', 'rbac.role_permissions_updated', 'rbac.permission_matrix_updated'],
+                'tu choi' => ['approval.rejected'],
+                'từ chối' => ['approval.rejected'],
+                'checkin' => ['checkin.checked_in', 'kiosk.checked_in'],
+                'check-in' => ['checkin.checked_in', 'kiosk.checked_in'],
+                'checkout' => ['checkout.checked_out', 'kiosk.checked_out'],
+                'check-out' => ['checkout.checked_out', 'kiosk.checked_out'],
+                'gửi qr' => ['visit.qr_emailed'],
+                'gui qr' => ['visit.qr_emailed'],
+                'kiosk' => ['settings.kiosk_updated', 'kiosk.walk_in_created', 'kiosk.checked_in', 'kiosk.checked_out'],
+                'cài đặt' => ['settings.kiosk_updated', 'settings.printer_updated'],
+                'cai dat' => ['settings.kiosk_updated', 'settings.printer_updated'],
+                'phân quyền' => ['rbac.user_role_updated', 'rbac.role_permissions_updated', 'rbac.permission_matrix_updated'],
+                'phan quyen' => ['rbac.user_role_updated', 'rbac.role_permissions_updated', 'rbac.permission_matrix_updated'],
+                'cảnh báo' => ['watchlist.matched', 'watchlist.created', 'watchlist.updated', 'watchlist.deleted'],
+                'canh bao' => ['watchlist.matched', 'watchlist.created', 'watchlist.updated', 'watchlist.deleted'],
+            ];
+
+            $mappedActions = [];
+            foreach ($actionKeywordMap as $keyword => $actions) {
+                if (str_contains($normalizedAction, $keyword)) {
+                    $mappedActions = array_merge($mappedActions, $actions);
+                }
+            }
+
+            $query->where(function ($builder) use ($action, $mappedActions) {
+                $builder->where('action', 'like', '%'.$action.'%');
+
+                if ($mappedActions !== []) {
+                    $builder->orWhereIn('action', array_unique($mappedActions));
+                }
+            });
         }
 
         if (is_numeric($userId)) {
