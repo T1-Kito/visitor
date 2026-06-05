@@ -56,9 +56,13 @@ class SystemSetting extends Model
             'kiosk.welcome_description' => config('services.kiosk.welcome_description'),
             'kiosk.hotline' => config('services.kiosk.hotline'),
             'kiosk.working_hours' => config('services.kiosk.working_hours'),
+            'admin.logo_url' => config('services.kiosk.admin_logo_url'),
+            'kiosk.owner_logo_url' => config('services.kiosk.owner_logo_url'),
+            'kiosk.customer_logo_url' => config('services.kiosk.customer_logo_url'),
             'kiosk.logo_url' => config('services.kiosk.logo_url'),
             'kiosk.background_url' => config('services.kiosk.background_url'),
             'kiosk.primary_color' => config('services.kiosk.primary_color'),
+            'app.favicon_url' => config('services.kiosk.favicon_url'),
         ];
     }
 }

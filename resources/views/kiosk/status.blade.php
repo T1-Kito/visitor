@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trạng thái yêu cầu | VMS Kiosk</title>
+    @php
+        $headSettings = $kioskSettings ?? [];
+        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? null;
+    @endphp
+    @if ($headFaviconUrl)
+        <link rel="icon" href="{{ $headFaviconUrl }}">
+        <link rel="shortcut icon" href="{{ $headFaviconUrl }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -60,6 +68,12 @@
 
         .ks-brand { gap: .9rem; }
 
+        .ks-logo-group {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
         .ks-logo {
             width: auto;
             min-width: 54px;
@@ -90,6 +104,12 @@
             max-height: 42px;
             object-fit: contain;
             padding: 0;
+        }
+
+        .ks-logo-separator {
+            width: 1px;
+            height: 34px;
+            background: var(--line);
         }
 
         .ks-brand strong {
@@ -542,7 +562,8 @@
     $systemName = $settings['kiosk.system_name'] ?? 'VMS Kiosk';
     $subtitle = $settings['kiosk.subtitle'] ?? 'Giao diện tự động cho khách đến công ty';
     $hotline = $settings['kiosk.hotline'] ?? '1900 0000';
-    $logoUrl = $settings['kiosk.logo_url'] ?? null;
+    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? null;
+    $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
 
@@ -565,11 +586,23 @@
     <main class="ks-shell">
         <header class="ks-header">
             <div class="ks-brand">
-                <div class="ks-logo {{ $logoUrl ? 'has-logo' : '' }}">
-                    @if ($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="{{ $systemName }}">
-                    @else
-                        <i class="bi bi-shield-check"></i>
+                <div class="ks-logo-group">
+                    @if ($ownerLogoUrl)
+                        <div class="ks-logo has-logo">
+                            <img src="{{ $ownerLogoUrl }}" alt="{{ $systemName }}">
+                        </div>
+                    @endif
+                    @if ($ownerLogoUrl && $customerLogoUrl)
+                        <span class="ks-logo-separator" aria-hidden="true"></span>
+                    @endif
+                    @if ($customerLogoUrl)
+                        <div class="ks-logo has-logo">
+                            <img src="{{ $customerLogoUrl }}" alt="Logo khách hàng">
+                        </div>
+                    @elseif (! $ownerLogoUrl)
+                        <div class="ks-logo">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
                     @endif
                 </div>
                 <div>

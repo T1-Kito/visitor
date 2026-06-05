@@ -16,7 +16,13 @@ class Visitor extends Model
         'email',
         'company',
         'identity_no',
+        'identity_issued_place',
+        'identity_issued_date',
         'note',
+    ];
+
+    protected $casts = [
+        'identity_issued_date' => 'date',
     ];
 
     public function visits(): HasMany

@@ -1,0 +1,19 @@
+{
+  "name": "VMS Gatehouse",
+  "short_name": "VMS",
+  "description": "Quản lý khách ra vào, duyệt lịch và quét QR.",
+  "start_url": "/m",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#edf4f2",
+  "theme_color": "#edf4f2",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/vms-pwa.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

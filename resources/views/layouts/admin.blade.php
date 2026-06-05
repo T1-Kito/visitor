@@ -4,12 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Visitor Management Dashboard')</title>
+    @if (! empty($adminBrand['favicon_url']))
+        <link rel="icon" href="{{ $adminBrand['favicon_url'] }}">
+        <link rel="shortcut icon" href="{{ $adminBrand['favicon_url'] }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="{{ asset('css/admin-ui.css') }}" rel="stylesheet">
+    <link href="{{ \App\Support\AssetVersion::url('css/admin-ui.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body>

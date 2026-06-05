@@ -48,6 +48,29 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/m/favorites', [AdminUiController::class, 'updateMobileFavorites'])
         ->middleware('permission:dashboard.view')
         ->name('mobile.favorites.update');
+    Route::get('/m/approvals', [AdminUiController::class, 'mobileApprovals'])
+        ->name('mobile.approvals');
+    Route::get('/m/checkin', [AdminUiController::class, 'mobileCheckin'])
+        ->middleware('permission:checkin.manage')
+        ->name('mobile.checkin');
+    Route::get('/m/checkout', [AdminUiController::class, 'mobileCheckout'])
+        ->middleware('permission:checkin.manage')
+        ->name('mobile.checkout');
+    Route::get('/m/access-lists', [AdminUiController::class, 'mobileAccessLists'])
+        ->middleware('permission:checkin.manage')
+        ->name('mobile.access-lists');
+    Route::get('/m/notifications', [AdminUiController::class, 'mobileNotifications'])
+        ->name('mobile.notifications');
+    Route::patch('/m/notifications/{notification}/read', [AdminUiController::class, 'markMobileNotificationRead'])
+        ->name('mobile.notifications.read');
+    Route::get('/m/visits/create', [AdminUiController::class, 'mobileVisitsCreate'])
+        ->middleware('permission:visits.manage')
+        ->name('mobile.visits.create');
+    Route::get('/m/visits', [AdminUiController::class, 'mobileVisits'])
+        ->middleware('permission:visits.manage')
+        ->name('mobile.visits.index');
+    Route::get('/m/visits/{visit}', [AdminUiController::class, 'mobileVisitShow'])
+        ->name('mobile.visits.show');
 
     Route::get('/visits', [AdminUiController::class, 'visitsIndex'])
         ->middleware('permission:visits.manage')

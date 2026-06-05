@@ -119,6 +119,8 @@
                             <div class="va-info"><i class="bi bi-telephone"></i><div><span class="va-label">Số điện thoại</span><span class="va-value">{{ $visit->visitor?->phone ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-envelope"></i><div><span class="va-label">Email</span><span class="va-value">{{ $visit->visitor?->email ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-card-text"></i><div><span class="va-label">CMND/CCCD</span><span class="va-value">{{ $visit->visitor?->identity_no ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-geo-alt"></i><div><span class="va-label">Nơi cấp</span><span class="va-value">{{ $visit->visitor?->identity_issued_place ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-calendar3"></i><div><span class="va-label">Ngày cấp</span><span class="va-value">{{ $visit->visitor?->identity_issued_date?->format('d/m/Y') ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-chat-text"></i><div><span class="va-label">Ghi chú</span><span class="va-value">{{ $visit->visitor?->note ?? '-' }}</span></div></div>
                         </div>
                     </div>

@@ -17,6 +17,8 @@
                     <div class="detail-item"><span>Email</span><strong>{{ $visitor->email ?? '-' }}</strong></div>
                     <div class="detail-item"><span>Cong ty</span><strong>{{ $visitor->company ?? '-' }}</strong></div>
                     <div class="detail-item"><span>So giay to</span><strong>{{ $visitor->identity_no ?? '-' }}</strong></div>
+                    <div class="detail-item"><span>Noi cap</span><strong>{{ $visitor->identity_issued_place ?? '-' }}</strong></div>
+                    <div class="detail-item"><span>Ngay cap</span><strong>{{ $visitor->identity_issued_date?->format('d/m/Y') ?? '-' }}</strong></div>
                     <div class="detail-item detail-wide"><span>Ghi chu</span><strong>{{ $visitor->note ?? '-' }}</strong></div>
                 </div>
             </section>

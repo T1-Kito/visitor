@@ -573,24 +573,31 @@ class SystemAdminController extends Controller
             'welcome_description' => ['required', 'string', 'max:280'],
             'hotline' => ['required', 'string', 'max:60'],
             'working_hours' => ['required', 'string', 'max:80'],
-            'logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'remove_logo' => ['nullable', 'boolean'],
+            'remove_admin_logo' => ['nullable', 'boolean'],
+            'remove_owner_logo' => ['nullable', 'boolean'],
+            'remove_customer_logo' => ['nullable', 'boolean'],
+            'remove_favicon' => ['nullable', 'boolean'],
             'remove_background' => ['nullable', 'boolean'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
 
-        $logoUrl = $currentSettings['kiosk.logo_url'] ?? null;
-        if ($request->boolean('remove_logo')) {
-            $this->deleteKioskUpload($logoUrl);
-            $logoUrl = null;
-        }
-        if ($request->hasFile('logo_file')) {
-            $this->deleteKioskUpload($logoUrl);
-            $logoUrl = $this->storeKioskUpload($request, 'logo_file', 'logo');
-        }
+        $adminLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['admin.logo_url'] ?? null, 'admin_logo', 'admin_logo_file', 'admin-logo');
+        $ownerLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['kiosk.owner_logo_url'] ?? null, 'owner_logo', 'owner_logo_file', 'owner-logo');
+        $customerLogoUrl = $this->resolveUploadedSetting(
+            $request,
+            $currentSettings['kiosk.customer_logo_url'] ?? ($currentSettings['kiosk.logo_url'] ?? null),
+            'customer_logo',
+            'customer_logo_file',
+            'customer-logo',
+        );
+        $faviconUrl = $this->resolveUploadedSetting($request, $currentSettings['app.favicon_url'] ?? null, 'favicon', 'favicon_file', 'favicon');
 
         $backgroundUrl = $currentSettings['kiosk.background_url'] ?? null;
         if ($request->boolean('remove_background')) {
@@ -610,9 +617,13 @@ class SystemAdminController extends Controller
             'kiosk.welcome_description' => $validated['welcome_description'],
             'kiosk.hotline' => $validated['hotline'],
             'kiosk.working_hours' => $validated['working_hours'],
-            'kiosk.logo_url' => $logoUrl,
+            'admin.logo_url' => $adminLogoUrl,
+            'kiosk.owner_logo_url' => $ownerLogoUrl,
+            'kiosk.customer_logo_url' => $customerLogoUrl,
+            'kiosk.logo_url' => $customerLogoUrl,
             'kiosk.background_url' => $backgroundUrl,
             'kiosk.primary_color' => $validated['primary_color'],
+            'app.favicon_url' => $faviconUrl,
         ]);
 
         $this->logAudit('settings.kiosk_updated', 'system_setting', 'kiosk', [
@@ -635,6 +646,23 @@ class SystemAdminController extends Controller
         $path = $file->storeAs('kiosk', $filename, 'public');
 
         return Storage::disk('public')->url($path);
+    }
+
+    private function resolveUploadedSetting(Request $request, ?string $currentUrl, string $key, string $field, string $prefix): ?string
+    {
+        $url = $currentUrl;
+
+        if ($request->boolean('remove_'.$key)) {
+            $this->deleteKioskUpload($url);
+            $url = null;
+        }
+
+        if ($request->hasFile($field)) {
+            $this->deleteKioskUpload($url);
+            $url = $this->storeKioskUpload($request, $field, $prefix);
+        }
+
+        return $url;
     }
 
     private function deleteKioskUpload(?string $url): void

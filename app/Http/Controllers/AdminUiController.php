@@ -98,7 +98,7 @@ class AdminUiController extends Controller
                 'hint' => 'Tạo và xem lịch',
                 'icon' => 'bi-calendar-check',
                 'tone' => 'blue',
-                'route' => route('admin.visits.index'),
+                'route' => route('mobile.visits.index'),
                 'enabled' => $user?->hasPermission('visits.manage') ?? false,
             ],
             [
@@ -107,7 +107,7 @@ class AdminUiController extends Controller
                 'hint' => $pendingApprovals.' yêu cầu',
                 'icon' => 'bi-patch-check',
                 'tone' => 'green',
-                'route' => route('admin.approvals.index'),
+                'route' => route('mobile.approvals'),
                 'enabled' => ($user?->hasPermission('approvals.manage') ?? false) || $pendingApprovals > 0,
                 'count' => $pendingApprovals,
             ],
@@ -117,7 +117,7 @@ class AdminUiController extends Controller
                 'hint' => $summary['pending_checkin'].' chờ vào',
                 'icon' => 'bi-box-arrow-in-right',
                 'tone' => 'cyan',
-                'route' => route('admin.access.index', ['mode' => 'checkin']),
+                'route' => route('mobile.checkin'),
                 'enabled' => $user?->hasPermission('checkin.manage') ?? false,
                 'count' => $summary['pending_checkin'],
             ],
@@ -127,7 +127,7 @@ class AdminUiController extends Controller
                 'hint' => $summary['in_company'].' trong công ty',
                 'icon' => 'bi-box-arrow-left',
                 'tone' => 'purple',
-                'route' => route('admin.access.index', ['mode' => 'checkout']),
+                'route' => route('mobile.checkout'),
                 'enabled' => $user?->hasPermission('checkin.manage') ?? false,
                 'count' => $summary['in_company'],
             ],
@@ -137,7 +137,7 @@ class AdminUiController extends Controller
                 'hint' => 'Danh sách hiện tại',
                 'icon' => 'bi-person-walking',
                 'tone' => 'teal',
-                'route' => route('admin.access.lists', ['type' => 'inside']),
+                'route' => route('mobile.access-lists', ['type' => 'inside']),
                 'enabled' => $user?->hasPermission('checkin.manage') ?? false,
             ],
             [
@@ -146,7 +146,7 @@ class AdminUiController extends Controller
                 'hint' => 'Tra cứu lịch sử',
                 'icon' => 'bi-list-check',
                 'tone' => 'orange',
-                'route' => route('admin.access.lists'),
+                'route' => route('mobile.access-lists', ['type' => 'all']),
                 'enabled' => $user?->hasPermission('checkin.manage') ?? false,
             ],
             [
@@ -164,7 +164,7 @@ class AdminUiController extends Controller
                 'hint' => $unreadNotifications.' chưa đọc',
                 'icon' => 'bi-bell',
                 'tone' => 'rose',
-                'route' => route('admin.notifications.index'),
+                'route' => route('mobile.notifications'),
                 'enabled' => true,
                 'count' => $unreadNotifications,
             ],
@@ -236,6 +236,275 @@ class AdminUiController extends Controller
             ->with('status', 'Đã lưu cài đặt yêu thích.');
     }
 
+    public function mobileApprovals(): View
+    {
+        $pendingVisits = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'pending')
+        )
+            ->orderByDesc('visits.created_at')
+            ->limit(20)
+            ->get();
+
+        $recentApproved = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'approved')
+        )
+            ->orderByDesc('visits.updated_at')
+            ->limit(10)
+            ->get();
+
+        $recentRejected = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'rejected')
+        )
+            ->orderByDesc('visits.updated_at')
+            ->limit(10)
+            ->get();
+
+        return view('mobile.approvals', $this->withBase([
+            'pendingVisits' => $this->mapMobileVisitCards($pendingVisits),
+            'approvedVisits' => $this->mapMobileVisitCards($recentApproved),
+            'rejectedVisits' => $this->mapMobileVisitCards($recentRejected),
+        ]));
+    }
+
+    public function mobileCheckin(Request $request): View
+    {
+        $scannedVisit = null;
+        $scannedVisitId = $request->session()->get('checkin_scanned_visit_id');
+        if (is_numeric($scannedVisitId)) {
+            $scannedVisit = $this->baseVisitQuery()->find((int) $scannedVisitId);
+        }
+
+        $readyVisits = $this->baseVisitQuery()
+            ->where('visits.status', 'approved')
+            ->orderByDesc('visits.scheduled_at')
+            ->limit(20)
+            ->get();
+
+        return view('mobile.access', $this->withBase([
+            'mode' => 'checkin',
+            'title' => 'Check-in',
+            'subtitle' => 'Quét QR hoặc nhập mã lịch để làm thủ tục vào.',
+            'scanRoute' => route('admin.checkin.scan-qr'),
+            'scannedVisit' => $scannedVisit,
+            'visits' => $this->mapMobileVisitCards($readyVisits),
+        ]));
+    }
+
+    public function mobileCheckout(Request $request): View
+    {
+        $scannedVisit = null;
+        $scannedVisitId = $request->session()->get('checkout_scanned_visit_id');
+        if (is_numeric($scannedVisitId)) {
+            $scannedVisit = $this->baseVisitQuery()->find((int) $scannedVisitId);
+        }
+
+        $insideVisits = $this->baseVisitQuery()
+            ->where('visits.status', 'checked_in')
+            ->orderByDesc('visits.actual_checkin_at')
+            ->limit(20)
+            ->get();
+
+        return view('mobile.access', $this->withBase([
+            'mode' => 'checkout',
+            'title' => 'Check-out',
+            'subtitle' => 'Quét QR hoặc nhập mã lịch để làm thủ tục ra.',
+            'scanRoute' => route('admin.checkout.scan-qr'),
+            'scannedVisit' => $scannedVisit,
+            'visits' => $this->mapMobileVisitCards($insideVisits),
+        ]));
+    }
+
+    public function mobileVisits(Request $request): View
+    {
+        $status = in_array($request->query('status'), ['all', 'pending', 'approved', 'checked_in', 'checked_out', 'rejected'], true)
+            ? (string) $request->query('status')
+            : 'all';
+        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $request->query('date'))
+            ? (string) $request->query('date')
+            : '';
+        $keyword = trim((string) $request->query('q', ''));
+
+        $query = $this->baseVisitQuery();
+
+        if ($status !== 'all') {
+            $query->where('visits.status', $status);
+        }
+
+        if ($date !== '') {
+            $query->whereDate('visits.scheduled_at', $date);
+        }
+
+        if ($keyword !== '') {
+            $query->where(function (Builder $nested) use ($keyword): void {
+                $nested->where('visits.code', 'like', "%{$keyword}%")
+                    ->orWhereHas('visitor', function (Builder $visitorQuery) use ($keyword): void {
+                        $visitorQuery->where('full_name', 'like', "%{$keyword}%")
+                            ->orWhere('company', 'like', "%{$keyword}%")
+                            ->orWhere('phone', 'like', "%{$keyword}%")
+                            ->orWhere('email', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('hostEmployee', function (Builder $hostQuery) use ($keyword): void {
+                        $hostQuery->where('name', 'like', "%{$keyword}%");
+                    });
+            });
+        }
+
+        $visits = $query
+            ->orderByDesc('visits.scheduled_at')
+            ->orderByDesc('visits.id')
+            ->paginate(10)
+            ->withQueryString();
+        $visits->getCollection()->transform(fn (Visit $visit): array => $this->mapMobileVisitListRow($visit));
+
+        $today = now()->toDateString();
+
+        return view('mobile.visits-index', $this->withBase([
+            'visits' => $visits,
+            'filters' => [
+                'q' => $keyword,
+                'date' => $date,
+                'status' => $status,
+            ],
+            'stats' => [
+                'today' => Visit::query()->whereDate('scheduled_at', $today)->count(),
+                'pending' => Visit::query()->where('status', 'pending')->count(),
+                'approved' => Visit::query()->where('status', 'approved')->count(),
+            ],
+            'canCreateVisit' => $request->user()?->hasPermission('visits.manage') ?? false,
+        ]));
+    }
+
+    public function mobileVisitsCreate(): View
+    {
+        return view('mobile.visits-create', $this->withBase([
+            'hosts' => $this->hostsForSelect(),
+            'accessZones' => $this->accessZones(),
+        ]));
+    }
+
+    public function mobileVisitShow(Visit $visit): View
+    {
+        if (! $this->canViewMobileVisit($visit)) {
+            abort(403);
+        }
+
+        $visit->load([
+            'visitor',
+            'hostEmployee.department',
+            'approval.approver',
+            'activeBadge',
+        ]);
+
+        return view('mobile.visit-show', $this->withBase([
+            'visit' => $visit,
+            'activityLogs' => AuditLog::query()
+                ->where('entity_type', 'visit')
+                ->where('entity_id', (string) $visit->id)
+                ->latest()
+                ->limit(8)
+                ->get(),
+        ]));
+    }
+
+    public function mobileAccessLists(Request $request): View
+    {
+        $type = in_array($request->query('type'), ['inside', 'in', 'out', 'all'], true)
+            ? (string) $request->query('type')
+            : 'inside';
+        $date = Carbon::parse((string) $request->query('date', now()->toDateString()))->toDateString();
+        $keyword = trim((string) $request->query('q', ''));
+
+        $from = Carbon::parse($date)->startOfDay();
+        $to = Carbon::parse($date)->endOfDay();
+        $query = $this->baseVisitQuery();
+
+        match ($type) {
+            'inside' => $query->where('visits.status', 'checked_in'),
+            'in' => $query->whereBetween('visits.actual_checkin_at', [$from, $to]),
+            'out' => $query->whereBetween('visits.actual_checkout_at', [$from, $to]),
+            default => $query->where(function (Builder $nested) use ($from, $to): void {
+                $nested->whereBetween('visits.actual_checkin_at', [$from, $to])
+                    ->orWhereBetween('visits.actual_checkout_at', [$from, $to])
+                    ->orWhere('visits.status', 'checked_in');
+            }),
+        };
+
+        if ($keyword !== '') {
+            $query->where(function (Builder $nested) use ($keyword): void {
+                $nested->where('visits.code', 'like', "%{$keyword}%")
+                    ->orWhereHas('visitor', function (Builder $visitorQuery) use ($keyword): void {
+                        $visitorQuery->where('full_name', 'like', "%{$keyword}%")
+                            ->orWhere('company', 'like', "%{$keyword}%")
+                            ->orWhere('phone', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('hostEmployee', fn (Builder $hostQuery) => $hostQuery->where('name', 'like', "%{$keyword}%"));
+            });
+        }
+
+        match ($type) {
+            'inside', 'in' => $query->orderByDesc('visits.actual_checkin_at'),
+            'out' => $query->orderByDesc('visits.actual_checkout_at'),
+            default => $query->orderByRaw('COALESCE(visits.actual_checkout_at, visits.actual_checkin_at, visits.scheduled_at) DESC'),
+        };
+
+        $visits = $query->paginate(10)->withQueryString();
+        $visits->getCollection()->transform(fn (Visit $visit): array => $this->mapMobileAccessRow($visit, $type));
+
+        return view('mobile.access-lists', $this->withBase([
+            'visits' => $visits,
+            'filters' => [
+                'type' => $type,
+                'date' => $date,
+                'q' => $keyword,
+            ],
+            'stats' => [
+                'inside' => Visit::query()->where('status', 'checked_in')->count(),
+                'in_today' => Visit::query()->whereDate('actual_checkin_at', now()->toDateString())->count(),
+                'out_today' => Visit::query()->whereDate('actual_checkout_at', now()->toDateString())->count(),
+            ],
+        ]));
+    }
+
+    public function mobileNotifications(Request $request): View
+    {
+        $status = in_array($request->query('status'), ['all', 'unread', 'read'], true)
+            ? (string) $request->query('status')
+            : 'all';
+
+        $query = Notification::query()
+            ->where('user_id', auth()->id())
+            ->orderByDesc('id');
+
+        if ($status === 'unread') {
+            $query->whereNull('read_at');
+        }
+
+        if ($status === 'read') {
+            $query->whereNotNull('read_at');
+        }
+
+        return view('mobile.notifications', $this->withBase([
+            'notifications' => $query->paginate(12)->withQueryString(),
+            'filters' => ['status' => $status],
+            'unreadCount' => $this->unreadNotificationCount(),
+        ]));
+    }
+
+    public function markMobileNotificationRead(Notification $notification): RedirectResponse
+    {
+        if ((int) $notification->user_id !== (int) auth()->id()) {
+            abort(404);
+        }
+
+        if ($notification->read_at === null) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return redirect()
+            ->to($this->mobileNotificationActionUrl($notification))
+            ->with('status', 'Đã mở thông báo.');
+    }
+
     private function mobileModuleKeysForUser(User $user, Request $request): array
     {
         $pendingApprovals = $this->scopeVisitsForApproval(
@@ -272,6 +541,107 @@ class AdminUiController extends Controller
             || str_contains($userAgent, 'mobile')
             || str_contains($userAgent, 'opera mini')
             || str_contains($userAgent, 'windows phone');
+    }
+
+    private function canViewMobileVisit(Visit $visit): bool
+    {
+        /** @var User|null $user */
+        $user = auth()->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        return $user->hasPermission('visits.manage')
+            || $user->hasPermission('checkin.manage')
+            || $this->canActOnVisit($visit);
+    }
+
+    private function mapMobileVisitCards(Collection $visits): array
+    {
+        return $visits->map(function (Visit $visit): array {
+            return [
+                'id' => $visit->id,
+                'code' => $visit->code,
+                'visitor' => $visit->visitor?->full_name ?? '-',
+                'company' => $visit->visitor?->company ?? '-',
+                'phone' => $visit->visitor?->phone ?? '-',
+                'email' => $visit->visitor?->email ?? '-',
+                'host' => $visit->hostEmployee?->name ?? '-',
+                'department' => $visit->hostEmployee?->department?->name ?? '-',
+                'purpose' => $visit->purpose,
+                'status' => $visit->status,
+                'time' => $visit->scheduled_at?->format('H:i') ?? '-',
+                'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+                'checkin_at' => $visit->actual_checkin_at?->format('H:i - d/m/Y') ?? '-',
+                'checkout_at' => $visit->actual_checkout_at?->format('H:i - d/m/Y') ?? '-',
+                'url' => route('mobile.visits.show', $visit),
+            ];
+        })->all();
+    }
+
+    private function mapMobileAccessRow(Visit $visit, string $type): array
+    {
+        $label = match ($type) {
+            'inside' => 'Đang trong công ty',
+            'in' => 'Khách vào',
+            'out' => 'Khách ra',
+            default => $visit->status === 'checked_in'
+                ? 'Đang trong công ty'
+                : ($visit->actual_checkout_at !== null ? 'Khách ra' : 'Khách vào'),
+        };
+
+        $badgeType = match ($label) {
+            'Khách vào' => 'in',
+            'Khách ra' => 'out',
+            default => 'inside',
+        };
+
+        return [
+            'id' => $visit->id,
+            'code' => $visit->code,
+            'label' => $label,
+            'badge_type' => $badgeType,
+            'visitor' => $visit->visitor?->full_name ?? '-',
+            'company' => $visit->visitor?->company ?? '-',
+            'phone' => $visit->visitor?->phone ?? '-',
+            'host' => $visit->hostEmployee?->name ?? '-',
+            'department' => $visit->hostEmployee?->department?->name ?? '-',
+            'purpose' => $visit->purpose ?? '-',
+            'checkin_at' => $visit->actual_checkin_at?->format('H:i d/m/Y') ?? '-',
+            'checkout_at' => $visit->actual_checkout_at?->format('H:i d/m/Y') ?? '-',
+            'url' => route('mobile.visits.show', $visit),
+        ];
+    }
+
+    private function mapMobileVisitListRow(Visit $visit): array
+    {
+        return [
+            'id' => $visit->id,
+            'code' => $visit->code,
+            'visitor' => $visit->visitor?->full_name ?? '-',
+            'company' => $visit->visitor?->company ?? '-',
+            'phone' => $visit->visitor?->phone ?? '-',
+            'host' => $visit->hostEmployee?->name ?? '-',
+            'department' => $visit->hostEmployee?->department?->name ?? '-',
+            'purpose' => $visit->purpose ?? '-',
+            'status' => $visit->status,
+            'status_label' => $this->visitStatusLabel($visit->status),
+            'time' => $visit->scheduled_at?->format('H:i') ?? '-',
+            'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+            'checkin_at' => $visit->actual_checkin_at?->format('H:i d/m/Y') ?? '-',
+            'checkout_at' => $visit->actual_checkout_at?->format('H:i d/m/Y') ?? '-',
+            'url' => route('mobile.visits.show', $visit),
+        ];
+    }
+
+    private function mobileNotificationActionUrl(Notification $notification): string
+    {
+        if ($notification->entity_type === 'visit' && is_numeric($notification->entity_id)) {
+            return route('mobile.visits.show', ['visit' => (int) $notification->entity_id]);
+        }
+
+        return route('mobile.notifications');
     }
 
     public function dashboardSummary(): JsonResponse
@@ -463,9 +833,11 @@ class AdminUiController extends Controller
         $this->notifyApprovalAdmins('visit.pending', 'Có lịch hẹn mới cần duyệt', "Lịch {$visit->code} vừa được tạo và đang chờ host duyệt.", 'warning', $visit);
         $this->scanWatchlistForVisit($visit, 'visit.created');
 
+        $redirectRoute = $request->boolean('mobile') ? 'mobile.visits.show' : 'admin.visits.show';
+
         return redirect()
-            ->route('admin.visits.show', $visit)
-            ->with('status', 'Da tao lich hen '.$visit->code.' va sinh QR thanh cong. Lich dang cho phe duyet.');
+            ->route($redirectRoute, $visit)
+            ->with('status', "Đã tạo lịch hẹn {$visit->code}. Lịch đang chờ host duyệt.");
     }
 
     public function visitsShow(Visit $visit): View
@@ -764,13 +1136,21 @@ class AdminUiController extends Controller
         ]));
     }
 
-    public function approveVisit(Visit $visit): RedirectResponse
+    public function approveVisit(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
         if (! $this->canActOnVisit($visit)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Bạn không có quyền xử lý lịch {$visit->code}."], 403);
+            }
+
             return redirect()->back()->with('error', "Bạn không có quyền xử lý lịch {$visit->code}.");
         }
 
         if ($visit->status !== 'pending') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Lịch {$visit->code} không ở trạng thái chờ duyệt."], 422);
+            }
+
             return redirect()->back()->with('error', "Lịch {$visit->code} không ở trạng thái chờ duyệt.");
         }
 
@@ -809,6 +1189,14 @@ class AdminUiController extends Controller
             $errorMessage = 'Lịch đã được duyệt nhưng chưa gửi được email QR: '.$exception->getMessage();
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $statusMessage,
+                'error' => $errorMessage,
+                'visit' => $this->mapMobileVisitCards(collect([$visit->refresh()]))[0],
+            ], $errorMessage === null ? 200 : 207);
+        }
+
         $redirect = redirect()->back()->with('status', $statusMessage);
         if ($errorMessage !== null) {
             $redirect->with('error', $errorMessage);
@@ -817,17 +1205,25 @@ class AdminUiController extends Controller
         return $redirect;
     }
 
-    public function rejectVisit(Request $request, Visit $visit): RedirectResponse
+    public function rejectVisit(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
         if (! $this->canActOnVisit($visit)) {
-            return redirect()->back()->with('error', "Ban khong co quyen xu ly lich {$visit->code}.");
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Bạn không có quyền xử lý lịch {$visit->code}."], 403);
+            }
+
+            return redirect()->back()->with('error', "Bạn không có quyền xử lý lịch {$visit->code}.");
         }
 
         if (! in_array($visit->status, ['pending', 'approved'], true)) {
-            return redirect()->back()->with('error', "Khong the tu choi lich {$visit->code} trong trang thai hien tai.");
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Không thể từ chối lịch {$visit->code} trong trạng thái hiện tại."], 422);
+            }
+
+            return redirect()->back()->with('error', "Không thể từ chối lịch {$visit->code} trong trạng thái hiện tại.");
         }
 
-        $reason = trim((string) $request->input('reason', 'Khong phu hop lich tiep khach.'));
+        $reason = trim((string) $request->input('reason', 'Không phù hợp lịch tiếp khách.'));
 
         $visit->update([
             'status' => 'rejected',
@@ -848,9 +1244,18 @@ class AdminUiController extends Controller
             'code' => $visit->code,
             'reason' => $reason,
         ]);
-        $this->notifyUsersWithPermission('visits.manage', 'approval.rejected', 'Lich hen bi tu choi', "Lich {$visit->code} bi tu choi. Ly do: {$reason}", 'danger', $visit);
+        $this->notifyUsersWithPermission('visits.manage', 'approval.rejected', 'Lịch hẹn bị từ chối', "Lịch {$visit->code} bị từ chối. Lý do: {$reason}", 'danger', $visit);
 
-        return redirect()->back()->with('status', "Da tu choi lich {$visit->code}.");
+        $message = "Đã từ chối lịch {$visit->code}.";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'visit' => $this->mapMobileVisitCards(collect([$visit->refresh()]))[0],
+            ]);
+        }
+
+        return redirect()->back()->with('status', $message);
     }
 
     public function waitVisit(Visit $visit): RedirectResponse
@@ -1223,8 +1628,10 @@ class AdminUiController extends Controller
             }
         }
 
+        $redirectRoute = $request->boolean('mobile') ? 'mobile.checkin' : 'admin.access.index';
+        $redirectParams = $request->boolean('mobile') ? [] : ['mode' => 'checkin'];
         $redirect = redirect()
-            ->route('admin.access.index', ['mode' => 'checkin'])
+            ->route($redirectRoute, $redirectParams)
             ->with('checkin_scanned_visit_id', $visit->id)
             ->with('checkin_scanned_by_qr', $scannedByQr);
 
@@ -1378,8 +1785,11 @@ class AdminUiController extends Controller
         }
 
         if ($visit->status !== 'checked_in') {
+            $redirectRoute = $request->boolean('mobile') ? 'mobile.checkout' : 'admin.access.index';
+            $redirectParams = $request->boolean('mobile') ? [] : ['mode' => 'checkout'];
+
             return redirect()
-                ->route('admin.access.index', ['mode' => 'checkout'])
+                ->route($redirectRoute, $redirectParams)
                 ->with('checkout_scanned_visit_id', $visit->id)
                 ->with('error', "Đã tìm thấy lịch {$visit->code}, nhưng trạng thái hiện tại là {$this->visitStatusLabel($visit->status)}. Chỉ khách đang trong công ty mới được làm thủ tục ra.");
         }
@@ -1391,8 +1801,11 @@ class AdminUiController extends Controller
 
         $error = $this->performCheckout($visit);
         if ($error !== null) {
+            $redirectRoute = $request->boolean('mobile') ? 'mobile.checkout' : 'admin.access.index';
+            $redirectParams = $request->boolean('mobile') ? [] : ['mode' => 'checkout'];
+
             return redirect()
-                ->route('admin.access.index', ['mode' => 'checkout'])
+                ->route($redirectRoute, $redirectParams)
                 ->with('checkout_scanned_visit_id', $visit->id)
                 ->with('error', $error);
         }
@@ -1402,8 +1815,11 @@ class AdminUiController extends Controller
         ]);
         $this->notifyHost($visit, 'visit.checked_out', 'Khách đã rời công ty', "Khách của lịch {$visit->code} đã ra khỏi công ty.", 'info');
 
+        $redirectRoute = $request->boolean('mobile') ? 'mobile.checkout' : 'admin.access.index';
+        $redirectParams = $request->boolean('mobile') ? [] : ['mode' => 'checkout'];
+
         return redirect()
-            ->route('admin.access.index', ['mode' => 'checkout'])
+            ->route($redirectRoute, $redirectParams)
             ->with('checkout_scanned_visit_id', $visit->id)
             ->with('status', "Đã tự động xác nhận khách ra cho lịch {$visit->code}.");
     }

@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Kiosk | Gatehouse Pro</title>
+    @php
+        $headSettings = $kioskSettings ?? [];
+        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? null;
+    @endphp
+    @if ($headFaviconUrl)
+        <link rel="icon" href="{{ $headFaviconUrl }}">
+        <link rel="shortcut icon" href="{{ $headFaviconUrl }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -59,6 +67,12 @@
             gap: .9rem;
         }
 
+        .kiosk-logo-group {
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
         .kiosk-logo {
             width: auto;
             min-width: 54px;
@@ -89,6 +103,12 @@
             max-height: 42px;
             object-fit: contain;
             padding: 0;
+        }
+
+        .kiosk-logo-separator {
+            width: 1px;
+            height: 34px;
+            background: var(--kiosk-line);
         }
 
         .kiosk-brand strong {
@@ -372,6 +392,67 @@
             border-radius: 0;
             background: transparent;
             color: #334963;
+        }
+
+        .kiosk-extra-panel {
+            grid-column: 1 / -1;
+            display: grid;
+            gap: .62rem;
+            margin-top: .1rem;
+            padding: .55rem;
+            border: 1px solid #e3edf8;
+            border-radius: 16px;
+            background: #f8fbff;
+        }
+
+        .kiosk-extra-toggle {
+            width: 100%;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            border: 0;
+            border-radius: 12px;
+            color: #315b89;
+            background: #fff;
+            font: inherit;
+            font-size: .78rem;
+            font-weight: 800;
+            padding: .45rem .7rem;
+            text-align: left;
+        }
+
+        .kiosk-extra-toggle span {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+        }
+
+        .kiosk-extra-toggle > span {
+            flex: 1;
+        }
+
+        .kiosk-extra-toggle small {
+            display: none;
+        }
+
+        .kiosk-extra-toggle i:last-child {
+            transition: transform .18s ease;
+        }
+
+        .kiosk-extra-panel.is-open .kiosk-extra-toggle i:last-child {
+            transform: rotate(180deg);
+        }
+
+        .kiosk-extra-content {
+            display: none;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .55rem 1rem;
+        }
+
+        .kiosk-extra-panel.is-open .kiosk-extra-content {
+            display: grid;
         }
 
         .kiosk-submit {
@@ -778,7 +859,7 @@
 
         @media (max-width: 760px) {
             .kiosk-header, .kiosk-tools { align-items: flex-start; flex-direction: column; }
-            .kiosk-flat-form, .kiosk-form-section, .kiosk-side, .kiosk-footer { grid-template-columns: 1fr; }
+            .kiosk-flat-form, .kiosk-form-section, .kiosk-extra-content, .kiosk-side, .kiosk-footer { grid-template-columns: 1fr; }
             .kiosk-title { flex-direction: column; }
             .kiosk-mode-actions { width: 100%; min-width: 0; }
         }
@@ -1046,7 +1127,9 @@
     $subtitle = $settings['kiosk.subtitle'] ?? 'Giao diện tự động cho khách đến công ty';
     $hotline = $settings['kiosk.hotline'] ?? '1900 0000';
     $workingHours = $settings['kiosk.working_hours'] ?? '07:30 - 18:00';
-    $logoUrl = $settings['kiosk.logo_url'] ?? null;
+    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? null;
+    $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
+    $logoUrls = array_values(array_filter([$ownerLogoUrl, $customerLogoUrl]));
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
     $lastVisit = $lastKioskVisit ?? null;
@@ -1082,11 +1165,23 @@
 
         <header class="kiosk-header">
             <div class="kiosk-brand">
-                <div class="kiosk-logo {{ $logoUrl ? 'has-logo' : '' }}">
-                    @if ($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="Logo">
-                    @else
-                        <i class="bi bi-shield-check"></i>
+                <div class="kiosk-logo-group">
+                    @if ($ownerLogoUrl)
+                        <div class="kiosk-logo has-logo">
+                            <img src="{{ $ownerLogoUrl }}" alt="Logo hệ thống">
+                        </div>
+                    @endif
+                    @if ($ownerLogoUrl && $customerLogoUrl)
+                        <span class="kiosk-logo-separator" aria-hidden="true"></span>
+                    @endif
+                    @if ($customerLogoUrl)
+                        <div class="kiosk-logo has-logo">
+                            <img src="{{ $customerLogoUrl }}" alt="{{ $companyName }}">
+                        </div>
+                    @elseif (! $ownerLogoUrl)
+                        <div class="kiosk-logo">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
                     @endif
                 </div>
                 <div>
@@ -1156,21 +1251,59 @@
                         </div>
                     </div>
                     <div>
-                        <label class="form-label">Email nếu có</label>
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
                         <div class="kiosk-input-wrap">
                             <i class="bi bi-envelope"></i>
-                            <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com">
+                            <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com" required>
                         </div>
                     </div>
                     <div>
-                        <label class="form-label">Công ty / Tổ chức</label>
+                        <label class="form-label">Công ty / Tổ chức <span class="text-danger">*</span></label>
                         <div class="kiosk-input-wrap">
                             <i class="bi bi-building"></i>
-                            <input class="form-control" name="visitor_company" value="{{ old('visitor_company') }}" placeholder="Nhập tên công ty">
+                            <input class="form-control" name="visitor_company" value="{{ old('visitor_company') }}" placeholder="Nhập tên công ty" required>
                         </div>
                     </div>
 
                     </div>
+
+                    <div class="kiosk-extra-panel {{ old('visitor_identity_no') || old('visitor_identity_issued_place') || old('visitor_identity_issued_date') || old('expected_checkout_time') ? 'is-open' : '' }}" data-kiosk-extra-panel>
+                        <button class="kiosk-extra-toggle" type="button" data-kiosk-extra-toggle aria-expanded="{{ old('visitor_identity_no') || old('visitor_identity_issued_place') || old('visitor_identity_issued_date') || old('expected_checkout_time') ? 'true' : 'false' }}">
+                            <span><i class="bi bi-plus-circle"></i>Thông tin xác thực</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="kiosk-extra-content">
+                            <div>
+                                <label class="form-label">Căn cước công dân</label>
+                                <div class="kiosk-input-wrap">
+                                    <i class="bi bi-card-text"></i>
+                                    <input class="form-control" name="visitor_identity_no" value="{{ old('visitor_identity_no') }}" placeholder="Nhập số CCCD">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">Nơi cấp</label>
+                                <div class="kiosk-input-wrap">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <input class="form-control" name="visitor_identity_issued_place" value="{{ old('visitor_identity_issued_place') }}" placeholder="Nhập nơi cấp">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">Ngày cấp</label>
+                                <div class="kiosk-input-wrap">
+                                    <i class="bi bi-calendar3"></i>
+                                    <input class="form-control" type="date" name="visitor_identity_issued_date" value="{{ old('visitor_identity_issued_date') }}">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">Dự kiến rời đi</label>
+                                <div class="kiosk-input-wrap">
+                                    <i class="bi bi-clock"></i>
+                                    <input class="form-control" type="time" name="expected_checkout_time" value="{{ old('expected_checkout_time', now()->addHours(2)->format('H:i')) }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="kiosk-form-section">
                     <div class="kiosk-section-title"><i class="bi bi-diagram-3-fill"></i>2. Thông tin gặp</div>
 
@@ -1204,17 +1337,6 @@
                                 <option value="{{ $purpose }}" @selected(old('purpose') === $purpose)>{{ $purpose }}</option>
                             @endforeach
                         </select>
-                    </div>
-                    <div>
-                        <label class="form-label">Dự kiến rời đi</label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-clock"></i>
-                            <input class="form-control" type="time" name="expected_checkout_time" value="{{ old('expected_checkout_time', now()->addHours(2)->format('H:i')) }}">
-                        </div>
-                    </div>
-                    <div class="kiosk-field-full">
-                        <label class="form-label">Ghi chú thêm nếu có</label>
-                        <textarea class="form-control" name="visitor_note" rows="2" placeholder="Ghi chú thêm nếu có">{{ old('visitor_note') }}</textarea>
                     </div>
                     </div>
 
@@ -1344,7 +1466,7 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="{{ asset('js/gatehouse-qr-scanner.js') }}"></script>
+    <script src="{{ \App\Support\AssetVersion::url('js/gatehouse-qr-scanner.js') }}"></script>
     <script>
         const clockNode = document.getElementById('kioskClock');
         const dateNode = document.getElementById('kioskDate');
@@ -1364,6 +1486,13 @@
             input: '#kioskQrInput',
             form: '#kioskLookupForm',
             status: '#kioskQrStatus'
+        });
+
+        const extraPanel = document.querySelector('[data-kiosk-extra-panel]');
+        const extraToggle = document.querySelector('[data-kiosk-extra-toggle]');
+        extraToggle?.addEventListener('click', () => {
+            const isOpen = extraPanel?.classList.toggle('is-open') ?? false;
+            extraToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
 
         const searchInput = document.getElementById('employeeSearch');

@@ -4,10 +4,8 @@
 
 @section('content')
     @php
-        $canOpenVisits = auth()->user()?->hasPermission('visits.manage');
-        $selectedKeys = $favoriteKeys->isEmpty()
-            ? $availableModules->pluck('key')
-            : $favoriteKeys;
+        $canScanAccess = auth()->user()?->hasPermission('checkin.manage');
+        $selectedKeys = $favoriteKeys->isEmpty() ? $availableModules->pluck('key') : $favoriteKeys;
         $statusLabels = [
             'pending' => 'Chờ duyệt',
             'approved' => 'Đã duyệt',
@@ -19,10 +17,7 @@
     @endphp
 
     @if (session('status'))
-        <div class="m-toast">
-            <i class="bi bi-check-circle"></i>
-            <span>{{ session('status') }}</span>
-        </div>
+        <div class="m-toast"><i class="bi bi-check-circle"></i><span>{{ session('status') }}</span></div>
     @endif
 
     <section class="m-hero">
@@ -31,10 +26,7 @@
             <h1>Điều phối khách ra/vào</h1>
             <span>{{ now()->format('H:i') }} · {{ now()->format('d/m/Y') }}</span>
         </div>
-        <a href="{{ route('admin.access.index', ['mode' => 'checkin']) }}">
-            <i class="bi bi-qr-code-scan"></i>
-            Quét QR
-        </a>
+        <a href="{{ $canScanAccess ? route('mobile.checkin') : route('mobile.approvals') }}"><i class="bi bi-qr-code-scan"></i>Quét QR</a>
     </section>
 
     <section class="m-section">
@@ -44,8 +36,7 @@
                 <span>{{ $modules->count() }} mục đang ghim</span>
             </div>
             <button class="m-link-btn" type="button" data-mobile-favorites-toggle>
-                <i class="bi bi-plus-circle"></i>
-                Tùy chỉnh
+                <i class="bi bi-plus-circle"></i>Tùy chỉnh
             </button>
         </div>
         <div class="m-module-grid">
@@ -79,48 +70,27 @@
                     @php $checked = $selectedKeys->contains($module['key']); @endphp
                     <label class="m-favorite-option m-tone-{{ $module['tone'] }}">
                         <input type="checkbox" name="modules[]" value="{{ $module['key'] }}" @checked($checked)>
-                        <span class="m-module-icon">
-                            <i class="bi {{ $module['icon'] }}"></i>
-                        </span>
-                        <span>
-                            <strong>{{ $module['label'] }}</strong>
-                            <small>{{ $module['hint'] }}</small>
-                        </span>
+                        <span class="m-module-icon"><i class="bi {{ $module['icon'] }}"></i></span>
+                        <span><strong>{{ $module['label'] }}</strong><small>{{ $module['hint'] }}</small></span>
                         <i class="bi bi-plus-circle m-favorite-add"></i>
                         <i class="bi bi-check-circle-fill m-favorite-check"></i>
                     </label>
                 @endforeach
             </div>
-            <button class="m-save-btn" type="submit">
-                <i class="bi bi-check2-circle"></i>
-                Lưu yêu thích
-            </button>
+            <button class="m-save-btn" type="submit"><i class="bi bi-check2-circle"></i>Lưu yêu thích</button>
         </form>
     </section>
 
     <section class="m-split">
         <article class="m-card">
-            <div class="m-card-head">
-                <h2>Hôm nay</h2>
-                <i class="bi bi-info-circle"></i>
-            </div>
+            <div class="m-card-head"><h2>Hôm nay</h2><i class="bi bi-info-circle"></i></div>
             <div class="m-mini-stats">
-                <div>
-                    <strong>{{ $stats['today'] }}</strong>
-                    <span>Lịch</span>
-                </div>
-                <div>
-                    <strong>{{ $stats['pending_checkin'] }}</strong>
-                    <span>Chờ vào</span>
-                </div>
+                <div><strong>{{ $stats['today'] }}</strong><span>Lịch</span></div>
+                <div><strong>{{ $stats['pending_checkin'] }}</strong><span>Chờ vào</span></div>
             </div>
         </article>
-
         <article class="m-card">
-            <div class="m-card-head">
-                <h2>Tóm tắt</h2>
-                <span>Hôm nay</span>
-            </div>
+            <div class="m-card-head"><h2>Tóm tắt</h2><span>Hôm nay</span></div>
             <div class="m-ring-row">
                 <div class="m-ring blue"><strong>{{ $stats['pending'] }}</strong><span>Chờ duyệt</span></div>
                 <div class="m-ring green"><strong>{{ $stats['in_company'] }}</strong><span>Trong CTY</span></div>
@@ -132,11 +102,11 @@
     <section class="m-section">
         <div class="m-section-head">
             <h2>Lịch gần đây</h2>
-            <a href="{{ $canOpenVisits ? route('admin.visits.index') : route('mobile.home') }}">Xem tất cả</a>
+            <a href="{{ route('mobile.access-lists', ['type' => 'all']) }}">Ra/vào</a>
         </div>
         <div class="m-visit-list">
             @forelse ($visits as $visit)
-                <a class="m-visit" href="{{ $canOpenVisits ? route('admin.visits.show', $visit['id']) : route('mobile.home') }}">
+                <a class="m-visit" href="{{ route('mobile.visits.show', $visit['id']) }}">
                     <span class="m-avatar">{{ mb_substr($visit['visitor'], 0, 1) }}</span>
                     <span class="m-visit-main">
                         <strong>{{ $visit['visitor'] }}</strong>
@@ -148,10 +118,7 @@
                     </span>
                 </a>
             @empty
-                <div class="m-empty">
-                    <i class="bi bi-calendar2-check"></i>
-                    <span>Chưa có lịch hẹn trong hôm nay.</span>
-                </div>
+                <div class="m-empty"><i class="bi bi-calendar2-check"></i><span>Chưa có lịch hẹn trong hôm nay.</span></div>
             @endforelse
         </div>
     </section>

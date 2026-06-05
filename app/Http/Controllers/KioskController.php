@@ -78,12 +78,14 @@ class KioskController extends Controller
         $validated = $request->validate([
             'visitor_name' => ['required', 'string', 'max:120'],
             'visitor_phone' => ['nullable', 'string', 'max:30'],
-            'visitor_email' => ['nullable', 'email', 'max:160'],
-            'visitor_company' => ['nullable', 'string', 'max:160'],
+            'visitor_email' => ['required', 'email', 'max:160'],
+            'visitor_company' => ['required', 'string', 'max:160'],
+            'visitor_identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
+            'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'host_employee_id' => ['required', 'exists:employees,id'],
             'purpose' => ['required', 'string', 'max:255'],
             'expected_checkout_time' => ['nullable', 'date_format:H:i'],
-            'visitor_note' => ['nullable', 'string', 'max:1000'],
             'policy_accepted' => ['accepted'],
         ]);
 
@@ -92,7 +94,9 @@ class KioskController extends Controller
             'phone' => $validated['visitor_phone'] ?? null,
             'email' => $validated['visitor_email'] ?? null,
             'company' => $validated['visitor_company'] ?? null,
-            'note' => $validated['visitor_note'] ?? null,
+            'identity_no' => $validated['visitor_identity_no'] ?? null,
+            'identity_issued_place' => $validated['visitor_identity_issued_place'] ?? null,
+            'identity_issued_date' => $validated['visitor_identity_issued_date'] ?? null,
         ]);
 
         $scheduledAt = now();

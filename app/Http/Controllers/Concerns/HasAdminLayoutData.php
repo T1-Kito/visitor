@@ -56,6 +56,7 @@ trait HasAdminLayoutData
             ->take(3)
             ->map(fn (string $word) => mb_substr($word, 0, 1))
             ->implode('');
+        $adminLogoUrl = $kioskSettings['admin.logo_url'] ?? null;
 
         return array_merge([
             'currentUser' => [
@@ -67,7 +68,8 @@ trait HasAdminLayoutData
             'adminBrand' => [
                 'name' => $brandName !== '' ? $brandName : 'Gatehouse Pro',
                 'subtitle' => $brandSubtitle !== '' ? $brandSubtitle : 'Quản lý khách ra vào',
-                'logo_url' => $kioskSettings['kiosk.logo_url'] ?? null,
+                'logo_url' => $adminLogoUrl,
+                'favicon_url' => $kioskSettings['app.favicon_url'] ?? $adminLogoUrl,
                 'initials' => mb_strtoupper($brandInitials !== '' ? $brandInitials : 'VMS'),
             ],
         ], $data);
