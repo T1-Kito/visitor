@@ -44,10 +44,11 @@
         </div>
 
         <div class="table-responsive">
-            <table class="resource-table">
+            <table class="resource-table visitor-table">
                 <thead>
                 <tr>
                     <th>Khách</th>
+                    <th class="visitor-code-column">Mã khách hàng</th>
                     <th>Số điện thoại</th>
                     <th>Email</th>
                     <th>Công ty</th>
@@ -66,6 +67,12 @@
                                     <span class="resource-muted">{{ $visitor->note ?: 'Chưa có ghi chú' }}</span>
                                 </div>
                             </div>
+                        </td>
+                        <td class="visitor-code-column">
+                            <span class="visitor-code-badge">
+                                <i class="bi bi-person-badge"></i>
+                                {{ $visitor->visitor_code }}
+                            </span>
                         </td>
                         <td>{{ $visitor->phone ?? '-' }}</td>
                         <td>{{ $visitor->email ?? '-' }}</td>
@@ -87,7 +94,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td class="resource-empty" colspan="6">
+                        <td class="resource-empty" colspan="7">
                             <i class="bi bi-person-lines-fill d-block fs-1 mb-2"></i>
                             Chưa có hồ sơ khách phù hợp.
                         </td>

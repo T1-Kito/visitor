@@ -155,6 +155,164 @@
             color: #be123c;
         }
 
+        .m-result-sheet[hidden] {
+            display: none !important;
+        }
+
+        .m-result-sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            display: grid;
+            place-items: center;
+            padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+            background: rgba(15, 23, 42, .6);
+            backdrop-filter: blur(9px);
+        }
+
+        .m-result-panel {
+            width: min(100%, 410px);
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto;
+            border-radius: 26px;
+            background: #fff;
+            box-shadow: 0 26px 80px rgba(15, 23, 42, .28);
+        }
+
+        .m-result-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 17px 18px;
+            border-bottom: 1px solid #e8eef5;
+        }
+
+        .m-result-head h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .m-result-close {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #d9e5f1;
+            border-radius: 14px;
+            color: #526a88;
+            background: #fff;
+            font-size: 1rem;
+        }
+
+        .m-result-body {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .m-result-summary {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr);
+            align-items: center;
+            gap: 13px;
+            padding: 15px;
+            border: 1px solid;
+            border-radius: 19px;
+        }
+
+        .m-result-summary.success {
+            border-color: #b7e8cc;
+            color: #087a43;
+            background: #effcf5;
+        }
+
+        .m-result-summary.danger {
+            border-color: #fecaca;
+            color: #b42318;
+            background: #fff3f4;
+        }
+
+        .m-result-icon {
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            border-radius: 17px;
+            background: rgba(255, 255, 255, .72);
+            font-size: 1.45rem;
+        }
+
+        .m-result-summary h3,
+        .m-result-summary p {
+            margin: 0;
+        }
+
+        .m-result-summary h3 {
+            font-size: .94rem;
+            font-weight: 600;
+        }
+
+        .m-result-summary p {
+            margin-top: 4px;
+            color: #51677f;
+            font-size: .76rem;
+            line-height: 1.45;
+        }
+
+        .m-result-details {
+            overflow: hidden;
+            border: 1px solid #e0e9f2;
+            border-radius: 18px;
+            background: #fbfdff;
+        }
+
+        .m-result-row {
+            min-height: 48px;
+            display: grid;
+            grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+            align-items: center;
+            gap: 12px;
+            padding: 10px 13px;
+            border-bottom: 1px solid #e8eef5;
+            font-size: .76rem;
+        }
+
+        .m-result-row:last-child {
+            border-bottom: 0;
+        }
+
+        .m-result-row span {
+            color: var(--m-muted);
+        }
+
+        .m-result-row strong {
+            overflow-wrap: anywhere;
+            color: var(--m-text);
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .m-result-action {
+            width: 100%;
+            min-height: 46px;
+            border: 0;
+            border-radius: 15px;
+            color: #fff;
+            background: #176fc5;
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 500;
+        }
+
+        .m-result-timer {
+            margin: -3px 0 0;
+            color: var(--m-muted);
+            font-size: .68rem;
+            text-align: center;
+        }
+
         @media (max-width: 520px) {
             .m-camera-sheet {
                 padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
@@ -178,6 +336,10 @@
                 margin: 0 14px 14px;
                 font-size: .78rem;
             }
+
+            .m-result-panel {
+                border-radius: 23px;
+            }
         }
     </style>
 @endpush
@@ -193,6 +355,9 @@
             'rejected' => 'Từ chối',
             'cancelled' => 'Đã hủy',
         ];
+        $resultMessage = session('error')
+            ?: (session('status') ?: ($errors->any() ? $errors->first() : null));
+        $resultIsSuccess = session('status') && ! session('error') && ! $errors->any();
     @endphp
 
     <section class="m-page-head">
@@ -203,29 +368,21 @@
         </div>
     </section>
 
-    @if (session('status'))
-        <div class="m-toast"><i class="bi bi-check-circle"></i><span>{{ session('status') }}</span></div>
-    @endif
-    @if (session('error'))
-        <div class="m-toast danger"><i class="bi bi-exclamation-triangle"></i><span>{{ session('error') }}</span></div>
-    @endif
-
     <section class="m-scan-card">
         <div class="m-scan-frame in-frame-camera">
             <i class="bi {{ $isCheckin ? 'bi-upc-scan' : 'bi-person-bounding-box' }}"></i>
             <strong>{{ $isCheckin ? 'Quét mã check-in' : 'Quét mã check-out' }}</strong>
-            <span>Có thể dùng camera điện thoại hoặc nhập mã thủ công.</span>
+            <span>Dùng camera điện thoại để quét mã QR.</span>
             <button class="m-camera-btn" type="button" data-open-camera>
                 <i class="bi bi-camera"></i>
                 Quét bằng camera
             </button>
         </div>
 
-        <form class="m-scan-form" action="{{ $scanRoute }}" method="post" data-mobile-scan-form>
+        <form action="{{ $scanRoute }}" method="post" data-mobile-scan-form hidden>
             @csrf
             <input type="hidden" name="mobile" value="1">
-            <input name="qr_token" autocomplete="off" autofocus data-qr-input placeholder="Nhập mã lịch hẹn hoặc mã QR">
-            <button type="submit"><i class="bi bi-search"></i>Kiểm tra</button>
+            <input type="hidden" name="qr_token" data-qr-input>
         </form>
     </section>
 
@@ -294,6 +451,58 @@
             <div class="m-camera-status" data-camera-status>Đưa mã QR vào giữa khung để hệ thống tự đọc.</div>
         </div>
     </div>
+
+    @if ($resultMessage)
+        <div class="m-result-sheet" data-result-modal>
+            <div class="m-result-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-result-title">
+                <div class="m-result-head">
+                    <h2 id="mobile-result-title">Kết quả {{ $isCheckin ? 'check-in' : 'check-out' }}</h2>
+                    <button class="m-result-close" type="button" data-close-result aria-label="Đóng">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="m-result-body">
+                    <div class="m-result-summary {{ $resultIsSuccess ? 'success' : 'danger' }}">
+                        <span class="m-result-icon">
+                            <i class="bi {{ $resultIsSuccess ? 'bi-check-circle' : 'bi-exclamation-triangle' }}"></i>
+                        </span>
+                        <div>
+                            <h3>{{ $resultIsSuccess ? ($isCheckin ? 'Check-in thành công' : 'Check-out thành công') : ($isCheckin ? 'Không thể check-in' : 'Không thể check-out') }}</h3>
+                            <p>{{ $resultMessage }}</p>
+                        </div>
+                    </div>
+
+                    @if ($scannedVisit)
+                        <div class="m-result-details">
+                            <div class="m-result-row">
+                                <span>Mã lịch hẹn</span>
+                                <strong>{{ $scannedVisit->code }}</strong>
+                            </div>
+                            <div class="m-result-row">
+                                <span>Khách</span>
+                                <strong>{{ $scannedVisit->visitor?->full_name ?? '-' }}</strong>
+                            </div>
+                            <div class="m-result-row">
+                                <span>Người tiếp khách</span>
+                                <strong>{{ $scannedVisit->hostEmployee?->name ?? '-' }}</strong>
+                            </div>
+                            <div class="m-result-row">
+                                <span>Phòng ban</span>
+                                <strong>{{ $scannedVisit->hostEmployee?->department?->name ?? '-' }}</strong>
+                            </div>
+                            <div class="m-result-row">
+                                <span>Trạng thái</span>
+                                <strong>{{ $statusLabels[$scannedVisit->status] ?? $scannedVisit->status }}</strong>
+                            </div>
+                        </div>
+                    @endif
+
+                    <button class="m-result-action" type="button" data-close-result>Đóng</button>
+                    <p class="m-result-timer">Tự động đóng sau <span data-result-countdown>15</span> giây</p>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')
@@ -308,11 +517,14 @@
             const statusBox = document.querySelector('[data-camera-status]');
             const input = document.querySelector('[data-qr-input]');
             const form = document.querySelector('[data-mobile-scan-form]');
+            const resultModal = document.querySelector('[data-result-modal]');
+            const resultCountdown = document.querySelector('[data-result-countdown]');
             let detector = null;
             let html5Qr = null;
             let stream = null;
             let scanTimer = null;
             let locked = false;
+            let resultTimer = null;
 
             const setStatus = (message, danger = false) => {
                 if (!statusBox) return;
@@ -397,7 +609,7 @@
 
             const startHtml5QrScanner = async () => {
                 if (!window.Html5Qrcode || !html5Reader) {
-                    setStatus('Trình duyệt này chưa hỗ trợ quét QR bằng camera. Bạn có thể nhập mã thủ công.', true);
+                    setStatus('Trình duyệt này chưa hỗ trợ quét QR bằng camera.', true);
                     return;
                 }
 
@@ -414,7 +626,7 @@
 
             const openCamera = async () => {
                 if (!navigator.mediaDevices?.getUserMedia && !window.Html5Qrcode) {
-                    setStatus('Không mở được camera trên thiết bị này. Vui lòng nhập mã thủ công.', true);
+                    setStatus('Không mở được camera trên thiết bị này.', true);
                     if (modal) modal.hidden = false;
                     return;
                 }
@@ -457,6 +669,33 @@
             modal?.addEventListener('click', (event) => {
                 if (event.target === modal) stopCamera();
             });
+            form?.addEventListener('submit', () => {
+                input?.blur();
+            });
+
+            const closeResult = () => {
+                window.clearInterval(resultTimer);
+                resultTimer = null;
+                if (resultModal) resultModal.hidden = true;
+                input?.focus({ preventScroll: true });
+            };
+
+            document.querySelectorAll('[data-close-result]').forEach((button) => {
+                button.addEventListener('click', closeResult);
+            });
+            resultModal?.addEventListener('click', (event) => {
+                if (event.target === resultModal) closeResult();
+            });
+
+            if (resultModal && resultCountdown) {
+                let seconds = 15;
+                resultTimer = window.setInterval(() => {
+                    seconds -= 1;
+                    resultCountdown.textContent = String(Math.max(seconds, 0));
+                    if (seconds <= 0) closeResult();
+                }, 1000);
+            }
+
             window.addEventListener('pagehide', stopCamera);
         })();
     </script>

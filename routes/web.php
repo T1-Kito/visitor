@@ -64,6 +64,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('mobile.notifications');
     Route::patch('/m/notifications/{notification}/read', [AdminUiController::class, 'markMobileNotificationRead'])
         ->name('mobile.notifications.read');
+    Route::get('/m/profile', [AdminUiController::class, 'mobileProfile'])
+        ->name('mobile.profile');
     Route::get('/m/visits/create', [AdminUiController::class, 'mobileVisitsCreate'])
         ->middleware('permission:visits.manage')
         ->name('mobile.visits.create');

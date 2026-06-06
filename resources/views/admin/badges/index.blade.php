@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Badges | Visitor Management')
-@section('page_title', 'Quan ly badge')
-@section('page_subtitle', 'Theo doi badge dang cap, da thu hoi va san sang su dung')
+@section('title', 'Thẻ ra vào')
+@section('page_title', 'Quản lý thẻ ra vào')
+@section('page_subtitle', 'Theo dõi thẻ đang sử dụng, đã thu hồi và sẵn sàng cấp')
 
 @section('content')
     <section class="panel-card">
@@ -10,13 +10,13 @@
             <table class="table modern-table align-middle mb-0">
                 <thead>
                 <tr>
-                    <th>Badge</th>
-                    <th>Trang thai</th>
-                    <th>Khach</th>
-                    <th>Lich hen</th>
-                    <th>Khu vuc</th>
-                    <th>Cap luc</th>
-                    <th>Het han</th>
+                    <th>Mã thẻ</th>
+                    <th>Trạng thái</th>
+                    <th>Khách</th>
+                    <th>Lịch hẹn</th>
+                    <th>Khu vực</th>
+                    <th>Cấp lúc</th>
+                    <th>Hết hạn</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -25,18 +25,18 @@
                         <td><strong>{{ $badge->badge_no }}</strong></td>
                         <td>
                             @if ($badge->status === 'active')
-                                <span class="status-badge status-checked-in">Active</span>
+                                <span class="status-badge status-checked-in">Đang sử dụng</span>
                             @elseif ($badge->status === 'revoked')
-                                <span class="status-badge status-checked-out">Revoked</span>
+                                <span class="status-badge status-checked-out">Đã thu hồi</span>
                             @else
-                                <span class="status-badge status-approved">Available</span>
+                                <span class="status-badge status-approved">Sẵn sàng cấp</span>
                             @endif
                         </td>
                         <td>{{ $badge->visit?->visitor?->full_name ?? '-' }}</td>
                         <td>{{ $badge->visit?->code ?? '-' }}</td>
                         <td>{{ $badge->visit?->access_zone ?? '-' }}</td>
-                        <td>{{ $badge->issued_at?->format('Y-m-d H:i') ?? '-' }}</td>
-                        <td>{{ $badge->valid_until?->format('Y-m-d H:i') ?? '-' }}</td>
+                        <td>{{ $badge->issued_at?->format('H:i - d/m/Y') ?? '-' }}</td>
+                        <td>{{ $badge->valid_until?->format('H:i - d/m/Y') ?? '-' }}</td>
                     </tr>
                 @endforeach
                 </tbody>

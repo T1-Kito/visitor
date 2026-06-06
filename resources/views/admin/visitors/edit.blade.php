@@ -12,6 +12,7 @@
             <section class="panel-card">
                 <div class="panel-header"><div><h3>Thong tin khach</h3><p>Du lieu dung lai khi tao lich hen moi.</p></div></div>
                 <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Ma khach</label><input class="form-control" value="{{ $visitor->visitor_code }}" readonly></div>
                     <div class="col-md-6"><label class="form-label">Ho ten</label><input class="form-control" name="full_name" value="{{ old('full_name', $visitor->full_name) }}" required></div>
                     <div class="col-md-6"><label class="form-label">So dien thoai</label><input class="form-control" name="phone" value="{{ old('phone', $visitor->phone) }}"></div>
                     <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email', $visitor->email) }}"></div>

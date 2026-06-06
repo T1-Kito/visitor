@@ -13,6 +13,7 @@
                     <span class="status-badge status-approved">{{ $visitor->visits_count }} luot</span>
                 </div>
                 <div class="detail-grid">
+                    <div class="detail-item"><span>Ma khach</span><strong>{{ $visitor->visitor_code }}</strong></div>
                     <div class="detail-item"><span>So dien thoai</span><strong>{{ $visitor->phone ?? '-' }}</strong></div>
                     <div class="detail-item"><span>Email</span><strong>{{ $visitor->email ?? '-' }}</strong></div>
                     <div class="detail-item"><span>Cong ty</span><strong>{{ $visitor->company ?? '-' }}</strong></div>

@@ -223,7 +223,8 @@ class CatalogController extends Controller
         if ($keyword !== '') {
             $query->where(function ($visitorQuery) use ($keyword): void {
                 $visitorQuery
-                    ->where('full_name', 'like', '%'.$keyword.'%')
+                    ->where('visitor_code', 'like', '%'.$keyword.'%')
+                    ->orWhere('full_name', 'like', '%'.$keyword.'%')
                     ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhere('email', 'like', '%'.$keyword.'%')
                     ->orWhere('company', 'like', '%'.$keyword.'%');
@@ -248,7 +249,10 @@ class CatalogController extends Controller
         ]);
 
         $visitor = Visitor::query()->create($validated);
-        $this->logAudit('visitor.created', 'visitor', (string) $visitor->id, ['phone' => $visitor->phone]);
+        $this->logAudit('visitor.created', 'visitor', (string) $visitor->id, [
+            'visitor_code' => $visitor->visitor_code,
+            'phone' => $visitor->phone,
+        ]);
 
         return redirect()->back()->with('status', 'Da tao ho so khach.');
     }
@@ -287,7 +291,10 @@ class CatalogController extends Controller
         ]);
 
         $visitor->update($validated);
-        $this->logAudit('visitor.updated', 'visitor', (string) $visitor->id, ['phone' => $visitor->phone]);
+        $this->logAudit('visitor.updated', 'visitor', (string) $visitor->id, [
+            'visitor_code' => $visitor->visitor_code,
+            'phone' => $visitor->phone,
+        ]);
 
         return redirect()
             ->route('admin.visitors.show', $visitor)

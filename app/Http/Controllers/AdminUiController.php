@@ -406,6 +406,26 @@ class AdminUiController extends Controller
         ]));
     }
 
+    public function mobileProfile(Request $request): View
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $user->loadMissing(['roles', 'employeeProfile.department']);
+
+        $employee = $user->employeeProfile;
+        if ($employee === null && trim((string) $user->email) !== '') {
+            $employee = Employee::query()
+                ->with('department')
+                ->where('email', $user->email)
+                ->first();
+        }
+
+        return view('mobile.profile', $this->withBase([
+            'profileUser' => $user,
+            'profileEmployee' => $employee,
+        ]));
+    }
+
     public function mobileAccessLists(Request $request): View
     {
         $type = in_array($request->query('type'), ['inside', 'in', 'out', 'all'], true)
@@ -760,7 +780,8 @@ class AdminUiController extends Controller
             ->withCount('visits')
             ->where(function (Builder $query) use ($keyword): void {
                 $query
-                    ->where('full_name', 'like', '%'.$keyword.'%')
+                    ->where('visitor_code', 'like', '%'.$keyword.'%')
+                    ->orWhere('full_name', 'like', '%'.$keyword.'%')
                     ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhere('email', 'like', '%'.$keyword.'%')
                     ->orWhere('company', 'like', '%'.$keyword.'%');
@@ -768,11 +789,12 @@ class AdminUiController extends Controller
             ->orderByDesc('visits_count')
             ->orderBy('full_name')
             ->limit(8)
-            ->get(['id', 'full_name', 'phone', 'email', 'company', 'note']);
+            ->get(['id', 'visitor_code', 'full_name', 'phone', 'email', 'company', 'note']);
 
         return response()->json([
             'data' => $visitors->map(fn (Visitor $visitor): array => [
                 'id' => $visitor->id,
+                'visitor_code' => $visitor->visitor_code,
                 'full_name' => $visitor->full_name,
                 'phone' => $visitor->phone,
                 'email' => $visitor->email,
@@ -2077,12 +2099,39 @@ class AdminUiController extends Controller
         $total = $visits->count();
         $checkedIn = $visits->where('status', 'checked_in')->count();
         $checkedOut = $visits->where('status', 'checked_out')->count();
+        $pendingApproval = $visits->where('status', 'pending')->count();
         $pendingCheckin = $visits->where('status', 'approved')->count();
-        $overstay = $visits->filter(
+        $overstayVisits = $visits->filter(
             fn (Visit $visit) => $visit->status === 'checked_in'
                 && $visit->expected_checkout_at !== null
                 && $visit->expected_checkout_at->lt(now())
-        )->count();
+        );
+        $overstay = $overstayVisits->count();
+
+        $reportAlerts = $overstayVisits
+            ->sortBy('expected_checkout_at')
+            ->map(fn (Visit $visit): array => [
+                'tone' => 'danger',
+                'icon' => 'bi-alarm',
+                'title' => 'Khách quá giờ: '.($visit->visitor?->full_name ?? 'Chưa rõ tên'),
+                'detail' => $visit->code.' · '.($visit->hostEmployee?->department?->name ?? 'Chưa có phòng ban'),
+                'time' => $visit->expected_checkout_at?->format('H:i d/m'),
+                'url' => route('admin.visits.show', $visit),
+            ])
+            ->concat(
+                $visits->where('status', 'pending')
+                    ->sortBy('scheduled_at')
+                    ->map(fn (Visit $visit): array => [
+                        'tone' => 'warning',
+                        'icon' => 'bi-hourglass-split',
+                        'title' => 'Chờ duyệt: '.($visit->visitor?->full_name ?? 'Chưa rõ tên'),
+                        'detail' => $visit->code.' · '.($visit->hostEmployee?->name ?? 'Chưa có người tiếp'),
+                        'time' => $visit->scheduled_at?->format('H:i d/m'),
+                        'url' => route('admin.visits.show', $visit),
+                    ])
+            )
+            ->take(5)
+            ->values();
 
         $chartDays = [];
         for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
@@ -2141,11 +2190,13 @@ class AdminUiController extends Controller
                 'total' => $total,
                 'checked_in' => $checkedIn,
                 'checked_out' => $checkedOut,
+                'pending_approval' => $pendingApproval,
                 'pending_checkin' => $pendingCheckin,
                 'overstay' => $overstay,
                 'growth' => $previousTotal > 0 ? round(($total - $previousTotal) / $previousTotal * 100) : ($total > 0 ? 100 : 0),
             ],
             'chartDays' => $chartDays,
+            'reportAlerts' => $reportAlerts,
             'topHosts' => $topHosts,
             'topDepartments' => $topDepartments,
             'reportVisits' => $visits->take(12)->values(),

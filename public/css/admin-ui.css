@@ -59,7 +59,6 @@ a {
 }
 
 .brand-block {
-    display: flex;
     align-items: center;
     justify-content: center;
     min-height: 92px;
@@ -2999,6 +2998,7 @@ a {
     height: 100vh;
     overflow-y: auto;
     scrollbar-width: thin;
+    padding-top: 0;
 }
 
 .sidebar-panel::-webkit-scrollbar {
@@ -3536,6 +3536,39 @@ a {
     background: #f6fbff;
 }
 
+.visitor-table {
+    min-width: 1080px;
+}
+
+.visitor-table .visitor-code-column {
+    width: 180px;
+    min-width: 180px;
+    white-space: nowrap;
+}
+
+.visitor-code-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .48rem;
+    min-height: 36px;
+    padding: .45rem .72rem;
+    color: #075fc7;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .025em;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #f1f7ff, #e7f1ff);
+    border: 1px solid #cfe2fb;
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85);
+}
+
+.visitor-code-badge i {
+    color: #3984df;
+    font-size: 1rem;
+}
+
 .resource-person {
     display: flex;
     align-items: center;
@@ -3790,7 +3823,7 @@ a {
 }
 
 .sidebar-panel .brand-block {
-    padding: 1rem .65rem 1.15rem;
+    padding: 0 .55rem .65rem;
     overflow: hidden;
 }
 
@@ -3806,8 +3839,8 @@ a {
 .sidebar-panel .brand-badge.has-logo {
     display: grid;
     place-items: center;
-    width: 176px;
-    height: 70px;
+    width: 100%;
+    height: 96px;
     max-width: 100%;
     max-height: none;
     padding: 0;
@@ -3815,17 +3848,11 @@ a {
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    overflow: visible;
+    overflow: hidden;
 }
 
-.sidebar-panel .brand-badge.has-logo img {
-    width: 200%;
-    height: 200%;
-    max-width: 300%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block;
-}
+
+
 
 .topbar-right .btn:not(.btn-brand):not(.btn-soft-danger) {
     font-weight: 500;

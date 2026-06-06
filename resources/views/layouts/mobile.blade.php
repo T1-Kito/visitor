@@ -25,27 +25,6 @@
     @endphp
 
     <div class="m-app">
-        <header class="m-topbar">
-            <a class="m-brand" href="{{ route('mobile.home') }}">
-                <span class="m-brand-logo {{ ! empty($adminBrand['logo_url']) ? 'has-logo' : '' }}">
-                    @if (! empty($adminBrand['logo_url']))
-                        <img src="{{ $adminBrand['logo_url'] }}" alt="{{ $adminBrand['name'] ?? 'Logo' }}">
-                    @else
-                        {{ $adminBrand['initials'] ?? 'VMS' }}
-                    @endif
-                </span>
-                <span>
-                    <strong>{{ $adminBrand['name'] ?? 'VMS' }}</strong>
-                    <small>{{ $currentUser['role'] ?? 'Mobile' }}</small>
-                </span>
-            </a>
-            <a class="m-icon-btn" href="{{ route('mobile.notifications') }}" aria-label="Thông báo">
-                <i class="bi bi-bell"></i>
-                @if (($notificationUnreadCount ?? 0) > 0)
-                    <em>{{ $notificationUnreadCount }}</em>
-                @endif
-            </a>
-        </header>
 
         <main class="m-content">
             @yield('content')
@@ -65,16 +44,20 @@
                 <span>Quét QR</span>
             </a>
             <a class="{{ request()->routeIs('mobile.notifications') ? 'active' : '' }}" href="{{ route('mobile.notifications') }}">
-                <i class="bi bi-bell"></i>
+                <span class="m-bottom-nav-icon">
+                    <i class="bi bi-bell"></i>
+                    @if (($notificationUnreadCount ?? 0) > 0)
+                        <em class="m-bottom-nav-badge">
+                            {{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}
+                        </em>
+                    @endif
+                </span>
                 <span>Thông báo</span>
             </a>
-            <form action="{{ route('admin.logout') }}" method="post">
-                @csrf
-                <button type="submit">
-                    <i class="bi bi-person-circle"></i>
-                    <span>Tôi</span>
-                </button>
-            </form>
+            <a class="{{ request()->routeIs('mobile.profile') ? 'active' : '' }}" href="{{ route('mobile.profile') }}">
+                <i class="bi bi-person-circle"></i>
+                <span>Tôi</span>
+            </a>
         </nav>
     </div>
 

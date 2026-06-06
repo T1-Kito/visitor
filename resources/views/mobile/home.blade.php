@@ -24,9 +24,14 @@
         <div>
             <p>Hôm nay</p>
             <h1>Điều phối khách ra/vào</h1>
-            <span>{{ now()->format('H:i') }} · {{ now()->format('d/m/Y') }}</span>
+            <span data-vietnam-clock>{{ now()->format('H:i') }} - {{ now()->format('d/m/Y') }}</span>
         </div>
-        <a href="{{ $canScanAccess ? route('mobile.checkin') : route('mobile.approvals') }}"><i class="bi bi-qr-code-scan"></i>Quét QR</a>
+        <div class="m-hero-actions">
+            <a class="m-hero-scan" href="{{ $canScanAccess ? route('mobile.checkin') : route('mobile.approvals') }}">
+                <i class="bi bi-qr-code-scan"></i>
+                Quét QR
+            </a>
+        </div>
     </section>
 
     <section class="m-section">
@@ -35,7 +40,7 @@
                 <h2>Module yêu thích</h2>
                 <span>{{ $modules->count() }} mục đang ghim</span>
             </div>
-            <button class="m-link-btn" type="button" data-mobile-favorites-toggle>
+            <button class="m-link-btn" type="button" data-mobile-favorites-open>
                 <i class="bi bi-plus-circle"></i>Tùy chỉnh
             </button>
         </div>
@@ -55,31 +60,41 @@
         </div>
     </section>
 
-    <section class="m-section m-favorites-panel" data-mobile-favorites-panel hidden>
-        <form action="{{ route('mobile.favorites.update') }}" method="post">
-            @csrf
-            <div class="m-section-head">
-                <div>
-                    <h2>Cài đặt yêu thích</h2>
-                    <span>Chọn module muốn ghim lên trang chủ.</span>
+    <div class="m-favorites-sheet" data-mobile-favorites-sheet hidden>
+        <button class="m-favorites-backdrop" type="button" data-mobile-favorites-close aria-label="Đóng cài đặt yêu thích"></button>
+        <section class="m-favorites-dialog" role="dialog" aria-modal="true" aria-labelledby="mobile-favorites-title">
+            <span class="m-sheet-handle" aria-hidden="true"></span>
+            <form action="{{ route('mobile.favorites.update') }}" method="post">
+                @csrf
+                <div class="m-favorites-head">
+                    <div>
+                        <h2 id="mobile-favorites-title">Cài đặt yêu thích</h2>
+                        <span>Chọn module muốn ghim lên trang chủ.</span>
+                    </div>
+                    <button class="m-favorites-close" type="button" data-mobile-favorites-close aria-label="Đóng">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
                 </div>
-                <button class="m-link-btn muted" type="button" data-mobile-favorites-toggle>Đóng</button>
-            </div>
-            <div class="m-favorite-grid">
-                @foreach ($availableModules as $module)
-                    @php $checked = $selectedKeys->contains($module['key']); @endphp
-                    <label class="m-favorite-option m-tone-{{ $module['tone'] }}">
-                        <input type="checkbox" name="modules[]" value="{{ $module['key'] }}" @checked($checked)>
-                        <span class="m-module-icon"><i class="bi {{ $module['icon'] }}"></i></span>
-                        <span><strong>{{ $module['label'] }}</strong><small>{{ $module['hint'] }}</small></span>
-                        <i class="bi bi-plus-circle m-favorite-add"></i>
-                        <i class="bi bi-check-circle-fill m-favorite-check"></i>
-                    </label>
-                @endforeach
-            </div>
-            <button class="m-save-btn" type="submit"><i class="bi bi-check2-circle"></i>Lưu yêu thích</button>
-        </form>
-    </section>
+                <div class="m-favorites-body">
+                    <div class="m-favorite-grid">
+                        @foreach ($availableModules as $module)
+                            @php $checked = $selectedKeys->contains($module['key']); @endphp
+                            <label class="m-favorite-option m-tone-{{ $module['tone'] }}">
+                                <input type="checkbox" name="modules[]" value="{{ $module['key'] }}" @checked($checked)>
+                                <span class="m-module-icon"><i class="bi {{ $module['icon'] }}"></i></span>
+                                <span><strong>{{ $module['label'] }}</strong><small>{{ $module['hint'] }}</small></span>
+                                <i class="bi bi-plus-circle m-favorite-add"></i>
+                                <i class="bi bi-check-circle-fill m-favorite-check"></i>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="m-favorites-footer">
+                    <button class="m-save-btn" type="submit"><i class="bi bi-check2-circle"></i>Lưu yêu thích</button>
+                </div>
+            </form>
+        </section>
+    </div>
 
     <section class="m-split">
         <article class="m-card">
@@ -126,13 +141,45 @@
 
 @push('scripts')
     <script>
-        document.querySelectorAll('[data-mobile-favorites-toggle]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const panel = document.querySelector('[data-mobile-favorites-panel]');
-                if (!panel) return;
-                panel.hidden = !panel.hidden;
-                if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+        const vietnamClock = document.querySelector('[data-vietnam-clock]');
+        const updateVietnamClock = () => {
+            if (!vietnamClock) return;
+
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hourCycle: 'h23',
+            }).formatToParts(new Date());
+            const value = (type) => parts.find((part) => part.type === type)?.value ?? '';
+
+            vietnamClock.textContent = `${value('hour')}:${value('minute')} - ${value('day')}/${value('month')}/${value('year')}`;
+        };
+
+        updateVietnamClock();
+        window.setInterval(updateVietnamClock, 30000);
+
+        const favoritesSheet = document.querySelector('[data-mobile-favorites-sheet]');
+        const openFavorites = () => {
+            if (!favoritesSheet) return;
+            favoritesSheet.hidden = false;
+            document.body.classList.add('m-sheet-open');
+        };
+        const closeFavorites = () => {
+            if (!favoritesSheet) return;
+            favoritesSheet.hidden = true;
+            document.body.classList.remove('m-sheet-open');
+        };
+
+        document.querySelector('[data-mobile-favorites-open]')?.addEventListener('click', openFavorites);
+        document.querySelectorAll('[data-mobile-favorites-close]').forEach((button) => {
+            button.addEventListener('click', closeFavorites);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && favoritesSheet && !favoritesSheet.hidden) closeFavorites();
         });
     </script>
 @endpush

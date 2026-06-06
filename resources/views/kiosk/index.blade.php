@@ -63,8 +63,9 @@
 
         .kiosk-brand {
             display: flex;
-            align-items: center;
-            gap: .9rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: .15rem;
         }
 
         .kiosk-logo-group {
@@ -75,9 +76,9 @@
 
         .kiosk-logo {
             width: auto;
-            min-width: 54px;
-            max-width: 118px;
-            height: 46px;
+            min-width: 64px;
+            max-width: 170px;
+            height: 62px;
             place-items: center;
             display: grid;
             border-radius: 14px;
@@ -88,8 +89,9 @@
         }
 
         .kiosk-logo.has-logo {
-            min-width: 0;
-            max-width: 128px;
+            width: 170px;
+            min-width: 170px;
+            max-width: 170px;
             background: transparent;
             border: 0;
             box-shadow: none;
@@ -97,18 +99,34 @@
         }
 
         .kiosk-logo img {
-            width: auto;
-            max-width: 128px;
-            height: 42px;
-            max-height: 42px;
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            max-height: 100%;
             object-fit: contain;
+            object-position: center;
             padding: 0;
+            transform: scale(1.06);
+            transform-origin: center;
         }
 
         .kiosk-logo-separator {
+            display: block;
             width: 1px;
-            height: 34px;
-            background: var(--kiosk-line);
+            height: 38px;
+            flex: 0 0 1px;
+            margin: 0 .25rem;
+            border-radius: 999px;
+            background: #cbd8e6;
+        }
+
+        .kiosk-brand-caption {
+            margin: 0;
+            padding-left: .1rem;
+            color: var(--kiosk-muted);
+            font-size: .72rem;
+            font-weight: 500;
+            line-height: 1.25;
         }
 
         .kiosk-brand strong {
@@ -1051,16 +1069,22 @@
             }
 
             .kiosk-logo {
-                min-width: 48px;
-                max-width: 96px;
-                height: 40px;
+                min-width: 54px;
+                max-width: 126px;
+                height: 48px;
                 border-radius: 13px;
             }
 
+            .kiosk-logo.has-logo {
+                width: 126px;
+                min-width: 126px;
+                max-width: 126px;
+            }
+
             .kiosk-logo img {
-                max-width: 96px;
-                height: 34px;
-                max-height: 34px;
+                max-width: 100%;
+                height: 100%;
+                max-height: 100%;
                 padding: 0;
             }
 
@@ -1184,10 +1208,7 @@
                         </div>
                     @endif
                 </div>
-                <div>
-                    <strong>{{ $systemName }}</strong>
-                    <span>{{ $subtitle }}</span>
-                </div>
+                <p class="kiosk-brand-caption">Hệ thống quản lý khách đến</p>
             </div>
             <div class="kiosk-tools">
                 <select class="form-select" aria-label="Chọn ngôn ngữ">

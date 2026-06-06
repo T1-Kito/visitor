@@ -331,7 +331,7 @@
             <div class="m-visitor-lookup">
                 <div class="m-lookup-title">
                     <strong>Tìm khách đã từng đến</strong>
-                    <span>Tên, SĐT, email</span>
+                    <span>Mã khách, tên, SĐT, email</span>
                 </div>
                 <div class="m-control">
                     <i class="bi bi-search"></i>
@@ -556,7 +556,7 @@
                 fields.company.value = visitor.company || '';
                 fields.note.value = visitor.note || fields.note.value || '';
                 lookupInput.value = visitor.full_name || '';
-                selectedVisitorText.textContent = `Đã chọn: ${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
+                selectedVisitorText.textContent = `Đã chọn: ${visitor.visitor_code ? visitor.visitor_code + ' - ' : ''}${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
                 selectedVisitorBox.classList.add('show');
                 hideSuggestions();
             };
@@ -589,7 +589,7 @@
                     const name = document.createElement('strong');
                     name.textContent = visitor.full_name || 'Khách chưa có tên';
                     const meta = document.createElement('span');
-                    meta.textContent = [visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
+                    meta.textContent = [visitor.visitor_code, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
 
                     info.appendChild(name);
                     info.appendChild(meta);

@@ -33,7 +33,7 @@
                                     <i class="bi bi-search"></i>
                                     <span>Tìm khách đã từng đến</span>
                                 </div>
-                                <small class="text-secondary">Tìm theo tên, SĐT, email hoặc công ty</small>
+                                <small class="text-secondary">Tìm theo mã khách, tên, SĐT, email hoặc công ty</small>
                             </div>
                             <div class="vc-control">
                                 <i class="bi bi-person-lines-fill"></i>
@@ -284,7 +284,7 @@
         fields.company.value = visitor.company || '';
         fields.note.value = visitor.note || fields.note.value || '';
         lookupInput.value = visitor.full_name || '';
-        selectedVisitorText.textContent = `Đã chọn khách cũ: ${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
+        selectedVisitorText.textContent = `Đã chọn khách cũ: ${visitor.visitor_code ? visitor.visitor_code + ' - ' : ''}${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
         selectedVisitorBox.classList.add('show');
         hideSuggestions();
     };
@@ -317,7 +317,7 @@
             const name = document.createElement('strong');
             name.textContent = visitor.full_name || 'Khách chưa có tên';
             const meta = document.createElement('span');
-            meta.textContent = [visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
+            meta.textContent = [visitor.visitor_code, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
             info.appendChild(name);
             info.appendChild(meta);
 
