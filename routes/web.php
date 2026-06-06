@@ -60,6 +60,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/m/access-lists', [AdminUiController::class, 'mobileAccessLists'])
         ->middleware('permission:checkin.manage')
         ->name('mobile.access-lists');
+    Route::get('/m/reports', [AdminUiController::class, 'mobileReports'])
+        ->middleware('permission:reports.export')
+        ->name('mobile.reports');
     Route::get('/m/notifications', [AdminUiController::class, 'mobileNotifications'])
         ->name('mobile.notifications');
     Route::patch('/m/notifications/{notification}/read', [AdminUiController::class, 'markMobileNotificationRead'])
@@ -115,6 +118,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/access', [AdminUiController::class, 'accessIndex'])
         ->middleware('permission:checkin.manage')
         ->name('admin.access.index');
+    Route::put('/access/quick-settings', [SystemAdminController::class, 'accessQuickSettingsUpdate'])
+        ->middleware('permission:system.manage')
+        ->name('admin.access.quick-settings.update');
     Route::get('/access/lists', [AdminUiController::class, 'accessListsIndex'])
         ->middleware('permission:checkin.manage')
         ->name('admin.access.lists');
@@ -340,12 +346,21 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:system.manage')
         ->name('admin.audit-logs.index');
 
+    Route::get('/settings', [SystemAdminController::class, 'settingsIndex'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.index');
     Route::get('/settings/kiosk', [SystemAdminController::class, 'kioskSettingsEdit'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.kiosk');
     Route::put('/settings/kiosk', [SystemAdminController::class, 'kioskSettingsUpdate'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.kiosk.update');
+    Route::get('/settings/logos', [SystemAdminController::class, 'logoSettingsEdit'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.logos');
+    Route::put('/settings/logos', [SystemAdminController::class, 'logoSettingsUpdate'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.logos.update');
     Route::get('/settings/printer', [SystemAdminController::class, 'printerSettingsEdit'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.printer');

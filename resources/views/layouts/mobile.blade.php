@@ -67,6 +67,14 @@
                 navigator.serviceWorker.register('{{ \App\Support\AssetVersion::url('sw.js') }}').catch(() => {});
             });
         }
+
+        document.querySelectorAll('.m-toast:not([data-approval-toast])').forEach((toast) => {
+            const duration = toast.classList.contains('danger') ? 12000 : 5200;
+            window.setTimeout(() => {
+                toast.classList.add('is-hiding');
+                window.setTimeout(() => toast.remove(), 260);
+            }, duration);
+        });
     </script>
     @stack('scripts')
 </body>

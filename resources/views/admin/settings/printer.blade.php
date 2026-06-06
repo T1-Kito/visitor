@@ -19,9 +19,9 @@
                 <h1>Thiết lập in mã QR</h1>
                 <p>Chọn máy in đang cắm trên máy lễ tân hoặc máy admin. Cấu hình này lưu trên Printer Bridge local, không cần sửa file thủ công.</p>
             </div>
-            <a class="btn btn-light" href="{{ route('admin.visits.index') }}">
-                <i class="bi bi-calendar-check"></i>
-                Về lịch hẹn
+            <a class="btn btn-light" href="{{ route('admin.settings.index') }}">
+                <i class="bi bi-grid"></i>
+                Tất cả cài đặt
             </a>
         </section>
 

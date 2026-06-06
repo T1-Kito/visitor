@@ -23,16 +23,16 @@
             background: radial-gradient(circle at top left, #d7ecff, #eef4fa 45%, #f6f9fc 100%);
         }
         .login-wrap {
-            width: min(460px, 92vw);
+            width: min(420px, 92vw);
         }
         .login-card {
             border: 1px solid #e4ebf4;
-            border-radius: 18px;
+            border-radius: 16px;
             box-shadow: 0 18px 35px rgba(17, 44, 76, 0.1);
         }
         .brand-pill {
-            width: 58px;
-            height: 58px;
+            width: 96px;
+            height: 60px;
             border-radius: 14px;
             display: grid;
             place-items: center;
@@ -42,16 +42,55 @@
             letter-spacing: 0.05em;
             overflow: hidden;
             flex: 0 0 auto;
+            margin: 0 auto;
         }
         .brand-pill.has-logo {
-            background: #fff;
-            border: 1px solid #e4ebf4;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            overflow: visible;
+            width: auto;
+            height: 88px;
         }
-        .brand-pill img {
-            width: 100%;
+        .brand-pill.has-logo img {
+            width: auto;
             height: 100%;
+            max-width: 280px;
             object-fit: contain;
-            padding: 5px;
+            display: block;
+        }
+        .login-brand-copy {
+            min-width: 0;
+            text-align: center;
+        }
+        .login-brand {
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            gap: 20px !important;
+        }
+        .login-card .form-label {
+            margin-bottom: 4px;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+        .login-card .form-control {
+            padding: .55rem .75rem;
+        }
+        @media (max-width: 420px) {
+            .brand-pill {
+                width: 88px;
+                height: 56px;
+            }
+            .brand-pill.has-logo {
+                height: 72px;
+            }
+            .login-brand-copy h1 {
+                font-size: 1rem;
+            }
+            .login-brand-copy p {
+                font-size: .82rem;
+            }
         }
         .btn-brand {
             background: linear-gradient(130deg, #0f7ec7, #0b5f97);
@@ -70,8 +109,8 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
         <div class="card login-card">
-            <div class="card-body p-4 p-md-5">
-                <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="card-body p-4">
+                <div class="login-brand d-flex align-items-center gap-2 mb-3">
                     <div class="brand-pill {{ ! empty($loginBrand['logo_url']) ? 'has-logo' : '' }}">
                         @if (! empty($loginBrand['logo_url']))
                             <img src="{{ $loginBrand['logo_url'] }}" alt="{{ $loginBrand['title'] ?? 'Logo' }}">
@@ -79,13 +118,13 @@
                             VMS
                         @endif
                     </div>
-                    <div>
+                    <div class="login-brand-copy">
                         <h1 class="h5 mb-1 fw-bold">{{ $loginBrand['title'] ?? 'Visitor Management System' }}</h1>
                         <p class="text-secondary mb-0">{{ $loginBrand['subtitle'] ?? 'Đăng nhập vào hệ thống vận hành' }}</p>
                     </div>
                 </div>
 
-                <form method="post" action="{{ route('login.attempt') }}" class="d-grid gap-3" data-login-form data-csrf-url="{{ route('csrf-token') }}">
+                <form method="post" action="{{ route('login.attempt') }}" class="d-grid gap-2" data-login-form data-csrf-url="{{ route('csrf-token') }}">
                     @csrf
                     <div>
                         <label class="form-label">Email</label>
@@ -105,10 +144,10 @@
                         <input class="form-check-input" type="checkbox" name="remember" id="remember">
                         <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
                     </div>
-                    <button class="btn btn-brand py-2" type="submit" data-login-submit>Đăng nhập</button>
+                    <button class="btn btn-brand py-2 mt-2" type="submit" data-login-submit>Đăng nhập</button>
                 </form>
 
-                <div class="alert alert-light border mt-4 mb-0">
+                <div class="alert alert-light border mt-3 mb-0 py-2 small">
                     Tai khoan demo: <strong>superadmin@company.local</strong> / <strong>Admin@123</strong>
                 </div>
             </div>

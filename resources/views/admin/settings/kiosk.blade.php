@@ -39,6 +39,9 @@
             </div>
         </div>
         <div class="ks-admin-actions">
+            <a class="ks-soft-btn" href="{{ route('admin.settings.index') }}">
+                <i class="bi bi-grid"></i>Tất cả cài đặt
+            </a>
             <a class="ks-soft-btn" href="{{ route('kiosk.index') }}" target="_blank">
                 <i class="bi bi-box-arrow-up-right"></i>Xem kiosk
             </a>

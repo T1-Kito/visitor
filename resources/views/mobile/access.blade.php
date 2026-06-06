@@ -32,6 +32,210 @@
             font-size: 1rem !important;
         }
 
+        .m-access-head {
+            grid-template-columns: 42px minmax(0, 1fr) 42px;
+        }
+
+        .m-access-settings-btn {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #d8e6f4;
+            border-radius: 14px;
+            background: #fff;
+            color: #42617f;
+            font-size: 1rem;
+        }
+
+        .m-access-settings-sheet[hidden] {
+            display: none !important;
+        }
+
+        .m-access-settings-sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0 max(0px, env(safe-area-inset-right, 0px)) 0 max(0px, env(safe-area-inset-left, 0px));
+            background: rgba(15, 23, 42, .48);
+            backdrop-filter: blur(5px);
+        }
+
+        .m-access-settings-panel {
+            width: min(100%, 520px);
+            max-height: min(88dvh, 720px);
+            overflow: auto;
+            padding: 10px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+            border-radius: 24px 24px 0 0;
+            background: #fff;
+            box-shadow: 0 -20px 60px rgba(15, 35, 60, .2);
+        }
+
+        .m-access-settings-handle {
+            width: 42px;
+            height: 4px;
+            margin: 0 auto 12px;
+            border-radius: 999px;
+            background: #d5e0ec;
+        }
+
+        .m-access-settings-head,
+        .m-access-setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .m-access-settings-head {
+            margin-bottom: 14px;
+        }
+
+        .m-access-settings-head h2 {
+            margin: 0;
+            color: #10233d;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .m-access-settings-head p,
+        .m-access-setting-copy span {
+            margin: 3px 0 0;
+            color: #788ba3;
+            font-size: .72rem;
+        }
+
+        .m-access-settings-close {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 36px;
+            border: 0;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #526b87;
+        }
+
+        .m-access-settings-body {
+            display: grid;
+            gap: 9px;
+        }
+
+        .m-access-setting-row {
+            min-height: 62px;
+            padding: 10px 12px;
+            border: 1px solid #e4edf7;
+            border-radius: 15px;
+            background: #fbfdff;
+        }
+
+        .m-access-setting-copy label {
+            display: block;
+            color: #203852;
+            font-size: .82rem;
+            font-weight: 500;
+        }
+
+        .m-access-switch {
+            width: 42px;
+            height: 24px;
+            position: relative;
+            flex: 0 0 42px;
+            appearance: none;
+            border: 0;
+            border-radius: 999px;
+            background: #cbd5e1;
+            cursor: pointer;
+            transition: background .18s ease;
+        }
+
+        .m-access-switch::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(15, 23, 42, .2);
+            transition: transform .18s ease;
+        }
+
+        .m-access-switch:checked {
+            background: #1976d2;
+        }
+
+        .m-access-switch:checked::after {
+            transform: translateX(18px);
+        }
+
+        .m-access-switch:focus-visible {
+            outline: 3px solid rgba(25, 118, 210, .18);
+            outline-offset: 2px;
+        }
+
+        .m-access-minutes {
+            width: 92px;
+            min-height: 38px;
+            padding: 6px 8px;
+            border: 1px solid #d7e5f3;
+            border-radius: 11px;
+            background: #fff;
+            color: #10233d;
+            font: inherit;
+            font-size: .82rem;
+            text-align: center;
+        }
+
+        .m-access-warning-field {
+            display: grid;
+            gap: 6px;
+            color: #203852;
+            font-size: .82rem;
+            font-weight: 500;
+        }
+
+        .m-access-warning-field textarea {
+            width: 100%;
+            min-height: 82px;
+            padding: 10px 12px;
+            border: 1px solid #d7e5f3;
+            border-radius: 13px;
+            color: #10233d;
+            font: inherit;
+            font-size: .8rem;
+            font-weight: 400;
+            resize: vertical;
+        }
+
+        .m-access-settings-save {
+            width: 100%;
+            min-height: 44px;
+            margin-top: 12px;
+            border: 0;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #1976d2, #11a9c7);
+            color: #fff;
+            font: inherit;
+            font-size: .86rem;
+            font-weight: 500;
+        }
+
+        @media (min-width: 560px) {
+            .m-access-settings-sheet {
+                padding-bottom: 14px;
+            }
+
+            .m-access-settings-panel {
+                border-radius: 24px;
+            }
+        }
+
         .m-scan-frame.in-frame-camera {
             min-height: 190px;
             gap: 8px;
@@ -358,15 +562,88 @@
         $resultMessage = session('error')
             ?: (session('status') ?: ($errors->any() ? $errors->first() : null));
         $resultIsSuccess = session('status') && ! session('error') && ! $errors->any();
+        $allowEarlyCheckin = ($accessSettings['access.allow_early_checkin'] ?? '1') === '1';
+        $allowLateCheckin = ($accessSettings['access.allow_late_checkin'] ?? '1') === '1';
+        $warningEnabled = ($accessSettings['access.warning_enabled'] ?? '1') === '1';
     @endphp
 
-    <section class="m-page-head">
+    <section class="m-page-head m-access-head">
         <a href="{{ route('mobile.home') }}" aria-label="Quay lại"><i class="bi bi-chevron-left"></i></a>
         <div>
             <h1>{{ $title }}</h1>
             <p>{{ $subtitle }}</p>
         </div>
+        @if (auth()->user()?->hasPermission('system.manage'))
+            <button class="m-access-settings-btn" type="button" data-open-access-settings aria-label="Cấu hình nhanh">
+                <i class="bi bi-gear"></i>
+            </button>
+        @endif
     </section>
+
+    @if (auth()->user()?->hasPermission('system.manage'))
+        <div class="m-access-settings-sheet" data-access-settings-sheet hidden>
+            <form class="m-access-settings-panel" method="post" action="{{ route('admin.access.quick-settings.update') }}">
+                @csrf
+                @method('put')
+                <input type="hidden" name="return_mode" value="{{ $mode }}">
+                <input type="hidden" name="return_mobile" value="1">
+                <div class="m-access-settings-handle"></div>
+                <div class="m-access-settings-head">
+                    <div>
+                        <h2>Cấu hình Check-in/Check-out</h2>
+                        <p>Thiết lập nhanh khung giờ và cảnh báo.</p>
+                    </div>
+                    <button class="m-access-settings-close" type="button" data-close-access-settings aria-label="Đóng">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="m-access-settings-body">
+                    <div class="m-access-setting-row">
+                        <div class="m-access-setting-copy">
+                            <label for="mobileAllowEarly">Cho phép check-in sớm</label>
+                            <span>Cho khách vào trước giờ hẹn.</span>
+                        </div>
+                        <input class="m-access-switch" id="mobileAllowEarly" type="checkbox" name="allow_early_checkin" value="1" @checked($allowEarlyCheckin)>
+                    </div>
+                    <div class="m-access-setting-row">
+                        <div class="m-access-setting-copy">
+                            <label for="mobileEarlyMinutes">Số phút check-in sớm</label>
+                            <span>Mặc định 30 phút.</span>
+                        </div>
+                        <input class="m-access-minutes" id="mobileEarlyMinutes" type="number" name="early_checkin_minutes" min="0" max="1440" value="{{ old('early_checkin_minutes', $accessSettings['access.early_checkin_minutes'] ?? 30) }}" required>
+                    </div>
+                    <div class="m-access-setting-row">
+                        <div class="m-access-setting-copy">
+                            <label for="mobileAllowLate">Cho phép check-in trễ</label>
+                            <span>Cho khách vào sau giờ hẹn.</span>
+                        </div>
+                        <input class="m-access-switch" id="mobileAllowLate" type="checkbox" name="allow_late_checkin" value="1" @checked($allowLateCheckin)>
+                    </div>
+                    <div class="m-access-setting-row">
+                        <div class="m-access-setting-copy">
+                            <label for="mobileLateMinutes">Số phút check-in trễ</label>
+                            <span>Mặc định 60 phút.</span>
+                        </div>
+                        <input class="m-access-minutes" id="mobileLateMinutes" type="number" name="late_checkin_minutes" min="0" max="1440" value="{{ old('late_checkin_minutes', $accessSettings['access.late_checkin_minutes'] ?? 60) }}" required>
+                    </div>
+                    <div class="m-access-setting-row">
+                        <div class="m-access-setting-copy">
+                            <label for="mobileWarningEnabled">Bật cảnh báo</label>
+                            <span>Hiện nội dung khi ngoài khung giờ.</span>
+                        </div>
+                        <input class="m-access-switch" id="mobileWarningEnabled" type="checkbox" name="warning_enabled" value="1" @checked($warningEnabled)>
+                    </div>
+                    <label class="m-access-warning-field" for="mobileWarningMessage">
+                        Nội dung cảnh báo
+                        <textarea id="mobileWarningMessage" name="warning_message" maxlength="500" placeholder="Nhập nội dung cảnh báo...">{{ old('warning_message', $accessSettings['access.warning_message'] ?? '') }}</textarea>
+                    </label>
+                </div>
+                <button class="m-access-settings-save" type="submit">
+                    <i class="bi bi-check2"></i> Lưu cấu hình
+                </button>
+            </form>
+        </div>
+    @endif
 
     <section class="m-scan-card">
         <div class="m-scan-frame in-frame-camera">
@@ -508,6 +785,33 @@
 @push('scripts')
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
+        (() => {
+            const sheet = document.querySelector('[data-access-settings-sheet]');
+            const openButton = document.querySelector('[data-open-access-settings]');
+            const closeButton = document.querySelector('[data-close-access-settings]');
+
+            const openSheet = () => {
+                if (!sheet) return;
+                sheet.hidden = false;
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeSheet = () => {
+                if (!sheet) return;
+                sheet.hidden = true;
+                document.body.style.overflow = '';
+            };
+
+            openButton?.addEventListener('click', openSheet);
+            closeButton?.addEventListener('click', closeSheet);
+            sheet?.addEventListener('click', (event) => {
+                if (event.target === sheet) closeSheet();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && sheet && !sheet.hidden) closeSheet();
+            });
+        })();
+
         (() => {
             const openButton = document.querySelector('[data-open-camera]');
             const closeButton = document.querySelector('[data-close-camera]');

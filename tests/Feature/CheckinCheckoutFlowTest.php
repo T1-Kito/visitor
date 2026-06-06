@@ -27,19 +27,15 @@ class CheckinCheckoutFlowTest extends TestCase
 
         $visit->update([
             'qr_expires_at' => now()->subDay(),
+            'scheduled_at' => now(),
         ]);
 
         $this->actingAs($admin)
             ->post('/checkin/scan-qr', [
                 'qr_token' => $visit->code,
             ])
-            ->assertRedirect('/checkin')
+            ->assertRedirect(route('admin.access.index', ['mode' => 'checkin']))
             ->assertSessionHas('checkin_scanned_visit_id', $visit->id)
-            ->assertSessionHas('status');
-
-        $this->actingAs($admin)
-            ->post("/checkin/{$visit->id}/confirm")
-            ->assertRedirect()
             ->assertSessionHas('status');
 
         $visit->refresh();
@@ -55,13 +51,8 @@ class CheckinCheckoutFlowTest extends TestCase
             ->post('/checkout/scan-qr', [
                 'qr_token' => $visit->code,
             ])
-            ->assertRedirect('/checkout')
+            ->assertRedirect(route('admin.access.index', ['mode' => 'checkout']))
             ->assertSessionHas('checkout_scanned_visit_id', $visit->id)
-            ->assertSessionHas('status');
-
-        $this->actingAs($admin)
-            ->post("/checkout/{$visit->id}/confirm")
-            ->assertRedirect()
             ->assertSessionHas('status');
 
         $visit->refresh();
@@ -90,7 +81,7 @@ class CheckinCheckoutFlowTest extends TestCase
             ->post('/checkout/scan-qr', [
                 'qr_token' => $visit->code,
             ])
-            ->assertRedirect('/checkout')
+            ->assertRedirect(route('admin.access.index', ['mode' => 'checkout']))
             ->assertSessionHas('error');
 
         $visit->refresh();

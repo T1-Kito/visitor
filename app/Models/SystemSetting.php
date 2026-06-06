@@ -68,4 +68,19 @@ class SystemSetting extends Model
             'app.favicon_url' => config('services.kiosk.favicon_url'),
         ];
     }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public static function accessDefaults(): array
+    {
+        return [
+            'access.allow_early_checkin' => '1',
+            'access.early_checkin_minutes' => '30',
+            'access.allow_late_checkin' => '1',
+            'access.late_checkin_minutes' => '60',
+            'access.warning_enabled' => '1',
+            'access.warning_message' => 'Khách đến ngoài khung giờ check-in được cho phép.',
+        ];
+    }
 }

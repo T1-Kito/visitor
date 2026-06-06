@@ -46,4 +46,30 @@ class ReportsEndpointsTest extends TestCase
 
         $this->assertStringStartsWith('PK', $xlsxResponse->streamedContent());
     }
+
+    public function test_mobile_reports_page_renders_with_filters_and_summary(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $user = User::query()
+            ->where('email', 'superadmin@company.local')
+            ->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('mobile.reports', [
+                'from_date' => now()->startOfMonth()->toDateString(),
+                'to_date' => now()->toDateString(),
+                'status' => 'all',
+            ]))
+            ->assertOk()
+            ->assertSeeText('Báo cáo')
+            ->assertSeeText('Tổng lượt khách')
+            ->assertSeeText('Hoạt động 7 ngày gần nhất')
+            ->assertSeeText('Lượt khách gần nhất');
+
+        $this->actingAs($user)
+            ->get(route('mobile.home'))
+            ->assertOk()
+            ->assertSee(route('mobile.reports'), false);
+    }
 }

@@ -867,6 +867,19 @@
         .kiosk-modal-qr svg { width: 150px; height: 150px; }
         .kiosk-modal-actions { display: grid; grid-template-columns: 1fr; gap: .75rem; margin-top: 1.25rem; }
         .kiosk-modal-actions .btn { min-height: 54px; border-radius: 16px; font-weight: 650; }
+
+        /* Keep the kiosk calm and readable on large touch screens. */
+        .kiosk-shell :is(h1, h2, h3, strong, label, button, .btn, .kiosk-section-title, .kiosk-mode-button) {
+            font-weight: 500 !important;
+        }
+
+        .kiosk-title h1 {
+            font-weight: 600 !important;
+        }
+
+        .kiosk-submit {
+            font-weight: 600 !important;
+        }
         .kiosk-modal-actions .btn-outline-primary { border-color: #071f3d; color: #fff; background: #071f3d; }
         .kiosk-modal-actions .btn-outline-primary:hover { border-color: #0b2a50; color: #fff; background: #0b2a50; }
 
@@ -1211,9 +1224,9 @@
                 <p class="kiosk-brand-caption">Hệ thống quản lý khách đến</p>
             </div>
             <div class="kiosk-tools">
-                <select class="form-select" aria-label="Chọn ngôn ngữ">
-                    <option>Tiếng Việt</option>
-                    <option>English</option>
+                <select class="form-select" id="kioskLanguage" aria-label="Chọn ngôn ngữ">
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="en">English</option>
                 </select>
                 <div class="kiosk-clock">
                     <strong id="kioskClock">--:--</strong>
@@ -1489,13 +1502,115 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="{{ \App\Support\AssetVersion::url('js/gatehouse-qr-scanner.js') }}"></script>
     <script>
+        const kioskTranslations = {
+            'Hệ thống quản lý khách đến': 'Visitor management system',
+            'Hỗ trợ': 'Support',
+            'Đăng ký khách': 'Visitor registration',
+            'Vui lòng nhập thông tin để được hỗ trợ nhanh chóng.': 'Please enter your information for faster assistance.',
+            'Đăng ký': 'Register',
+            '1. Thông tin khách': '1. Visitor information',
+            'Họ và tên': 'Full name',
+            'Số điện thoại': 'Phone number',
+            'Công ty / Tổ chức': 'Company / Organization',
+            'Thông tin xác thực': 'Identity information',
+            'Căn cước công dân': 'Identity document',
+            'Nơi cấp': 'Place of issue',
+            'Ngày cấp': 'Date of issue',
+            'Dự kiến rời đi': 'Expected departure',
+            '2. Thông tin gặp': '2. Meeting information',
+            'Người cần gặp': 'Person to meet',
+            'Phòng ban': 'Department',
+            'Chưa chọn nhân viên.': 'No employee selected.',
+            '3. Thông tin chuyến thăm': '3. Visit information',
+            'Mục đích đến': 'Purpose of visit',
+            'Chọn mục đích': 'Select a purpose',
+            'Họp': 'Meeting',
+            'Giao hàng': 'Delivery',
+            'Phỏng vấn': 'Interview',
+            'Tham quan': 'Site visit',
+            'Khác': 'Other',
+            'Tôi đồng ý tuân thủ quy định ra/vào và hướng dẫn của lễ tân/bảo vệ.': 'I agree to follow the access rules and instructions from reception/security.',
+            'Gửi yêu cầu tiếp khách': 'Submit visit request',
+            'Check-in trực tiếp': 'Direct check-in',
+            'Check-out trực tiếp': 'Direct check-out',
+            'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Scan the QR code or enter an approved visit code to check in.',
+            'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Scan the QR code or enter the visit code of a visitor currently inside to check out.',
+            'Đưa mã QR vào khung': 'Place the QR code inside the frame',
+            'Nếu không có mã QR, khách có thể nhập mã lịch hẹn bên dưới.': 'If no QR code is available, enter the visit code below.',
+            'Hoặc nhập mã check-in': 'Or enter a check-in code',
+            'Hoặc nhập mã check-out': 'Or enter a check-out code',
+            'Check-in ngay': 'Check in now',
+            'Check-out ngay': 'Check out now',
+            'Trạng thái yêu cầu gần nhất': 'Latest request status',
+            'Mã lịch': 'Visit code',
+            'Người tiếp': 'Host',
+            'Cập nhật lúc': 'Last updated',
+            'Xem lịch sử yêu cầu': 'View request history',
+            'Quy định': 'Guidelines',
+            'Xem hướng dẫn': 'View instructions',
+            'Thời gian làm việc': 'Working hours',
+            'Xin cảm ơn!': 'Thank you!',
+            'Chúc bạn một ngày tốt lành': 'Have a great day',
+            'Không tìm thấy nhân viên phù hợp.': 'No matching employee found.',
+        };
+        const kioskPlaceholders = {
+            'Nhập họ và tên': 'Enter full name',
+            'Nhập số điện thoại': 'Enter phone number',
+            'Nhập tên công ty': 'Enter company name',
+            'Nhập số CCCD': 'Enter identity number',
+            'Nhập nơi cấp': 'Enter place of issue',
+            'Tìm tên nhân viên': 'Search employee name',
+            'Tự động sau khi chọn': 'Filled automatically after selection',
+            'Nhập mã lịch hẹn hoặc mã QR': 'Enter visit code or QR code',
+            'Nhập mã lịch hẹn để check-out': 'Enter visit code to check out',
+        };
+        const reverseKioskTranslations = Object.fromEntries(Object.entries(kioskTranslations).map(([vi, en]) => [en, vi]));
+        const reverseKioskPlaceholders = Object.fromEntries(Object.entries(kioskPlaceholders).map(([vi, en]) => [en, vi]));
+        let kioskLanguage = localStorage.getItem('kiosk-language') === 'en' ? 'en' : 'vi';
+
+        function kioskText(viText) {
+            return kioskLanguage === 'en' ? (kioskTranslations[viText] ?? viText) : viText;
+        }
+
+        function translateKiosk(root = document.body) {
+            const textMap = kioskLanguage === 'en' ? kioskTranslations : reverseKioskTranslations;
+            const placeholderMap = kioskLanguage === 'en' ? kioskPlaceholders : reverseKioskPlaceholders;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+            while (walker.nextNode()) {
+                const node = walker.currentNode;
+                if (['SCRIPT', 'STYLE'].includes(node.parentElement?.tagName)) continue;
+                const value = node.nodeValue;
+                const trimmed = value.trim();
+                if (trimmed && textMap[trimmed]) node.nodeValue = value.replace(trimmed, textMap[trimmed]);
+            }
+
+            root.querySelectorAll('[placeholder]').forEach((element) => {
+                if (placeholderMap[element.placeholder]) element.placeholder = placeholderMap[element.placeholder];
+            });
+            document.documentElement.lang = kioskLanguage;
+        }
+
+        const kioskLanguageSelect = document.getElementById('kioskLanguage');
+        if (kioskLanguageSelect) {
+            kioskLanguageSelect.value = kioskLanguage;
+            kioskLanguageSelect.addEventListener('change', () => {
+                kioskLanguage = kioskLanguageSelect.value === 'en' ? 'en' : 'vi';
+                localStorage.setItem('kiosk-language', kioskLanguage);
+                translateKiosk();
+                setLookupMode(document.getElementById('kioskLookupMode')?.value);
+                updateClock();
+            });
+        }
+
         const clockNode = document.getElementById('kioskClock');
         const dateNode = document.getElementById('kioskDate');
 
         function updateClock() {
             const now = new Date();
-            clockNode.textContent = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(now);
-            dateNode.textContent = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
+            const locale = kioskLanguage === 'en' ? 'en-GB' : 'vi-VN';
+            clockNode.textContent = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(now);
+            dateNode.textContent = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
         }
 
         updateClock();
@@ -1527,7 +1642,7 @@
             resultsBox.innerHTML = '';
 
             if (items.length === 0) {
-                resultsBox.innerHTML = '<div class="list-group-item text-secondary">Không tìm thấy nhân viên phù hợp.</div>';
+                resultsBox.innerHTML = `<div class="list-group-item text-secondary">${kioskText('Không tìm thấy nhân viên phù hợp.')}</div>`;
                 return;
             }
 
@@ -1547,7 +1662,7 @@
                 item.appendChild(detail);
                 item.addEventListener('click', () => {
                     hostEmployeeId.value = employee.id;
-                    selectedHost.textContent = `Đã chọn: ${employee.name}`;
+                    selectedHost.textContent = `${kioskLanguage === 'en' ? 'Selected' : 'Đã chọn'}: ${employee.name}`;
                     selectedDepartment.value = employee.department ?? '';
                     resultsBox.innerHTML = '';
                     searchInput.value = employee.name;
@@ -1560,7 +1675,7 @@
             clearTimeout(searchTimer);
             hostEmployeeId.value = '';
             selectedDepartment.value = '';
-            selectedHost.textContent = 'Chưa chọn nhân viên.';
+            selectedHost.textContent = kioskText('Chưa chọn nhân viên.');
 
             const keyword = searchInput.value.trim();
             if (keyword.length < 2) {
@@ -1604,8 +1719,8 @@
 
         function lookupButtonHtml() {
             return currentLookupMode() === 'checkout'
-                ? '<i class="bi bi-box-arrow-left me-1"></i>Check-out ngay'
-                : '<i class="bi bi-box-arrow-in-right me-1"></i>Check-in ngay';
+                ? `<i class="bi bi-box-arrow-left me-1"></i>${kioskText('Check-out ngay')}`
+                : `<i class="bi bi-box-arrow-in-right me-1"></i>${kioskText('Check-in ngay')}`;
         }
 
         function setLookupMode(mode) {
@@ -1623,8 +1738,8 @@
 
             if (lookupInput) {
                 lookupInput.placeholder = normalizedMode === 'checkout'
-                    ? 'Nhập mã lịch hẹn để check-out'
-                    : 'Nhập mã lịch hẹn hoặc mã QR';
+                    ? kioskLanguage === 'en' ? 'Enter visit code to check out' : 'Nhập mã lịch hẹn để check-out'
+                    : kioskLanguage === 'en' ? 'Enter visit code or QR code' : 'Nhập mã lịch hẹn hoặc mã QR';
             }
 
             if (lookupSubmitButton) {
@@ -1632,17 +1747,21 @@
             }
 
             if (lookupHeading) {
-                lookupHeading.textContent = normalizedMode === 'checkout' ? 'Check-out trực tiếp' : 'Check-in trực tiếp';
+                lookupHeading.textContent = normalizedMode === 'checkout'
+                    ? kioskText('Check-out trực tiếp')
+                    : kioskText('Check-in trực tiếp');
             }
 
             if (lookupHelp) {
                 lookupHelp.textContent = normalizedMode === 'checkout'
-                    ? 'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.'
-                    : 'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.';
+                    ? kioskText('Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.')
+                    : kioskText('Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.');
             }
 
             if (lookupDivider) {
-                lookupDivider.textContent = normalizedMode === 'checkout' ? 'Hoặc nhập mã check-out' : 'Hoặc nhập mã check-in';
+                lookupDivider.textContent = normalizedMode === 'checkout'
+                    ? kioskText('Hoặc nhập mã check-out')
+                    : kioskText('Hoặc nhập mã check-in');
             }
         }
 
@@ -1858,6 +1977,9 @@
                 setTimeout(() => kioskNotice.remove(), 260);
             }, 4200);
         }
+
+        translateKiosk();
+        setLookupMode(document.getElementById('kioskLookupMode')?.value);
     </script>
 </body>
 </html>

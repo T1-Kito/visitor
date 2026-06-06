@@ -298,12 +298,19 @@ a {
     color: #087a43;
     background: #ecfdf4;
     font-size: 0.78rem;
+    transition: opacity .24s ease, transform .24s ease;
 }
 
 .m-toast.danger {
     border-color: #fecaca;
     color: #b42318;
     background: #fff1f2;
+}
+
+.m-toast.is-hiding {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
 }
 
 .m-page-head {

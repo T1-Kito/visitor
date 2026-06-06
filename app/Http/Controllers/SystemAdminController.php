@@ -582,6 +582,43 @@ class SystemAdminController extends Controller
         ]));
     }
 
+    public function settingsIndex(): View
+    {
+        return view('admin.settings.index', $this->withBase([]));
+    }
+
+    public function accessQuickSettingsUpdate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'early_checkin_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
+            'late_checkin_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
+            'warning_message' => ['nullable', 'string', 'max:500'],
+            'return_mode' => ['nullable', Rule::in(['checkin', 'checkout'])],
+            'return_mobile' => ['nullable', 'boolean'],
+        ]);
+
+        SystemSetting::putMany([
+            'access.allow_early_checkin' => $request->boolean('allow_early_checkin') ? '1' : '0',
+            'access.early_checkin_minutes' => (string) $validated['early_checkin_minutes'],
+            'access.allow_late_checkin' => $request->boolean('allow_late_checkin') ? '1' : '0',
+            'access.late_checkin_minutes' => (string) $validated['late_checkin_minutes'],
+            'access.warning_enabled' => $request->boolean('warning_enabled') ? '1' : '0',
+            'access.warning_message' => trim((string) ($validated['warning_message'] ?? '')),
+        ]);
+
+        $this->logAudit('settings.access_updated', 'system_setting', 'access');
+
+        $mode = $validated['return_mode'] ?? 'checkin';
+        $route = $request->boolean('return_mobile')
+            ? ($mode === 'checkout' ? 'mobile.checkout' : 'mobile.checkin')
+            : 'admin.access.index';
+        $parameters = $request->boolean('return_mobile') ? [] : ['mode' => $mode];
+
+        return redirect()
+            ->route($route, $parameters)
+            ->with('status', 'Đã lưu cấu hình Check-in/Check-out.');
+    }
+
     public function kioskSettingsEdit(): View
     {
         return view('admin.settings.kiosk', $this->withBase([
@@ -596,6 +633,57 @@ class SystemAdminController extends Controller
         ]));
     }
 
+    public function logoSettingsEdit(): View
+    {
+        return view('admin.settings.logos', $this->withBase([
+            'settings' => SystemSetting::values(SystemSetting::kioskDefaults()),
+        ]));
+    }
+
+    public function logoSettingsUpdate(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'login_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
+            'remove_admin_logo' => ['nullable', 'boolean'],
+            'remove_login_logo' => ['nullable', 'boolean'],
+            'remove_owner_logo' => ['nullable', 'boolean'],
+            'remove_customer_logo' => ['nullable', 'boolean'],
+            'remove_favicon' => ['nullable', 'boolean'],
+        ]);
+
+        $settings = SystemSetting::values(SystemSetting::kioskDefaults());
+        $adminLogoUrl = $this->resolveUploadedSetting($request, $settings['admin.logo_url'] ?? null, 'admin_logo', 'admin_logo_file', 'admin-logo');
+        $loginLogoUrl = $this->resolveUploadedSetting($request, $settings['login.logo_url'] ?? null, 'login_logo', 'login_logo_file', 'login-logo');
+        $ownerLogoUrl = $this->resolveUploadedSetting($request, $settings['kiosk.owner_logo_url'] ?? null, 'owner_logo', 'owner_logo_file', 'owner-logo');
+        $customerLogoUrl = $this->resolveUploadedSetting(
+            $request,
+            $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null),
+            'customer_logo',
+            'customer_logo_file',
+            'customer-logo',
+        );
+        $faviconUrl = $this->resolveUploadedSetting($request, $settings['app.favicon_url'] ?? null, 'favicon', 'favicon_file', 'favicon');
+
+        SystemSetting::putMany([
+            'admin.logo_url' => $adminLogoUrl,
+            'login.logo_url' => $loginLogoUrl,
+            'kiosk.owner_logo_url' => $ownerLogoUrl,
+            'kiosk.customer_logo_url' => $customerLogoUrl,
+            'kiosk.logo_url' => $customerLogoUrl,
+            'app.favicon_url' => $faviconUrl,
+        ]);
+
+        $this->logAudit('settings.logos_updated', 'system_setting', 'logos');
+
+        return redirect()
+            ->route('admin.settings.logos')
+            ->with('status', 'Đã cập nhật cài đặt logo.');
+    }
+
     public function kioskSettingsUpdate(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -608,34 +696,12 @@ class SystemAdminController extends Controller
             'working_hours' => ['required', 'string', 'max:80'],
             'login_title' => ['required', 'string', 'max:120'],
             'login_subtitle' => ['required', 'string', 'max:180'],
-            'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'login_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'remove_admin_logo' => ['nullable', 'boolean'],
-            'remove_login_logo' => ['nullable', 'boolean'],
-            'remove_owner_logo' => ['nullable', 'boolean'],
-            'remove_customer_logo' => ['nullable', 'boolean'],
-            'remove_favicon' => ['nullable', 'boolean'],
             'remove_background' => ['nullable', 'boolean'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
-
-        $adminLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['admin.logo_url'] ?? null, 'admin_logo', 'admin_logo_file', 'admin-logo');
-        $loginLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['login.logo_url'] ?? null, 'login_logo', 'login_logo_file', 'login-logo');
-        $ownerLogoUrl = $this->resolveUploadedSetting($request, $currentSettings['kiosk.owner_logo_url'] ?? null, 'owner_logo', 'owner_logo_file', 'owner-logo');
-        $customerLogoUrl = $this->resolveUploadedSetting(
-            $request,
-            $currentSettings['kiosk.customer_logo_url'] ?? ($currentSettings['kiosk.logo_url'] ?? null),
-            'customer_logo',
-            'customer_logo_file',
-            'customer-logo',
-        );
-        $faviconUrl = $this->resolveUploadedSetting($request, $currentSettings['app.favicon_url'] ?? null, 'favicon', 'favicon_file', 'favicon');
 
         $backgroundUrl = $currentSettings['kiosk.background_url'] ?? null;
         if ($request->boolean('remove_background')) {
@@ -655,16 +721,10 @@ class SystemAdminController extends Controller
             'kiosk.welcome_description' => $validated['welcome_description'],
             'kiosk.hotline' => $validated['hotline'],
             'kiosk.working_hours' => $validated['working_hours'],
-            'admin.logo_url' => $adminLogoUrl,
-            'login.logo_url' => $loginLogoUrl,
             'login.title' => $validated['login_title'],
             'login.subtitle' => $validated['login_subtitle'],
-            'kiosk.owner_logo_url' => $ownerLogoUrl,
-            'kiosk.customer_logo_url' => $customerLogoUrl,
-            'kiosk.logo_url' => $customerLogoUrl,
             'kiosk.background_url' => $backgroundUrl,
             'kiosk.primary_color' => $validated['primary_color'],
-            'app.favicon_url' => $faviconUrl,
         ]);
 
         $this->logAudit('settings.kiosk_updated', 'system_setting', 'kiosk', [

@@ -19,6 +19,9 @@
                 $isActive = $isExactOnly
                     ? request()->routeIs($routeName)
                     : (request()->routeIs($routeName) || request()->routeIs($activePattern));
+                if ($routeName === 'admin.settings.index') {
+                    $isActive = request()->routeIs('admin.settings.*', 'admin.rbac.*', 'admin.audit-logs.*');
+                }
             @endphp
             <a href="{{ route($item['route']) }}"
                class="sidebar-link {{ $isActive ? 'active' : '' }}">

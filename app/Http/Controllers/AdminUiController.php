@@ -10,6 +10,7 @@ use App\Models\Badge;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Notification;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\UserMobileFavorite;
 use App\Models\Visit;
@@ -155,7 +156,7 @@ class AdminUiController extends Controller
                 'hint' => 'Theo dõi dữ liệu',
                 'icon' => 'bi-file-earmark-bar-graph',
                 'tone' => 'slate',
-                'route' => route('admin.reports.index'),
+                'route' => route('mobile.reports'),
                 'enabled' => $user?->hasPermission('reports.export') ?? false,
             ],
             [
@@ -285,6 +286,7 @@ class AdminUiController extends Controller
             'title' => 'Check-in',
             'subtitle' => 'Quét QR hoặc nhập mã lịch để làm thủ tục vào.',
             'scanRoute' => route('admin.checkin.scan-qr'),
+            'accessSettings' => SystemSetting::values(SystemSetting::accessDefaults()),
             'scannedVisit' => $scannedVisit,
             'visits' => $this->mapMobileVisitCards($readyVisits),
         ]));
@@ -309,6 +311,7 @@ class AdminUiController extends Controller
             'title' => 'Check-out',
             'subtitle' => 'Quét QR hoặc nhập mã lịch để làm thủ tục ra.',
             'scanRoute' => route('admin.checkout.scan-qr'),
+            'accessSettings' => SystemSetting::values(SystemSetting::accessDefaults()),
             'scannedVisit' => $scannedVisit,
             'visits' => $this->mapMobileVisitCards($insideVisits),
         ]));
@@ -482,6 +485,72 @@ class AdminUiController extends Controller
                 'in_today' => Visit::query()->whereDate('actual_checkin_at', now()->toDateString())->count(),
                 'out_today' => Visit::query()->whereDate('actual_checkout_at', now()->toDateString())->count(),
             ],
+        ]));
+    }
+
+    public function mobileReports(Request $request): View
+    {
+        $filters = $this->reportFilters($request);
+        $from = Carbon::parse($filters['from_date'])->startOfDay();
+        $to = Carbon::parse($filters['to_date'])->endOfDay();
+        $visits = $this->filteredVisitsQuery($filters)
+            ->orderByDesc('scheduled_at')
+            ->get();
+        $total = $visits->count();
+        $overstayVisits = $visits->filter(
+            fn (Visit $visit): bool => $visit->status === 'checked_in'
+                && $visit->expected_checkout_at !== null
+                && $visit->expected_checkout_at->lt(now())
+        );
+
+        $chartDays = [];
+        for ($day = $from->copy(); $day->lte($to); $day->addDay()) {
+            $daily = $visits->filter(fn (Visit $visit): bool => $visit->scheduled_at?->isSameDay($day) ?? false);
+            $chartDays[] = [
+                'label' => $day->format('d/m'),
+                'total' => $daily->count(),
+                'checkin' => $daily->filter(fn (Visit $visit): bool => $visit->actual_checkin_at !== null)->count(),
+            ];
+        }
+        $chartDays = array_slice($chartDays, -7);
+        $chartMax = max(1, ...array_column($chartDays, 'total'));
+
+        $topDepartments = $visits
+            ->groupBy(fn (Visit $visit): string => $visit->hostEmployee?->department?->name ?? 'Chưa có phòng ban')
+            ->map(fn (Collection $items, string $name): array => [
+                'name' => $name,
+                'total' => $items->count(),
+                'percent' => $total > 0 ? (int) round($items->count() / $total * 100) : 0,
+            ])
+            ->sortByDesc('total')
+            ->take(4)
+            ->values();
+
+        $statusLabels = [
+            'pending' => 'Chờ duyệt',
+            'approved' => 'Chờ check-in',
+            'rejected' => 'Từ chối',
+            'checked_in' => 'Trong công ty',
+            'checked_out' => 'Đã ra',
+            'cancelled' => 'Đã hủy',
+        ];
+
+        return view('mobile.reports', $this->withBase([
+            'filters' => $filters,
+            'statuses' => ['all' => 'Tất cả trạng thái', ...$statusLabels],
+            'statusLabels' => $statusLabels,
+            'stats' => [
+                'total' => $total,
+                'pending' => $visits->where('status', 'pending')->count(),
+                'inside' => $visits->where('status', 'checked_in')->count(),
+                'checked_out' => $visits->where('status', 'checked_out')->count(),
+                'overstay' => $overstayVisits->count(),
+            ],
+            'chartDays' => $chartDays,
+            'chartMax' => $chartMax,
+            'topDepartments' => $topDepartments,
+            'alerts' => $overstayVisits->sortBy('expected_checkout_at')->take(4)->values(),
+            'recentVisits' => $visits->take(8)->values(),
         ]));
     }
 
@@ -1311,6 +1380,7 @@ class AdminUiController extends Controller
     public function accessIndex(Request $request): View
     {
         $today = now()->toDateString();
+        $accessSettings = SystemSetting::values(SystemSetting::accessDefaults());
         $requestedMode = (string) $request->query('mode', '');
         $activeMode = in_array($requestedMode, ['checkin', 'checkout'], true)
             ? $requestedMode
@@ -1385,6 +1455,7 @@ class AdminUiController extends Controller
 
         return view('admin.access.index', $this->withBase([
             'activeMode' => $activeMode,
+            'accessSettings' => $accessSettings,
             'readyToCheckin' => $this->mapVisitRows($readyToCheckin),
             'checkinScannedVisit' => $checkinScannedVisit,
             'checkinScannedQrExpired' => $checkinScannedByQr && ($checkinScannedVisit?->qr_expires_at?->lt(now()) ?? false),
@@ -3267,6 +3338,11 @@ XML;
             };
         }
 
+        $windowError = $this->checkinWindowError($visit);
+        if ($windowError !== null) {
+            return $windowError;
+        }
+
         $visit->update([
             'status' => 'checked_in',
             'actual_checkin_at' => $visit->actual_checkin_at ?? now(),
@@ -3288,6 +3364,40 @@ XML;
         $this->sendHostCheckinEmail($visit);
 
         return null;
+    }
+
+    private function checkinWindowError(Visit $visit): ?string
+    {
+        if ($visit->scheduled_at === null) {
+            return null;
+        }
+
+        $settings = SystemSetting::values(SystemSetting::accessDefaults());
+        $scheduledAt = $visit->scheduled_at->copy();
+        $allowEarly = ($settings['access.allow_early_checkin'] ?? '1') === '1';
+        $allowLate = ($settings['access.allow_late_checkin'] ?? '1') === '1';
+        $earlyMinutes = max(0, (int) ($settings['access.early_checkin_minutes'] ?? 30));
+        $lateMinutes = max(0, (int) ($settings['access.late_checkin_minutes'] ?? 60));
+        $earliestAt = $allowEarly ? $scheduledAt->copy()->subMinutes($earlyMinutes) : $scheduledAt;
+        $latestAt = $allowLate ? $scheduledAt->copy()->addMinutes($lateMinutes) : $scheduledAt;
+        $message = null;
+
+        if (now()->lt($earliestAt)) {
+            $message = "Chưa đến giờ check-in. Lịch {$visit->code} được phép check-in từ {$earliestAt->format('H:i d/m/Y')}.";
+        } elseif (now()->gt($latestAt)) {
+            $message = "Đã quá giờ check-in. Lịch {$visit->code} chỉ được check-in đến {$latestAt->format('H:i d/m/Y')}.";
+        }
+
+        if ($message === null) {
+            return null;
+        }
+
+        $warningEnabled = ($settings['access.warning_enabled'] ?? '1') === '1';
+        $warningMessage = trim((string) ($settings['access.warning_message'] ?? ''));
+
+        return $warningEnabled && $warningMessage !== ''
+            ? "{$warningMessage} {$message}"
+            : $message;
     }
 
     private function performCheckout(Visit $visit): ?string

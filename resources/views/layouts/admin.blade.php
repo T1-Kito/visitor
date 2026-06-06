@@ -94,7 +94,7 @@
                 @endphp
 
                 @if ($adminNoticeType && count($adminNoticeMessages) > 0)
-                    <div class="admin-notice-layer" id="adminNotice">
+                    <div class="admin-notice-layer" id="adminNotice" data-notice-type="{{ $adminNoticeType }}">
                         <div class="admin-notice admin-notice-{{ $adminNoticeType }}">
                             <div class="admin-notice-icon">
                                 <i class="bi {{ $adminNoticeType === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill' }}"></i>
@@ -149,7 +149,8 @@
         if (adminNotice) {
             const closeAdminNotice = () => adminNotice.classList.add('is-hidden');
             document.querySelector('[data-close-admin-notice]')?.addEventListener('click', closeAdminNotice);
-            setTimeout(closeAdminNotice, 5200);
+            const noticeDuration = adminNotice.dataset.noticeType === 'danger' ? 12000 : 5200;
+            setTimeout(closeAdminNotice, noticeDuration);
         }
     </script>
     @stack('scripts')

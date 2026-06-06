@@ -11,6 +11,7 @@
 .access-result-scan{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:.42rem;margin:.62rem 1rem 0;padding:.42rem;border:1px solid #dce9f7;border-radius:12px;background:#f8fbff}.access-result-scan .access-input-wrap input{min-height:36px;padding:.48rem 2rem .48rem .7rem;border-radius:10px;background:#fff;font-size:.78rem}.access-result-scan .access-input-wrap i{right:.65rem;font-size:.8rem}.access-result-scan .access-btn{min-height:36px;border-radius:10px;font-size:.78rem}.access-result-hint{display:flex;align-items:center;gap:.35rem;margin:.35rem 1rem 0;color:#7187a3;font-size:.7rem}.access-result-hint i{color:#1976d2;font-size:.78rem}@media(max-width:768px){.access-result-scan{grid-template-columns:1fr}}
 .access-history{border:1px solid #e2edf8;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(17,39,68,.05);overflow:hidden}.access-history-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1rem;border-bottom:1px solid #eef4fb}.access-history-title h3{margin:0;color:#10233d;font-size:.98rem;font-weight:600}.access-history-title p{margin:.14rem 0 0;color:#7187a3;font-size:.76rem}.access-history-filter{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.access-history-filter input,.access-history-filter select{min-height:36px;border:1px solid #d8e5f2;border-radius:11px;color:#526b87;font-size:.78rem}.access-history-filter button{min-height:36px;display:inline-flex;align-items:center;gap:.35rem;border:0;border-radius:11px;padding:0 .72rem;background:#eff6ff;color:#1976d2;font-size:.78rem;font-weight:500}.access-history-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;padding:1rem}.access-history-item{display:grid;gap:.5rem;padding:.75rem;border:1px solid #edf3fb;border-radius:16px;background:linear-gradient(135deg,#fff,#f8fbff);text-decoration:none;color:#10233d}.access-history-item:hover{border-color:#b8d5f2;background:#f7fbff}.access-history-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem}.access-history-code{color:#1976d2;font-size:.82rem;font-weight:600}.access-history-time{color:#10233d;font-size:.9rem;font-weight:600}.access-history-person{display:flex;align-items:center;gap:.55rem}.access-history-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#edf6ff;color:#1976d2;font-weight:600}.access-history-name{font-size:.86rem;font-weight:600}.access-history-company,.access-history-meta{color:#7187a3;font-size:.72rem}.access-history-badge{display:inline-flex;width:max-content;align-items:center;gap:.3rem;padding:.22rem .55rem;border-radius:999px;font-size:.72rem;font-weight:500}.access-history-badge.in{background:#ecfdf5;color:#047857}.access-history-badge.out{background:#fff7ed;color:#c2410c}.access-history-empty{padding:1.2rem;text-align:center;color:#879ab2;font-size:.84rem}@media(max-width:1300px){.access-history-list{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:768px){.access-history-head{align-items:flex-start;flex-direction:column}.access-history-filter{width:100%}.access-history-filter input,.access-history-filter select,.access-history-filter button{width:100%}.access-history-list{grid-template-columns:1fr}}
 .access-stat{text-decoration:none}.access-stat:hover{transform:translateY(-1px);border-color:#bdd8f4}.access-history-close{min-height:36px;display:inline-flex;align-items:center;gap:.35rem;padding:0 .72rem;border:1px solid #d8e5f2;border-radius:11px;background:#fff;color:#526b87;text-decoration:none;font-size:.78rem;font-weight:500}.access-history-list{display:grid;grid-template-columns:1fr;gap:0;padding:0}.access-history-item{display:grid;grid-template-columns:110px 92px minmax(220px,1.2fr) minmax(180px,1fr) 120px;gap:.75rem;align-items:center;padding:.72rem 1rem;border:0;border-bottom:1px solid #eef4fb;border-radius:0;background:#fff;text-decoration:none;color:#10233d}.access-history-item:hover{background:#f7fbff}.access-history-top{display:contents}.access-history-person{min-width:0}.access-history-meta{font-size:.78rem}.access-history-badge{justify-self:start}@media(max-width:1100px){.access-history-item{grid-template-columns:1fr;gap:.35rem}.access-history-top{display:flex}.access-history-badge{justify-self:start}}@media(max-width:768px){.access-history-filter input,.access-history-filter button,.access-history-close{width:100%;justify-content:center}}
+.access-hero-actions{display:flex;align-items:center;gap:.5rem}.access-settings-btn{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;border:1px solid #d8e6f4;border-radius:13px;background:#fff;color:#42617f;font-size:1rem;transition:.18s ease}.access-settings-btn:hover{border-color:#9fc6ec;background:#edf6ff;color:#1976d2;transform:rotate(12deg)}.access-settings-btn:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(25,118,210,.14)}.access-settings-modal .modal-content{border:0;border-radius:22px;box-shadow:0 24px 70px rgba(16,35,61,.2)}.access-settings-modal .modal-header{padding:1rem 1.15rem;border-bottom:1px solid #edf3fa}.access-settings-modal .modal-title{font-size:1rem;font-weight:600;color:#10233d}.access-settings-modal .modal-body{display:grid;gap:.85rem;padding:1rem 1.15rem}.access-setting-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.72rem .8rem;border:1px solid #e5edf7;border-radius:15px;background:#fbfdff}.access-setting-copy label{display:block;margin:0;color:#203852;font-size:.86rem;font-weight:500}.access-setting-copy span{display:block;margin-top:.12rem;color:#788ba3;font-size:.72rem}.access-minutes{width:112px}.access-minutes .input-group-text,.access-minutes .form-control{min-height:38px;border-color:#d9e6f3;font-size:.78rem}.access-warning-field label{margin-bottom:.35rem;color:#203852;font-size:.82rem;font-weight:500}.access-warning-field textarea{min-height:82px;border-color:#d9e6f3;border-radius:13px;font-size:.82rem;resize:vertical}.access-settings-modal .modal-footer{padding:.8rem 1.15rem;border-top:1px solid #edf3fa}.access-settings-save{min-height:40px;padding:0 1rem;border:0;border-radius:12px;background:linear-gradient(135deg,#1976d2,#11a9c7);color:#fff;font-size:.82rem;font-weight:500}@media(max-width:768px){.access-hero-actions{width:100%}.access-tabs{flex:1}.access-setting-row{align-items:flex-start}.access-minutes{width:100px}}
 </style>
 @endpush
 
@@ -19,6 +20,9 @@
     $isCheckin = $activeMode === 'checkin';
     $checkinRows = $readyToCheckin ?? [];
     $checkoutRows = $insideVisits ?? [];
+    $allowEarlyCheckin = ($accessSettings['access.allow_early_checkin'] ?? '1') === '1';
+    $allowLateCheckin = ($accessSettings['access.allow_late_checkin'] ?? '1') === '1';
+    $warningEnabled = ($accessSettings['access.warning_enabled'] ?? '1') === '1';
 @endphp
 
 <div class="access-page" data-active-mode="{{ $activeMode }}">
@@ -27,15 +31,98 @@
             <h3>Điều phối khách ra/vào</h3>
             <p>Chọn tác vụ, quét QR hoặc nhập mã lịch hẹn để xử lý tại quầy.</p>
         </div>
-        <div class="access-tabs" role="tablist" aria-label="Tác vụ ra vào">
-            <button class="access-tab {{ $isCheckin ? 'is-active' : '' }}" type="button" data-access-tab="checkin">
-                <i class="bi bi-box-arrow-in-right"></i> Check-in
-            </button>
-            <button class="access-tab {{ ! $isCheckin ? 'is-active' : '' }}" type="button" data-access-tab="checkout">
-                <i class="bi bi-box-arrow-left"></i> Check-out
-            </button>
+        <div class="access-hero-actions">
+            <div class="access-tabs" role="tablist" aria-label="Tác vụ ra vào">
+                <button class="access-tab {{ $isCheckin ? 'is-active' : '' }}" type="button" data-access-tab="checkin">
+                    <i class="bi bi-box-arrow-in-right"></i> Check-in
+                </button>
+                <button class="access-tab {{ ! $isCheckin ? 'is-active' : '' }}" type="button" data-access-tab="checkout">
+                    <i class="bi bi-box-arrow-left"></i> Check-out
+                </button>
+            </div>
+            @if (auth()->user()?->hasPermission('system.manage'))
+                <button class="access-settings-btn" type="button" data-bs-toggle="modal" data-bs-target="#accessQuickSettingsModal" aria-label="Cấu hình nhanh Check-in và Check-out" title="Cấu hình nhanh">
+                    <i class="bi bi-gear"></i>
+                </button>
+            @endif
         </div>
     </section>
+
+    @if (auth()->user()?->hasPermission('system.manage'))
+        <div class="modal fade access-settings-modal" id="accessQuickSettingsModal" tabindex="-1" aria-labelledby="accessQuickSettingsTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="post" action="{{ route('admin.access.quick-settings.update') }}">
+                    @csrf
+                    @method('put')
+                    <input type="hidden" name="return_mode" value="{{ $activeMode }}">
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title" id="accessQuickSettingsTitle">Cấu hình Check-in/Check-out</h2>
+                            <small class="text-secondary">Thiết lập nhanh khung giờ và nội dung cảnh báo.</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="access-setting-row">
+                            <div class="access-setting-copy">
+                                <label for="allowEarlyCheckin">Cho phép check-in sớm</label>
+                                <span>Cho khách vào trước giờ hẹn trong khoảng cho phép.</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="allowEarlyCheckin" type="checkbox" name="allow_early_checkin" value="1" @checked($allowEarlyCheckin)>
+                            </div>
+                        </div>
+                        <div class="access-setting-row">
+                            <div class="access-setting-copy">
+                                <label for="earlyCheckinMinutes">Số phút check-in sớm</label>
+                                <span>Mặc định 30 phút.</span>
+                            </div>
+                            <div class="input-group access-minutes">
+                                <input class="form-control" id="earlyCheckinMinutes" type="number" name="early_checkin_minutes" min="0" max="1440" value="{{ old('early_checkin_minutes', $accessSettings['access.early_checkin_minutes'] ?? 30) }}" required>
+                                <span class="input-group-text">phút</span>
+                            </div>
+                        </div>
+                        <div class="access-setting-row">
+                            <div class="access-setting-copy">
+                                <label for="allowLateCheckin">Cho phép check-in trễ</label>
+                                <span>Cho khách vào sau giờ hẹn trong khoảng cho phép.</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="allowLateCheckin" type="checkbox" name="allow_late_checkin" value="1" @checked($allowLateCheckin)>
+                            </div>
+                        </div>
+                        <div class="access-setting-row">
+                            <div class="access-setting-copy">
+                                <label for="lateCheckinMinutes">Số phút check-in trễ</label>
+                                <span>Mặc định 60 phút.</span>
+                            </div>
+                            <div class="input-group access-minutes">
+                                <input class="form-control" id="lateCheckinMinutes" type="number" name="late_checkin_minutes" min="0" max="1440" value="{{ old('late_checkin_minutes', $accessSettings['access.late_checkin_minutes'] ?? 60) }}" required>
+                                <span class="input-group-text">phút</span>
+                            </div>
+                        </div>
+                        <div class="access-setting-row">
+                            <div class="access-setting-copy">
+                                <label for="warningEnabled">Bật cảnh báo</label>
+                                <span>Hiện nội dung cảnh báo khi khách ngoài khung giờ.</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="warningEnabled" type="checkbox" name="warning_enabled" value="1" @checked($warningEnabled)>
+                            </div>
+                        </div>
+                        <div class="access-warning-field">
+                            <label for="warningMessage">Nội dung cảnh báo</label>
+                            <textarea class="form-control" id="warningMessage" name="warning_message" maxlength="500" placeholder="Nhập nội dung cảnh báo...">{{ old('warning_message', $accessSettings['access.warning_message'] ?? '') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Hủy</button>
+                        <button class="access-settings-save" type="submit"><i class="bi bi-check2 me-1"></i>Lưu cấu hình</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     <section class="access-stats">
         <div class="access-stat stat-waiting"><span>Chờ vào</span><strong>{{ $accessStats['waiting_in'] ?? 0 }}</strong></div>

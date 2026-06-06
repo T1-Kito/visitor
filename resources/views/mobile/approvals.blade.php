@@ -335,7 +335,7 @@
                 window.clearTimeout(showToast.timer);
                 showToast.timer = window.setTimeout(() => {
                     toast.hidden = true;
-                }, 3500);
+                }, isDanger ? 12000 : 5200);
             };
 
             const normalizeList = (name) => {
