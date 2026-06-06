@@ -158,19 +158,36 @@ a {
     color: #146bd7;
 }
 
-.sidebar-footer {
-    margin-top: auto;
-    padding: 0.75rem;
-    border-radius: 18px;
-    border: 1px solid #dce9f6;
-    background: rgba(255, 255, 255, 0.74);
-    box-shadow: 0 12px 26px rgba(19, 45, 72, 0.06);
-}
+
 
 .sidebar-account {
     display: flex;
     align-items: center;
     gap: 0.65rem;
+    width: 100%;
+    padding: 0.35rem 0.4rem;
+    border: 0;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.sidebar-account:hover {
+    background: rgba(15, 126, 199, 0.06);
+}
+
+.sidebar-account-caret {
+    margin-left: auto;
+    color: #6b7d92;
+    font-size: 0.95rem;
+    transition: transform 0.2s ease;
+    flex: 0 0 auto;
+}
+
+.sidebar-footer.is-open .sidebar-account-caret {
+    transform: rotate(180deg);
 }
 
 .sidebar-user-avatar {
@@ -182,6 +199,7 @@ a {
 
 .sidebar-account-meta {
     min-width: 0;
+    flex: 1 1 auto;
 }
 
 .sidebar-account .user-name,
@@ -189,6 +207,19 @@ a {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin: 0;
+}
+
+.sidebar-account-menu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.22s ease, margin-top 0.22s ease;
+    margin-top: 0;
+}
+
+.sidebar-footer.is-open .sidebar-account-menu {
+    max-height: 80px;
+    margin-top: 0.4rem;
 }
 
 .sidebar-logout {
@@ -197,10 +228,9 @@ a {
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    margin-top: 0.65rem;
     padding: 0.56rem 0.75rem;
     border: 1px solid #f5b9c0;
-    border-radius: 14px;
+    border-radius: 12px;
     color: #c83245;
     background: #fff7f8;
     font-size: 0.86rem;

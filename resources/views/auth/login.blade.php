@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f7ec7">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $loginBrand['title'] ?? 'Đăng nhập' }}</title>
     @if (! empty($loginBrand['favicon_url']))
@@ -14,16 +15,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        html, body {
+            min-height: 100%;
+        }
         body {
             min-height: 100vh;
+            min-height: 100dvh;
             margin: 0;
             display: grid;
             place-items: center;
+            padding: 24px 16px;
             font-family: "Manrope", sans-serif;
             background: radial-gradient(circle at top left, #d7ecff, #eef4fa 45%, #f6f9fc 100%);
+            -webkit-tap-highlight-color: transparent;
         }
         .login-wrap {
-            width: min(420px, 92vw);
+            width: min(420px, 100%);
         }
         .login-card {
             border: 1px solid #e4ebf4;
@@ -48,16 +55,19 @@
             background: transparent;
             border: 0;
             border-radius: 0;
-            overflow: visible;
+            overflow: hidden;
             width: auto;
             height: 88px;
+            display: block;
+            padding: 0;
         }
         .brand-pill.has-logo img {
             width: auto;
-            height: 100%;
+            height: 108px;
             max-width: 280px;
             object-fit: contain;
             display: block;
+            margin: 0 auto;
         }
         .login-brand-copy {
             min-width: 0;
@@ -67,7 +77,10 @@
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            gap: 20px !important;
+            gap: 18px !important;
+        }
+        .login-brand-copy h1 {
+            line-height: 1.25;
         }
         .login-card .form-label {
             margin-bottom: 4px;
@@ -75,21 +88,76 @@
             font-weight: 500;
         }
         .login-card .form-control {
-            padding: .55rem .75rem;
+            padding: .65rem .85rem;
+            font-size: 16px;
+            border-radius: 10px;
         }
-        @media (max-width: 420px) {
+        .login-card .form-check-input {
+            width: 1.1rem;
+            height: 1.1rem;
+            margin-top: .2rem;
+        }
+        .login-card .form-check-label {
+            font-size: .9rem;
+            padding-left: 4px;
+        }
+        .login-card .btn-brand {
+            min-height: 48px;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        .login-card .demo-credentials {
+            font-size: .82rem;
+            line-height: 1.45;
+            background: #f4f7fb;
+            border-color: #e1e8f1 !important;
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+                align-items: start;
+                padding-top: max(16px, env(safe-area-inset-top));
+            }
+            .login-card {
+                border-radius: 14px;
+                box-shadow: 0 10px 24px rgba(17, 44, 76, 0.08);
+            }
+            .login-card .card-body {
+                padding: 1.25rem !important;
+            }
+            .login-brand {
+                gap: 12px !important;
+                margin-bottom: 1rem !important;
+            }
             .brand-pill {
-                width: 88px;
-                height: 56px;
+                width: 84px;
+                height: 54px;
             }
             .brand-pill.has-logo {
-                height: 72px;
+                height: 64px;
+                max-width: 80%;
+            }
+            .brand-pill.has-logo img {
+                height: 84px;
+                max-width: 100%;
             }
             .login-brand-copy h1 {
-                font-size: 1rem;
+                font-size: 1.05rem;
+                margin-bottom: 2px !important;
             }
             .login-brand-copy p {
                 font-size: .82rem;
+            }
+        }
+        @media (max-width: 360px) {
+            .login-card .card-body {
+                padding: 1rem !important;
+            }
+            .brand-pill.has-logo {
+                height: 56px;
+            }
+            .brand-pill.has-logo img {
+                height: 56px;
             }
         }
         .btn-brand {
@@ -98,7 +166,7 @@
             color: #fff;
             font-weight: 700;
         }
-        .btn-brand:hover {
+        .btn-brand:hover, .btn-brand:focus, .btn-brand:active {
             color: #fff;
         }
     </style>
@@ -147,7 +215,7 @@
                     <button class="btn btn-brand py-2 mt-2" type="submit" data-login-submit>Đăng nhập</button>
                 </form>
 
-                <div class="alert alert-light border mt-3 mb-0 py-2 small">
+                <div class="alert alert-light border mt-3 mb-0 py-2 demo-credentials">
                     Tai khoan demo: <strong>superadmin@company.local</strong> / <strong>Admin@123</strong>
                 </div>
             </div>

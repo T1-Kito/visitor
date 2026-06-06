@@ -31,21 +31,24 @@
 
             @include('admin.partials.sidebar-menu')
 
-            <div class="sidebar-footer">
-                <div class="sidebar-account">
+            <div class="sidebar-footer" data-account-toggle>
+                <button type="button" class="sidebar-account" data-account-trigger aria-expanded="false">
                     <div class="user-avatar sidebar-user-avatar">{{ strtoupper(substr($currentUser['name'], 0, 1)) }}</div>
                     <div class="sidebar-account-meta">
                         <p class="user-name">{{ $currentUser['name'] }}</p>
                         <p class="user-role">{{ $currentUser['role'] }}</p>
                     </div>
+                    <i class="bi bi-chevron-up sidebar-account-caret"></i>
+                </button>
+                <div class="sidebar-account-menu">
+                    <form action="{{ route('admin.logout') }}" method="post">
+                        @csrf
+                        <button class="sidebar-logout" type="submit">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Thoát
+                        </button>
+                    </form>
                 </div>
-                <form action="{{ route('admin.logout') }}" method="post">
-                    @csrf
-                    <button class="sidebar-logout" type="submit">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Thoát
-                    </button>
-                </form>
             </div>
         </aside>
 
@@ -124,21 +127,24 @@
         </div>
         <div class="offcanvas-body">
             @include('admin.partials.sidebar-menu')
-            <div class="sidebar-footer">
-                <div class="sidebar-account">
+            <div class="sidebar-footer" data-account-toggle>
+                <button type="button" class="sidebar-account" data-account-trigger aria-expanded="false">
                     <div class="user-avatar sidebar-user-avatar">{{ strtoupper(substr($currentUser['name'], 0, 1)) }}</div>
                     <div class="sidebar-account-meta">
                         <p class="user-name">{{ $currentUser['name'] }}</p>
                         <p class="user-role">{{ $currentUser['role'] }}</p>
                     </div>
+                    <i class="bi bi-chevron-up sidebar-account-caret"></i>
+                </button>
+                <div class="sidebar-account-menu">
+                    <form action="{{ route('admin.logout') }}" method="post">
+                        @csrf
+                        <button class="sidebar-logout" type="submit">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Thoát
+                        </button>
+                    </form>
                 </div>
-                <form action="{{ route('admin.logout') }}" method="post">
-                    @csrf
-                    <button class="sidebar-logout" type="submit">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Thoát
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -152,6 +158,25 @@
             const noticeDuration = adminNotice.dataset.noticeType === 'danger' ? 12000 : 5200;
             setTimeout(closeAdminNotice, noticeDuration);
         }
+
+        document.querySelectorAll('[data-account-toggle]').forEach((footer) => {
+            const trigger = footer.querySelector('[data-account-trigger]');
+            if (!trigger) return;
+            trigger.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isOpen = footer.classList.toggle('is-open');
+                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            document.querySelectorAll('[data-account-toggle].is-open').forEach((footer) => {
+                if (!footer.contains(event.target)) {
+                    footer.classList.remove('is-open');
+                    footer.querySelector('[data-account-trigger]')?.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
     </script>
     @stack('scripts')
 </body>
