@@ -36,7 +36,7 @@ Tao lich hen / walk-in -> phe duyet -> QR/badge -> check-in -> theo doi -> canh 
 
 - Laravel 12 thay NestJS.
 - Blade thay Next.js/React.
-- MySQL/XAMPP thay PostgreSQL Docker.
+- MySQL/IIS cho ban cai dat Windows.
 - Eloquent thay Prisma.
 - Laravel session auth thay JWT cho ban Blade MVP.
 
@@ -65,7 +65,7 @@ Tao lich hen / walk-in -> phe duyet -> QR/badge -> check-in -> theo doi -> canh 
 
 [PARTIAL] README da viet lai cach chay local.
 
-[TODO] Chua co Docker/Sail chuan cho production/dev team.
+[DONE] Dong goi theo huong IIS cho Windows.
 
 ## 7. Migration
 

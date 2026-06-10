@@ -14,6 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         html, body {
             min-height: 100%;
@@ -30,7 +31,47 @@
             -webkit-tap-highlight-color: transparent;
         }
         .login-wrap {
-            width: min(420px, 100%);
+            width: min(400px, 100%);
+        }
+        .login-license-notice {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 0.7rem;
+            align-items: start;
+            margin-bottom: 12px;
+            padding: 0.8rem 0.85rem;
+            border: 1px solid #fde68a;
+            border-radius: 14px;
+            background: #fffbeb;
+        }
+        .login-license-notice i {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .login-license-notice strong {
+            display: block;
+            color: #7c2d12;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        .login-license-notice p {
+            margin: 0.15rem 0 0;
+            color: #9a6700;
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+        .login-license-notice a {
+            display: inline-block;
+            margin-top: 0.45rem;
+            color: #b45309;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
         }
         .login-card {
             border: 1px solid #e4ebf4;
@@ -57,17 +98,20 @@
             border-radius: 0;
             overflow: hidden;
             width: auto;
-            height: 88px;
+            height: 64px;
             display: block;
             padding: 0;
         }
         .brand-pill.has-logo img {
             width: auto;
-            height: 108px;
-            max-width: 280px;
+            height: 64px;
+            max-width: 230px;
             object-fit: contain;
             display: block;
             margin: 0 auto;
+        }
+        .login-card .card-body {
+            padding: 1rem !important;
         }
         .login-brand-copy {
             min-width: 0;
@@ -77,7 +121,7 @@
             flex-direction: column;
             justify-content: center;
             text-align: center;
-            gap: 18px !important;
+            gap: 10px !important;
         }
         .login-brand-copy h1 {
             line-height: 1.25;
@@ -88,7 +132,7 @@
             font-weight: 500;
         }
         .login-card .form-control {
-            padding: .65rem .85rem;
+            padding: .6rem .78rem;
             font-size: 16px;
             border-radius: 10px;
         }
@@ -102,15 +146,9 @@
             padding-left: 4px;
         }
         .login-card .btn-brand {
-            min-height: 48px;
+            min-height: 44px;
             border-radius: 10px;
             font-size: 1rem;
-        }
-        .login-card .demo-credentials {
-            font-size: .82rem;
-            line-height: 1.45;
-            background: #f4f7fb;
-            border-color: #e1e8f1 !important;
         }
         @media (max-width: 480px) {
             body {
@@ -122,23 +160,20 @@
                 border-radius: 14px;
                 box-shadow: 0 10px 24px rgba(17, 44, 76, 0.08);
             }
-            .login-card .card-body {
-                padding: 1.25rem !important;
-            }
             .login-brand {
-                gap: 12px !important;
-                margin-bottom: 1rem !important;
+                gap: 10px !important;
+                margin-bottom: .9rem !important;
             }
             .brand-pill {
                 width: 84px;
                 height: 54px;
             }
             .brand-pill.has-logo {
-                height: 64px;
+                height: 58px;
                 max-width: 80%;
             }
             .brand-pill.has-logo img {
-                height: 84px;
+                height: 58px;
                 max-width: 100%;
             }
             .login-brand-copy h1 {
@@ -173,6 +208,16 @@
 </head>
 <body>
     <div class="login-wrap">
+        @if (! empty($licenseNotice))
+            <div class="login-license-notice">
+                <i class="bi bi-shield-exclamation"></i>
+                <div>
+                    <strong>{{ $licenseNotice['title'] }}</strong>
+                    <p>{{ $licenseNotice['message'] }}</p>
+                    <a href="{{ $licenseNotice['url'] }}">Xem bản quyền</a>
+                </div>
+            </div>
+        @endif
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
@@ -215,9 +260,6 @@
                     <button class="btn btn-brand py-2 mt-2" type="submit" data-login-submit>Đăng nhập</button>
                 </form>
 
-                <div class="alert alert-light border mt-3 mb-0 py-2 demo-credentials">
-                    Tai khoan demo: <strong>superadmin@company.local</strong> / <strong>Admin@123</strong>
-                </div>
             </div>
         </div>
     </div>

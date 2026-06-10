@@ -6,7 +6,7 @@
     <title>Trạng thái yêu cầu | VMS Kiosk</title>
     @php
         $headSettings = $kioskSettings ?? [];
-        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? null;
+        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? $headSettings['admin.logo_url'] ?? null;
     @endphp
     @if ($headFaviconUrl)
         <link rel="icon" href="{{ $headFaviconUrl }}">
@@ -14,7 +14,7 @@
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
@@ -116,7 +116,7 @@
             display: block;
             font-family: "Plus Jakarta Sans", sans-serif;
             font-size: 1.28rem;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: -.04em;
             text-transform: uppercase;
         }
@@ -124,7 +124,7 @@
         .ks-brand span {
             color: var(--muted);
             font-size: .72rem;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: .045em;
             text-transform: uppercase;
         }
@@ -139,12 +139,12 @@
             border-radius: 13px;
             background: #fff;
             color: var(--ink);
-            font-weight: 800;
+            font-weight: 700;
             font-family: inherit;
         }
 
         .ks-clock { min-width: 92px; text-align: right; }
-        .ks-clock strong { display: block; font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.38rem; font-weight: 800; letter-spacing: -.05em; }
+        .ks-clock strong { display: block; font-family: "Plus Jakarta Sans", sans-serif; font-size: 1.38rem; font-weight: 700; letter-spacing: -.05em; }
         .ks-clock span { color: var(--muted); font-size: .74rem; }
 
         .ks-help {
@@ -153,7 +153,7 @@
             border-left: 1px solid var(--line);
             color: #526b87;
             font-size: .78rem;
-            font-weight: 800;
+            font-weight: 700;
             white-space: nowrap;
         }
 
@@ -190,21 +190,21 @@
 
         .ks-mark-wrap {
             position: relative;
-            height: 58px;
+            height: 48px;
             display: grid;
             place-items: center;
         }
 
         .ks-mark {
-            width: 52px;
-            height: 52px;
+            width: 42px;
+            height: 42px;
             display: grid;
             place-items: center;
             border-radius: 999px;
             background: linear-gradient(135deg, #35d074, #20c767);
             color: #fff;
-            font-size: 1.85rem;
-            box-shadow: 0 16px 32px rgba(34, 197, 94, .18);
+            font-size: 1.4rem;
+            box-shadow: 0 10px 22px rgba(34, 197, 94, .14);
         }
 
         .ks-confetti {
@@ -229,8 +229,8 @@
             margin: 0;
             color: var(--ink);
             font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: clamp(1.45rem, 2vw, 2rem);
-            font-weight: 700;
+            font-size: clamp(1.65rem, 2.18vw, 2rem);
+            font-weight: 600;
             letter-spacing: 0;
         }
 
@@ -238,7 +238,7 @@
             margin: -.35rem auto 0;
             max-width: 500px;
             color: #526b87;
-            font-size: .84rem;
+            font-size: 1rem;
             line-height: 1.45;
         }
 
@@ -276,7 +276,7 @@
             display: block;
             color: #0b6fe8;
             font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: clamp(1.5rem, 2.15vw, 2.05rem);
+            font-size: clamp(3rem, 3.9vw, 3.45rem);
             font-weight: 700;
             letter-spacing: 0;
             overflow-wrap: anywhere;
@@ -285,7 +285,7 @@
         .ks-code-box p {
             margin: .45rem 0 0;
             color: #526b87;
-            font-size: .76rem;
+            font-size: 1rem;
             line-height: 1.35;
         }
 
@@ -362,7 +362,7 @@
 
         .ks-actions {
             display: grid;
-            grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.6fr);
+            grid-template-columns: minmax(180px, 1fr);
             gap: .7rem;
         }
 
@@ -378,7 +378,7 @@
             color: var(--blue);
             font-family: inherit;
             font-size: .86rem;
-            font-weight: 650;
+            font-weight: 600;
             text-decoration: none;
             cursor: pointer;
         }
@@ -450,7 +450,7 @@
             margin: .48rem 0 .45rem;
             color: #6e86a3;
             font-size: .68rem;
-            font-weight: 900;
+            font-weight: 700;
             text-transform: uppercase;
         }
 
@@ -550,7 +550,7 @@
             .ks-header, .ks-tools { align-items: flex-start; flex-direction: column; }
             .ks-main, .ks-side, .ks-info-strip, .ks-actions { grid-template-columns: 1fr; }
             .ks-success { min-height: 0; padding: 1.35rem; }
-            .ks-code-box strong { font-size: 1.75rem; }
+            .ks-code-box strong { font-size: 2.35rem; }
             .ks-code-content { grid-template-columns: 1fr; text-align: center; }
             .ks-guest-qr { justify-self: center; }
         }
@@ -562,7 +562,7 @@
     $systemName = $settings['kiosk.system_name'] ?? 'VMS Kiosk';
     $subtitle = $settings['kiosk.subtitle'] ?? 'Giao diện tự động cho khách đến công ty';
     $hotline = $settings['kiosk.hotline'] ?? '1900 0000';
-    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? null;
+    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
     $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
@@ -702,8 +702,6 @@
                                 <i class="bi bi-box-arrow-in-right"></i>Xác nhận check-in
                             </button>
                         </form>
-                    @else
-                        <button class="ks-btn ks-btn-primary" type="button" onclick="window.print()"><i class="bi bi-printer"></i>In phiếu (nếu cần)</button>
                     @endif
                 </div>
             </section>

@@ -1,0 +1,26 @@
+CONG CU CAP BAN QUYEN - KHACH MOI VMS
+
+Luu y quan trong:
+- Khong gui thu muc license-issuer/private cho khach.
+- File private key trong thu muc nay la chia khoa de cap license.
+- Neu mat private key, license cu van chay nhung ban khong cap/gia han bang khoa cu duoc.
+
+Cach cap license de nhat:
+1. Mo man hinh /license tren may khach.
+2. Sao chep "Ma may chu".
+3. Bam dup file Cap-License.cmd.
+4. Nhap ma may chu, ten khach va chon thoi han 3/6/9/12 thang.
+5. Tool tu mo thu muc va chon san file license vua tao.
+6. Gui file JSON do cho khach.
+7. Khach tai file nay len man hinh Kich hoat ban quyen.
+
+Mac dinh nen cap 12 thang. Chi chon vinh vien khi sep yeu cau.
+
+QUAN LY DANH SACH LICENSE:
+1. Bam dup Mo-Quan-Ly-License.cmd.
+2. Trinh duyet se mo tai http://127.0.0.1:8799.
+3. Tai day co the cap moi, tim kiem, xem thoi han, tai file va danh dau thu hoi.
+4. Dong cua so dong lenh de tat trang quan ly.
+
+Trang nay chi chay tren may noi bo va khong duoc dong goi cho khach.
+Thu hoi license offline chi cap nhat so quan ly, khong khoa tu xa file da gui cho khach.

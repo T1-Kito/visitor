@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Visitor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -150,6 +151,310 @@ class CatalogController extends Controller
         $this->logAudit('employee.created', 'employee', (string) $employee->id, ['email' => $employee->email]);
 
         return redirect()->back()->with('status', 'Da tao nhan vien moi.');
+    }
+
+    public function employeesImportTemplate(): StreamedResponse
+    {
+        $rows = [
+            [
+                $this->vi('H&#7885; v&#224; t&#234;n'),
+                'Email',
+                $this->vi('S&#7889; &#273;i&#7879;n tho&#7841;i'),
+                $this->vi('Ch&#7913;c danh'),
+                $this->vi('Ph&#242;ng ban'),
+                $this->vi('&#272;ang ho&#7841;t &#273;&#7897;ng'),
+            ],
+            [
+                $this->vi('Nguy&#7877;n V&#259;n A'),
+                'nguyenvana@company.com',
+                '0909123456',
+                $this->vi('Nh&#226;n vi&#234;n kinh doanh'),
+                $this->vi('Kinh doanh'),
+                '1',
+            ],
+            [
+                $this->vi('Tr&#7847;n Th&#7883; B'),
+                'tranthib@company.com',
+                '0909765432',
+                $this->vi('Tr&#432;&#7903;ng nh&#243;m'),
+                $this->vi('Nh&#226;n s&#7921;'),
+                '1',
+            ],
+        ];
+        $path = $this->makeEmployeeTemplateXlsx($rows);
+
+        return response()->streamDownload(function () use ($path): void {
+            readfile($path);
+            @unlink($path);
+        }, 'mau-import-nhan-vien.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function employeesImport(Request $request): RedirectResponse
+    {
+        $validated = $request->validateWithBag('importEmployees', [
+            'import_file' => ['required', 'file', 'mimes:xlsx,csv,txt', 'max:4096'],
+        ]);
+
+        $file = $validated['import_file'];
+        $rows = $this->readEmployeeImportRows($file->getRealPath(), $file->getClientOriginalExtension());
+        $header = array_shift($rows);
+        if (! is_array($header)) {
+
+            return back()->with('error', 'File import không có dữ liệu.');
+        }
+
+        $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+        $header = array_map(fn ($value): string => $this->normalizeEmployeeImportHeader((string) $value), $header);
+        $requiredHeaders = ['name', 'email', 'phone', 'job_title', 'department', 'is_active'];
+        $missingHeaders = array_diff($requiredHeaders, $header);
+
+        if ($missingHeaders !== []) {
+            return back()->with('error', 'File import thiếu cột: '.implode(', ', $missingHeaders).'. Hãy tải file mẫu mới nhất.');
+        }
+
+        $indexes = array_flip($header);
+        $created = 0;
+        $updated = 0;
+        $skipped = 0;
+        $errors = [];
+        $line = 1;
+
+        foreach ($rows as $row) {
+            $line++;
+            if ($row === [null] || count(array_filter($row, fn ($value): bool => trim((string) $value) !== '')) === 0) {
+                continue;
+            }
+
+            $data = [];
+            foreach ($requiredHeaders as $key) {
+                $data[$key] = trim((string) ($row[$indexes[$key]] ?? ''));
+            }
+
+            $name = $data['name'];
+            $email = Str::lower($data['email']);
+            $departmentName = $data['department'];
+
+            if ($name === '') {
+                $skipped++;
+                $errors[] = "Dòng {$line}: thiếu tên nhân viên.";
+                continue;
+            }
+
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                $skipped++;
+                $errors[] = "Dòng {$line}: email không hợp lệ.";
+                continue;
+            }
+
+            if ($departmentName === '') {
+                $skipped++;
+                $errors[] = "Dòng {$line}: thiếu phòng ban.";
+                continue;
+            }
+
+            $department = Department::query()->firstOrCreate(
+                ['name' => $departmentName],
+                ['code' => $this->generateDepartmentCode($departmentName)]
+            );
+
+            $isActive = ! in_array(Str::lower($data['is_active']), ['0', 'false', 'no', 'inactive', 'ngung', 'ngừng'], true);
+            $payload = [
+                'department_id' => $department->id,
+                'name' => $name,
+                'email' => $email !== '' ? $email : null,
+                'phone' => $data['phone'] !== '' ? $data['phone'] : null,
+                'job_title' => $data['job_title'] !== '' ? $data['job_title'] : null,
+                'is_active' => $isActive,
+            ];
+
+            if ($email !== '') {
+                $employee = Employee::query()->where('email', $email)->first();
+                if ($employee) {
+                    $employee->update($payload);
+                    $updated++;
+                    continue;
+                }
+            }
+
+            Employee::query()->create($payload);
+            $created++;
+        }
+
+        $this->logAudit('employee.imported', 'employee', 'bulk', [
+            'created' => $created,
+            'updated' => $updated,
+            'skipped' => $skipped,
+        ]);
+
+        $message = "Đã import nhân viên: thêm {$created}, cập nhật {$updated}, bỏ qua {$skipped}.";
+        if ($errors !== []) {
+            $message .= ' Lỗi: '.implode(' ', array_slice($errors, 0, 5));
+        }
+
+        return back()->with($errors === [] ? 'status' : 'error', $message);
+    }
+
+    /**
+     * @param  array<int, array<int, string>>  $rows
+     */
+    private function makeEmployeeTemplateXlsx(array $rows): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'employee-template-').'.xlsx';
+        $zip = new \ZipArchive();
+        $zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>');
+        $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+        $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>');
+        $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Nhân viên" sheetId="1" r:id="rId1"/></sheets></workbook>');
+
+        $sheetRows = '';
+        foreach ($rows as $rowIndex => $row) {
+            $cells = '';
+            foreach ($row as $colIndex => $value) {
+                $cellRef = $this->xlsxColumnName($colIndex + 1).($rowIndex + 1);
+                $escaped = htmlspecialchars((string) $value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+                $cells .= '<c r="'.$cellRef.'" t="inlineStr"><is><t>'.$escaped.'</t></is></c>';
+            }
+            $sheetRows .= '<row r="'.($rowIndex + 1).'">'.$cells.'</row>';
+        }
+
+        $zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="22" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="6" width="18" customWidth="1"/></cols><sheetData>'.$sheetRows.'</sheetData></worksheet>');
+        $zip->close();
+
+        return $path;
+    }
+
+    /**
+     * @return array<int, array<int, string|null>>
+     */
+    private function readEmployeeImportRows(string $path, string $extension): array
+    {
+        if (Str::lower($extension) === 'xlsx') {
+            return $this->readEmployeeImportXlsxRows($path);
+        }
+
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return [];
+        }
+
+        $rows = [];
+        while (($row = fgetcsv($handle)) !== false) {
+            if ($rows === [] && isset($row[0]) && Str::startsWith(Str::lower((string) $row[0]), 'sep=')) {
+                continue;
+            }
+            $rows[] = $row;
+        }
+        fclose($handle);
+
+        return $rows;
+    }
+
+    /**
+     * @return array<int, array<int, string|null>>
+     */
+    private function readEmployeeImportXlsxRows(string $path): array
+    {
+        $zip = new \ZipArchive();
+        if ($zip->open($path) !== true) {
+            return [];
+        }
+
+        $sharedStrings = [];
+        $sharedXml = $zip->getFromName('xl/sharedStrings.xml');
+        if (is_string($sharedXml)) {
+            $shared = simplexml_load_string($sharedXml);
+            if ($shared) {
+                foreach ($shared->si as $item) {
+                    $sharedStrings[] = isset($item->t) ? (string) $item->t : trim((string) $item->asXML());
+                }
+            }
+        }
+
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        $zip->close();
+        if (! is_string($sheetXml)) {
+            return [];
+        }
+
+        $sheet = simplexml_load_string($sheetXml);
+        if (! $sheet) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($sheet->sheetData->row as $row) {
+            $values = [];
+            foreach ($row->c as $cell) {
+                $cellRef = (string) $cell['r'];
+                $column = $this->xlsxColumnIndex(preg_replace('/\d+/', '', $cellRef) ?: 'A') - 1;
+                $type = (string) $cell['t'];
+                $value = null;
+
+                if ($type === 's') {
+                    $value = $sharedStrings[(int) $cell->v] ?? null;
+                } elseif ($type === 'inlineStr') {
+                    $value = isset($cell->is->t) ? (string) $cell->is->t : null;
+                } elseif (isset($cell->v)) {
+                    $value = (string) $cell->v;
+                }
+
+                $values[$column] = $value;
+            }
+
+            if ($values !== []) {
+                ksort($values);
+                $rows[] = array_values($values);
+            }
+        }
+
+        return $rows;
+    }
+
+    private function xlsxColumnName(int $index): string
+    {
+        $name = '';
+        while ($index > 0) {
+            $index--;
+            $name = chr(65 + ($index % 26)).$name;
+            $index = intdiv($index, 26);
+        }
+
+        return $name;
+    }
+
+    private function xlsxColumnIndex(string $name): int
+    {
+        $index = 0;
+        foreach (str_split($name) as $char) {
+            $index = $index * 26 + (ord($char) - 64);
+        }
+
+        return $index;
+    }
+
+    private function normalizeEmployeeImportHeader(string $header): string
+    {
+        $header = Str::lower(trim($header));
+        $header = preg_replace('/\s+/', ' ', $header) ?? $header;
+        $key = str_replace(['_', '-', '.'], ' ', Str::ascii($header));
+
+        return match ($key) {
+            'ho va ten', 'ten nhan vien', 'nhan vien', 'name' => 'name',
+            'email', 'e mail' => 'email',
+            'so dien thoai', 'dien thoai', 'phone', 'sdt' => 'phone',
+            'chuc danh', 'job title' => 'job_title',
+            'phong ban', 'department' => 'department',
+            'dang hoat dong', 'trang thai', 'is active', 'active' => 'is_active',
+            default => $header,
+        };
+    }
+
+    private function vi(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     public function employeesShow(Employee $employee): View

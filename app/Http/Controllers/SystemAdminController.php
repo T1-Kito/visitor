@@ -9,8 +9,11 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Support\DynamicMailSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -633,6 +636,96 @@ class SystemAdminController extends Controller
         ]));
     }
 
+    public function mailSettingsEdit(): View
+    {
+        $settings = DynamicMailSettings::values();
+
+        return view('admin.settings.mail', $this->withBase([
+            'settings' => $settings,
+            'passwordConfigured' => $settings['mail.password_configured'] === '1',
+        ]));
+    }
+
+    public function mailSettingsUpdate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'from_name' => ['required', 'string', 'max:120'],
+            'from_address' => ['required', 'email:rfc', 'max:190'],
+            'app_password' => ['nullable', 'string', 'min:16', 'max:100'],
+            'remove_password' => ['nullable', 'boolean'],
+        ]);
+
+        $passwordSetting = SystemSetting::query()->where('key', 'mail.password')->first();
+        $password = $passwordSetting?->value;
+        $submittedPassword = preg_replace('/\s+/', '', (string) ($validated['app_password'] ?? ''));
+
+        if ($request->boolean('remove_password')) {
+            $password = null;
+        } elseif ($submittedPassword !== '') {
+            $password = DynamicMailSettings::encryptPassword($submittedPassword);
+        } elseif (! $passwordSetting) {
+            $currentPassword = DynamicMailSettings::values()['mail.password'] ?? null;
+            $password = $currentPassword
+                ? DynamicMailSettings::encryptPassword($currentPassword)
+                : null;
+        }
+
+        SystemSetting::putMany([
+            'mail.host' => 'smtp.gmail.com',
+            'mail.port' => '587',
+            'mail.scheme' => null,
+            'mail.username' => strtolower($validated['from_address']),
+            'mail.password' => $password,
+            'mail.from_address' => strtolower($validated['from_address']),
+            'mail.from_name' => trim($validated['from_name']),
+        ]);
+
+        $this->logAudit('settings.mail_updated', 'system_setting', 'mail', [
+            'from_address' => strtolower($validated['from_address']),
+            'from_name' => trim($validated['from_name']),
+        ]);
+
+        return redirect()
+            ->route('admin.settings.mail')
+            ->with('status', 'Đã lưu cấu hình Gmail.');
+    }
+
+    public function mailSettingsTest(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'test_email' => ['required', 'email:rfc', 'max:190'],
+        ]);
+
+        $settings = DynamicMailSettings::apply();
+        if (! $settings['mail.username'] || ! $settings['mail.password']) {
+            return back()->withErrors([
+                'test_email' => 'Hãy lưu Gmail và App Password trước khi gửi thử.',
+            ]);
+        }
+
+        try {
+            $recipient = strtolower($validated['test_email']);
+            Mail::html(
+                '<p>Gửi email thử thành công từ hệ thống quản lý khách.</p>',
+                function ($message) use ($recipient): void {
+                    $message->to($recipient)->subject('Kiểm tra cấu hình Gmail');
+                }
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->withErrors([
+                'test_email' => 'Không gửi được email. Hãy kiểm tra Gmail và App Password.',
+            ]);
+        }
+
+        $this->logAudit('settings.mail_tested', 'system_setting', 'mail', [
+            'recipient' => $recipient,
+        ]);
+
+        return back()->with('status', "Đã gửi email thử đến {$recipient}.");
+    }
+
     public function logoSettingsEdit(): View
     {
         return view('admin.settings.logos', $this->withBase([
@@ -646,35 +739,23 @@ class SystemAdminController extends Controller
             'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'login_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
-            'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
-            'remove_admin_logo' => ['nullable', 'boolean'],
-            'remove_login_logo' => ['nullable', 'boolean'],
-            'remove_owner_logo' => ['nullable', 'boolean'],
-            'remove_customer_logo' => ['nullable', 'boolean'],
-            'remove_favicon' => ['nullable', 'boolean'],
+            'desktop_icon_file' => ['nullable', 'file', 'mimes:ico', 'max:1024'],
         ]);
 
         $settings = SystemSetting::values(SystemSetting::kioskDefaults());
-        $adminLogoUrl = $this->resolveUploadedSetting($request, $settings['admin.logo_url'] ?? null, 'admin_logo', 'admin_logo_file', 'admin-logo');
-        $loginLogoUrl = $this->resolveUploadedSetting($request, $settings['login.logo_url'] ?? null, 'login_logo', 'login_logo_file', 'login-logo');
-        $ownerLogoUrl = $this->resolveUploadedSetting($request, $settings['kiosk.owner_logo_url'] ?? null, 'owner_logo', 'owner_logo_file', 'owner-logo');
-        $customerLogoUrl = $this->resolveUploadedSetting(
-            $request,
-            $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null),
-            'customer_logo',
-            'customer_logo_file',
-            'customer-logo',
-        );
-        $faviconUrl = $this->resolveUploadedSetting($request, $settings['app.favicon_url'] ?? null, 'favicon', 'favicon_file', 'favicon');
+        $adminLogoUrl = $this->resolveUploadedSetting($request, $settings['admin.logo_url'] ?? null, 'admin_logo_file', 'admin-logo');
+        $loginLogoUrl = $this->resolveUploadedSetting($request, $settings['login.logo_url'] ?? null, 'login_logo_file', 'login-logo');
+        $ownerLogoUrl = $this->resolveUploadedSetting($request, $settings['kiosk.owner_logo_url'] ?? null, 'owner_logo_file', 'owner-logo');
+        $faviconUrl = $this->resolveUploadedSetting($request, $settings['app.favicon_url'] ?? null, 'favicon_file', 'favicon');
+        $desktopIconUrl = $this->resolveDesktopIconSetting($request, $settings['app.desktop_icon_url'] ?? ($settings['app.favicon_url'] ?? null));
 
         SystemSetting::putMany([
             'admin.logo_url' => $adminLogoUrl,
             'login.logo_url' => $loginLogoUrl,
             'kiosk.owner_logo_url' => $ownerLogoUrl,
-            'kiosk.customer_logo_url' => $customerLogoUrl,
-            'kiosk.logo_url' => $customerLogoUrl,
             'app.favicon_url' => $faviconUrl,
+            'app.desktop_icon_url' => $desktopIconUrl,
         ]);
 
         $this->logAudit('settings.logos_updated', 'system_setting', 'logos');
@@ -742,6 +823,11 @@ class SystemAdminController extends Controller
     {
         $file = $request->file($field);
         abort_if($file === null, 422, 'File upload khong hop le.');
+        abort_if(
+            ! $file->isValid() || ! is_readable($file->getRealPath()),
+            422,
+            'Khong doc duoc file upload tam. Vui long kiem tra cau hinh thu muc tam cua PHP.'
+        );
 
         $extension = $file->getClientOriginalExtension() ?: $file->extension();
         $filename = sprintf('%s-%s.%s', $prefix, now()->format('YmdHis'), $extension);
@@ -750,14 +836,9 @@ class SystemAdminController extends Controller
         return Storage::disk('public')->url($path);
     }
 
-    private function resolveUploadedSetting(Request $request, ?string $currentUrl, string $key, string $field, string $prefix): ?string
+    private function resolveUploadedSetting(Request $request, ?string $currentUrl, string $field, string $prefix): ?string
     {
         $url = $currentUrl;
-
-        if ($request->boolean('remove_'.$key)) {
-            $this->deleteKioskUpload($url);
-            $url = null;
-        }
 
         if ($request->hasFile($field)) {
             $this->deleteKioskUpload($url);
@@ -765,6 +846,30 @@ class SystemAdminController extends Controller
         }
 
         return $url;
+    }
+
+    private function resolveDesktopIconSetting(Request $request, ?string $currentUrl): ?string
+    {
+        if (! $request->hasFile('desktop_icon_file')) {
+            return $currentUrl;
+        }
+
+        $file = $request->file('desktop_icon_file');
+        abort_if($file === null, 422, 'File upload khong hop le.');
+        abort_if(
+            ! $file->isValid() || ! is_readable($file->getRealPath()),
+            422,
+            'Khong doc duoc file upload tam. Vui long kiem tra cau hinh thu muc tam cua PHP.'
+        );
+
+        $targetDirectory = public_path('icons');
+        if (! is_dir($targetDirectory)) {
+            File::makeDirectory($targetDirectory, 0755, true, true);
+        }
+
+        File::copy($file->getRealPath(), $targetDirectory.DIRECTORY_SEPARATOR.'vms-shortcut.ico');
+
+        return asset('icons/vms-shortcut.ico').'?v='.now()->format('YmdHis');
     }
 
     private function deleteKioskUpload(?string $url): void

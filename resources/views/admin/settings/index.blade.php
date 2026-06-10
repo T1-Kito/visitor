@@ -28,6 +28,14 @@
                     <span class="settings-tile-icon"><i class="bi bi-image"></i></span>
                     <strong>Cài đặt logo</strong>
                 </a>
+                <a class="settings-tile tile-green" href="{{ route('admin.settings.mail') }}">
+                    <span class="settings-tile-icon"><i class="bi bi-envelope-at"></i></span>
+                    <strong>Cấu hình Gmail</strong>
+                </a>
+                <a class="settings-tile tile-orange" href="{{ route('admin.settings.license') }}">
+                    <span class="settings-tile-icon"><i class="bi bi-shield-lock"></i></span>
+                    <strong>Bản quyền</strong>
+                </a>
             </div>
         </section>
 

@@ -45,10 +45,20 @@
                 </select>
                 <button class="btn btn-light" type="submit"><i class="bi bi-funnel"></i> Lọc</button>
             </form>
-            <button class="btn btn-brand" type="button" data-bs-toggle="modal" data-bs-target="#createEmployeeModal">
-                <i class="bi bi-person-plus"></i>
-                Tạo nhân viên
-            </button>
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <a class="btn btn-light" href="{{ route('admin.employees.import-template') }}">
+                    <i class="bi bi-download"></i>
+                    Tải mẫu
+                </a>
+                <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#importEmployeeModal">
+                    <i class="bi bi-upload"></i>
+                    Import
+                </button>
+                <button class="btn btn-brand" type="button" data-bs-toggle="modal" data-bs-target="#createEmployeeModal">
+                    <i class="bi bi-person-plus"></i>
+                    Tạo nhân viên
+                </button>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -121,6 +131,36 @@
     </section>
 </div>
 
+<div class="modal fade resource-modal" id="importEmployeeModal" tabindex="-1" aria-labelledby="importEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="{{ route('admin.employees.import') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="importEmployeeModalLabel">Import nhân viên</h5>
+                    <div class="text-secondary small">Tải file mẫu, điền dữ liệu rồi import lại vào hệ thống.</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small">
+                    File Excel cần có các cột:
+                    <strong>Họ và tên, Email, Số điện thoại, Chức danh, Phòng ban, Đang hoạt động</strong>.
+                    Phòng ban chưa có sẽ được tự tạo. Nếu email đã tồn tại, hệ thống sẽ cập nhật nhân viên đó.
+                </div>
+                <label class="form-label">File Excel/CSV <span class="text-danger">*</span></label>
+                <input class="form-control" type="file" name="import_file" accept=".xlsx,.csv,text/csv,text/plain" required>
+                @error('import_file', 'importEmployees')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-light" href="{{ route('admin.employees.import-template') }}"><i class="bi bi-download"></i> Tải file mẫu</a>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-brand" type="submit"><i class="bi bi-upload"></i> Import nhân viên</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="modal fade resource-modal" id="createEmployeeModal" tabindex="-1" aria-labelledby="createEmployeeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <form class="modal-content" method="post" action="{{ route('admin.employees.store') }}">
@@ -176,7 +216,11 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            new bootstrap.Modal(document.getElementById('createEmployeeModal')).show();
+            @if ($errors->importEmployees->any())
+                new bootstrap.Modal(document.getElementById('importEmployeeModal')).show();
+            @else
+                new bootstrap.Modal(document.getElementById('createEmployeeModal')).show();
+            @endif
         });
     </script>
     @endpush

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
+use App\Support\LicenseManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class AuthController extends Controller
     public function showLogin(): Response
     {
         $settings = SystemSetting::values(SystemSetting::kioskDefaults());
+        $licenseStatus = app(LicenseManager::class)->status();
 
         return response()
             ->view('auth.login', [
@@ -23,6 +25,7 @@ class AuthController extends Controller
                     'subtitle' => $settings['login.subtitle'] ?? 'Đăng nhập vào hệ thống vận hành',
                     'favicon_url' => $settings['app.favicon_url'] ?? ($settings['login.logo_url'] ?? null),
                 ],
+                'licenseNotice' => $this->licenseNotice($licenseStatus),
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
@@ -73,5 +76,29 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->with('status', 'Da dang xuat thanh cong.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $licenseStatus
+     * @return array{title: string, message: string, url: string}|null
+     */
+    private function licenseNotice(array $licenseStatus): ?array
+    {
+        if (! ($licenseStatus['enabled'] ?? false) || ! ($licenseStatus['valid'] ?? false)) {
+            return null;
+        }
+
+        $daysRemaining = $licenseStatus['days_remaining'] ?? ($licenseStatus['trial_days_remaining'] ?? null);
+        if (! is_int($daysRemaining) || $daysRemaining > 3) {
+            return null;
+        }
+
+        return [
+            'title' => 'Bản quyền sắp hết hạn',
+            'message' => $daysRemaining === 0
+                ? 'Bản quyền sẽ hết hạn trong hôm nay. Vui lòng liên hệ nhà cung cấp.'
+                : "Còn {$daysRemaining} ngày nữa là hết hạn. Vui lòng liên hệ nhà cung cấp để gia hạn.",
+            'url' => route('license.show'),
+        ];
     }
 }

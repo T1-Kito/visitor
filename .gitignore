@@ -16,9 +16,15 @@
 /public/build
 /public/hot
 /public/storage
+/public/icons/Ellipse 1.ico
 /storage/*.key
 /storage/pail
 /vendor
+/license-issuer/private
+/license-issuer/data
+/license-issuer/licenses
 Homestead.json
 Homestead.yaml
 Thumbs.db
+dist/*.zip
+dist/KhachMoi-VMS-IIS/

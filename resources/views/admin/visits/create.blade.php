@@ -159,43 +159,8 @@
                 </div>
             </section>
 
-            <section class="vc-section">
-                <div class="vc-section-head">
-                    <div class="vc-section-icon"><i class="bi bi-shield-check"></i></div>
-                    <div class="vc-section-title">
-                        <strong>3. Quyền truy cập và an ninh</strong>
-                        <span>Cấu hình khu vực được phép vào và hình thức làm thủ tục.</span>
-                    </div>
-                </div>
-                <div class="vc-section-body">
-                    <div class="vc-grid">
-                        <div class="vc-field">
-                            <label>Khu vực truy cập</label>
-                            <div class="vc-control">
-                                <i class="bi bi-geo-alt"></i>
-                                <select class="form-select" name="access_zone">
-                                    @foreach ($accessZones as $zone)
-                                        <option value="{{ $zone }}" @selected(old('access_zone') === $zone)>{{ $zone }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @error('access_zone')<span class="vc-error">{{ $message }}</span>@enderror
-                        </div>
-                        <div class="vc-field">
-                            <label>Hình thức vào <em>*</em></label>
-                            <div class="vc-control">
-                                <i class="bi bi-qr-code-scan"></i>
-                                <select class="form-select" name="checkin_method" required>
-                                    <option value="qr" @selected(old('checkin_method', 'qr') === 'qr')>Mã QR</option>
-                                    <option value="badge" @selected(old('checkin_method') === 'badge')>Thẻ tạm</option>
-                                    <option value="manual" @selected(old('checkin_method') === 'manual')>Nhập thủ công tại quầy</option>
-                                </select>
-                            </div>
-                            @error('checkin_method')<span class="vc-error">{{ $message }}</span>@enderror
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <input type="hidden" name="access_zone" value="{{ old('access_zone', $accessZones[0] ?? 'Tang 1 - Le tan') }}">
+            <input type="hidden" name="checkin_method" value="{{ old('checkin_method', 'qr') }}">
 
             <div class="vc-footer">
                 <a class="vc-btn-cancel" href="{{ route('admin.visits.index') }}">

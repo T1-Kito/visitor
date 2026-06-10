@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
+use App\Support\DynamicMailSettings;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -186,7 +187,11 @@ class KioskController extends Controller
                 $request->session()->put('kiosk_checkin_visit_id', $visit->id);
                 $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
 
-                return $this->confirmCheckin($request, $visit);
+                return response()->json([
+                    'ok' => true,
+                    'message' => "Da tim thay lich {$visit->code}. Vui long xac nhan check-in.",
+                    'visit' => $this->kioskVisitPayload($visit, true),
+                ]);
             }
 
             return response()->json([
@@ -218,7 +223,9 @@ class KioskController extends Controller
         $request->session()->put('kiosk_checkin_visit_id', $visit->id);
         $request->session()->put('kiosk_scanned_by_qr', $scannedByQr);
 
-        return $this->confirmCheckin($request, $visit);
+        return redirect()
+            ->route('kiosk.checkin.status', $visit)
+            ->with('status', "Da tim thay lich {$visit->code}. Vui long xac nhan check-in.");
     }
 
     public function confirmCheckin(Request $request, Visit $visit): RedirectResponse|JsonResponse
@@ -562,6 +569,7 @@ class KioskController extends Controller
         ])->render();
 
         try {
+            DynamicMailSettings::apply();
             Mail::html($html, function ($message) use ($email, $subject): void {
                 $message->to($email)->subject($subject);
             });

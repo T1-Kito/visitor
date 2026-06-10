@@ -82,6 +82,21 @@
             </header>
 
             <main class="workspace">
+                @if (! empty($licenseNotice))
+                    <div class="license-warning-banner">
+                        <div class="license-warning-icon">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+                        <div class="license-warning-content">
+                            <strong>{{ $licenseNotice['title'] }}</strong>
+                            <p>{{ $licenseNotice['message'] }}</p>
+                        </div>
+                        <a class="license-warning-action" href="{{ $licenseNotice['url'] }}">
+                            Xem bản quyền
+                        </a>
+                    </div>
+                @endif
+
                 @php
                     $adminNoticeMessages = [];
                     if (session('error')) {

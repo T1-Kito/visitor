@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Ma trận phân quyền | Visitor Management')
-@section('page_title', 'Ma trận phân quyền')
-@section('page_subtitle', 'Tick quyền theo từng vai trò và lưu thay đổi một lần')
+@section('title', 'Phân quyền | Visitor Management')
+@section('page_title', 'Phân quyền')
+@section('page_subtitle', 'Chọn quyền theo từng vai trò và lưu thay đổi một lần')
 
 @push('styles')
 <style>
@@ -121,7 +121,7 @@
         <section class="pm-card">
             <div class="pm-card-head">
                 <div>
-                    <h3>Ma trận quyền</h3>
+                    <h3>Phân quyền</h3>
                     <p>{{ $matrixRoles->count() }} vai trò · {{ $permissions->count() }} quyền hệ thống</p>
                 </div>
                 <div class="pm-actions">

@@ -6,6 +6,8 @@ use App\Models\Notification;
 use App\Models\Employee;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Support\LicenseManager;
+use Carbon\CarbonImmutable;
 
 trait HasAdminLayoutData
 {
@@ -57,6 +59,7 @@ trait HasAdminLayoutData
             ->map(fn (string $word) => mb_substr($word, 0, 1))
             ->implode('');
         $adminLogoUrl = $kioskSettings['admin.logo_url'] ?? null;
+        $licenseNotice = $this->adminLayoutLicenseNotice(app(LicenseManager::class)->status());
 
         return array_merge([
             'currentUser' => [
@@ -72,6 +75,7 @@ trait HasAdminLayoutData
                 'favicon_url' => $kioskSettings['app.favicon_url'] ?? $adminLogoUrl,
                 'initials' => mb_strtoupper($brandInitials !== '' ? $brandInitials : 'VMS'),
             ],
+            'licenseNotice' => $licenseNotice,
         ], $data);
     }
 
@@ -104,5 +108,50 @@ trait HasAdminLayoutData
             ->where('user_id', $userId)
             ->whereNull('read_at')
             ->count();
+    }
+
+    /**
+     * @param  array<string, mixed>  $licenseStatus
+     * @return array{type: string, title: string, message: string, url: string, days_remaining: int|null, ends_at: string|null}|null
+     */
+    private function adminLayoutLicenseNotice(array $licenseStatus): ?array
+    {
+        if (! ($licenseStatus['enabled'] ?? false) || ! ($licenseStatus['valid'] ?? false)) {
+            return null;
+        }
+
+        $daysRemaining = $licenseStatus['days_remaining'] ?? ($licenseStatus['trial_days_remaining'] ?? null);
+        $endsAt = $licenseStatus['trial_ends_at'] ?? ($licenseStatus['expires_at'] ?? null);
+
+        if (is_int($daysRemaining) && $daysRemaining > 3) {
+            return null;
+        }
+
+        if ($daysRemaining === null && is_string($endsAt) && $endsAt !== '') {
+            try {
+                $daysRemaining = now()->startOfDay()->diffInDays(CarbonImmutable::parse($endsAt)->startOfDay(), false);
+            } catch (\Throwable) {
+                return null;
+            }
+
+            if ($daysRemaining > 3) {
+                return null;
+            }
+        }
+
+        if (! is_int($daysRemaining) || $daysRemaining < 0 || $daysRemaining > 3) {
+            return null;
+        }
+
+        return [
+            'type' => 'warning',
+            'title' => 'Bản quyền sắp hết hạn',
+            'message' => $daysRemaining === 0
+                ? 'Bản quyền sẽ hết hạn trong hôm nay. Vui lòng liên hệ nhà cung cấp.'
+                : "Còn {$daysRemaining} ngày nữa là hết hạn. Vui lòng liên hệ nhà cung cấp để gia hạn.",
+            'url' => route('admin.settings.license'),
+            'days_remaining' => $daysRemaining,
+            'ends_at' => is_string($endsAt) && $endsAt !== '' ? $endsAt : null,
+        ];
     }
 }

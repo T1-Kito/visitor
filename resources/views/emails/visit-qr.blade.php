@@ -11,7 +11,7 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #d8e5f2;border-radius:18px;overflow:hidden;">
                     <tr>
                         <td style="padding:22px 24px;border-bottom:1px solid #edf3fb;">
-                            <div style="font-size:13px;font-weight:700;color:#146bd7;text-transform:uppercase;">VMS KIOSK</div>
+                            <div style="font-size:13px;font-weight:700;color:#146bd7;text-transform:uppercase;">{{ $mailBrandName ?? 'VMS Kiosk' }}</div>
                             <h1 style="margin:8px 0 0;font-size:24px;line-height:1.25;color:#0b1f3a;">Mã QR lịch hẹn của bạn</h1>
                             <p style="margin:8px 0 0;color:#536b88;font-size:14px;line-height:1.5;">Vui lòng xuất trình mã này tại quầy lễ tân khi đến công ty.</p>
                         </td>

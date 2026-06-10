@@ -16,6 +16,7 @@ use App\Models\UserMobileFavorite;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
+use App\Support\DynamicMailSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -3728,6 +3729,7 @@ XML;
         ])->render();
 
         try {
+            DynamicMailSettings::apply();
             Mail::html($html, function ($message) use ($email, $subject): void {
                 $message->to($email)->subject($subject);
             });
@@ -3772,10 +3774,12 @@ XML;
             ->errorCorrection('M')
             ->generate($visit->qr_token);
         $subject = 'Mã QR lịch hẹn '.$visit->code;
+        $mailSettings = DynamicMailSettings::apply();
         $html = view('emails.visit-qr', [
             'visit' => $visit,
             'qrSvg' => $qrSvg,
             'statusUrl' => route('kiosk.checkin.status', $visit),
+            'mailBrandName' => $mailSettings['mail.from_name'] ?: 'VMS Kiosk',
         ])->render();
 
         Mail::html($html, function ($message) use ($email, $subject): void {

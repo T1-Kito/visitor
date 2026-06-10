@@ -116,7 +116,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 Mở terminal khác và chạy:
 
 ```bash
-ngrok http 8000
+ngrok htgit add .tp 8000
 ```
 
 Sau đó gửi cho sếp link dạng:

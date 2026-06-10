@@ -38,6 +38,7 @@ return [
         'hotline' => env('KIOSK_RECEPTION_HOTLINE', '1900 0000'),
         'working_hours' => env('KIOSK_WORKING_HOURS', '07:30 - 18:00'),
         'logo_url' => env('KIOSK_LOGO_URL', null),
+        'desktop_icon_url' => env('APP_DESKTOP_ICON_URL', null),
         'background_url' => env('KIOSK_BACKGROUND_URL', null),
         'primary_color' => env('KIOSK_PRIMARY_COLOR', '#146bd7'),
     ],

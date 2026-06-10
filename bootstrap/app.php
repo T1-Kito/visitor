@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
+use App\Http\Middleware\EnsureLicensed;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\RedirectToCanonicalUrl;
 
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->append(RedirectToCanonicalUrl::class);
+        $middleware->append(EnsureLicensed::class);
 
         $middleware->alias([
             'permission' => EnsurePermission::class,

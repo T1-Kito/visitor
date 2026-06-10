@@ -6,7 +6,7 @@
     <title>Kiosk | Gatehouse Pro</title>
     @php
         $headSettings = $kioskSettings ?? [];
-        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? null;
+        $headFaviconUrl = $headSettings['app.favicon_url'] ?? $headSettings['kiosk.customer_logo_url'] ?? $headSettings['kiosk.logo_url'] ?? $headSettings['admin.logo_url'] ?? null;
     @endphp
     @if ($headFaviconUrl)
         <link rel="icon" href="{{ $headFaviconUrl }}">
@@ -1164,7 +1164,7 @@
     $subtitle = $settings['kiosk.subtitle'] ?? 'Giao diện tự động cho khách đến công ty';
     $hotline = $settings['kiosk.hotline'] ?? '1900 0000';
     $workingHours = $settings['kiosk.working_hours'] ?? '07:30 - 18:00';
-    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? null;
+    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
     $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
     $logoUrls = array_values(array_filter([$ownerLogoUrl, $customerLogoUrl]));
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';

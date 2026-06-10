@@ -4,8 +4,12 @@ use App\Http\Controllers\AdminUiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\KioskController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SystemAdminController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/license', [LicenseController::class, 'show'])->name('license.show');
+Route::post('/license', [LicenseController::class, 'store'])->name('license.store');
 
 Route::get('/kiosk', [KioskController::class, 'index'])->name('kiosk.index');
 Route::get('/kiosk/employees/search', [KioskController::class, 'searchEmployees'])->name('kiosk.employees.search');
@@ -209,6 +213,12 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/employees', [CatalogController::class, 'employeesIndex'])
         ->middleware('permission:employees.manage')
         ->name('admin.employees.index');
+    Route::get('/employees/import-template', [CatalogController::class, 'employeesImportTemplate'])
+        ->middleware('permission:employees.manage')
+        ->name('admin.employees.import-template');
+    Route::post('/employees/import', [CatalogController::class, 'employeesImport'])
+        ->middleware('permission:employees.manage')
+        ->name('admin.employees.import');
     Route::post('/employees', [CatalogController::class, 'employeesStore'])
         ->middleware('permission:employees.manage')
         ->name('admin.employees.store');
@@ -364,6 +374,18 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/settings/printer', [SystemAdminController::class, 'printerSettingsEdit'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.printer');
+    Route::get('/settings/mail', [SystemAdminController::class, 'mailSettingsEdit'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.mail');
+    Route::get('/settings/license', [LicenseController::class, 'show'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.license');
+    Route::put('/settings/mail', [SystemAdminController::class, 'mailSettingsUpdate'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.mail.update');
+    Route::post('/settings/mail/test', [SystemAdminController::class, 'mailSettingsTest'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.mail.test');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
 });

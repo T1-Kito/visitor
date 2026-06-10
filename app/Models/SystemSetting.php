@@ -27,7 +27,31 @@ class SystemSetting extends Model
             ->pluck('value', 'key')
             ->all();
 
-        return array_merge($defaults, $stored);
+        $values = array_merge($defaults, $stored);
+        $publicAssetKeys = [
+            'admin.logo_url',
+            'login.logo_url',
+            'kiosk.owner_logo_url',
+            'kiosk.customer_logo_url',
+            'kiosk.logo_url',
+            'kiosk.background_url',
+            'app.favicon_url',
+            'app.desktop_icon_url',
+        ];
+
+        foreach ($publicAssetKeys as $key) {
+            $value = $values[$key] ?? null;
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            $path = parse_url($value, PHP_URL_PATH);
+            if (is_string($path) && str_starts_with($path, '/storage/')) {
+                $values[$key] = $path;
+            }
+        }
+
+        return $values;
     }
 
     /**
@@ -66,6 +90,7 @@ class SystemSetting extends Model
             'kiosk.background_url' => config('services.kiosk.background_url'),
             'kiosk.primary_color' => config('services.kiosk.primary_color'),
             'app.favicon_url' => config('services.kiosk.favicon_url'),
+            'app.desktop_icon_url' => config('services.kiosk.desktop_icon_url'),
         ];
     }
 
@@ -81,6 +106,22 @@ class SystemSetting extends Model
             'access.late_checkin_minutes' => '60',
             'access.warning_enabled' => '1',
             'access.warning_message' => 'Khách đến ngoài khung giờ check-in được cho phép.',
+        ];
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public static function mailDefaults(): array
+    {
+        return [
+            'mail.host' => 'smtp.gmail.com',
+            'mail.port' => '587',
+            'mail.scheme' => null,
+            'mail.username' => config('mail.mailers.smtp.username'),
+            'mail.password' => null,
+            'mail.from_address' => config('mail.from.address'),
+            'mail.from_name' => config('mail.from.name') ?: config('app.name'),
         ];
     }
 }
