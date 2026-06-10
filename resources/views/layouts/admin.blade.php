@@ -65,6 +65,10 @@
                 </div>
 
                 <div class="topbar-right">
+                    <a class="btn btn-light d-none d-md-inline-flex align-items-center gap-2" href="{{ route('kiosk.index') }}" target="_blank" rel="noopener">
+                        <i class="bi bi-display"></i>
+                        Kiosk
+                    </a>
                     <a class="btn btn-light position-relative" href="{{ route('admin.notifications.index') }}">
                         <i class="bi bi-bell"></i>
                         <span class="d-none d-md-inline">Thông báo</span>
