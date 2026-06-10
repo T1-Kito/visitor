@@ -854,12 +854,13 @@ class AdminUiController extends Controller
                     ->orWhere('full_name', 'like', '%'.$keyword.'%')
                     ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhere('email', 'like', '%'.$keyword.'%')
-                    ->orWhere('company', 'like', '%'.$keyword.'%');
+                    ->orWhere('company', 'like', '%'.$keyword.'%')
+                    ->orWhere('identity_no', 'like', '%'.$keyword.'%');
             })
             ->orderByDesc('visits_count')
             ->orderBy('full_name')
             ->limit(8)
-            ->get(['id', 'visitor_code', 'full_name', 'phone', 'email', 'company', 'note']);
+            ->get(['id', 'visitor_code', 'full_name', 'phone', 'email', 'company', 'identity_no', 'identity_issued_place', 'identity_issued_date', 'note']);
 
         return response()->json([
             'data' => $visitors->map(fn (Visitor $visitor): array => [
@@ -869,6 +870,9 @@ class AdminUiController extends Controller
                 'phone' => $visitor->phone,
                 'email' => $visitor->email,
                 'company' => $visitor->company,
+                'identity_no' => $visitor->identity_no,
+                'identity_issued_place' => $visitor->identity_issued_place,
+                'identity_issued_date' => $visitor->identity_issued_date?->format('Y-m-d'),
                 'note' => $visitor->note,
                 'visits_count' => $visitor->visits_count,
             ])->values(),
@@ -1267,6 +1271,7 @@ class AdminUiController extends Controller
             'code' => $visit->code,
             'qr_expires_at' => $visit->qr_expires_at?->toDateTimeString(),
         ]);
+        $this->scanWatchlistForVisit($visit, 'approval.approved');
         $this->notifyUsersWithPermission('checkin.manage', 'approval.approved', 'Lịch đã duyệt, sẵn sàng làm thủ tục vào', "Lịch {$visit->code} đã được duyệt và mã QR đã sẵn sàng.", 'success', $visit);
 
         $statusMessage = "Đã duyệt lịch {$visit->code}. Mã QR đã sẵn sàng.";
@@ -1277,8 +1282,12 @@ class AdminUiController extends Controller
             $statusMessage .= $sentEmail
                 ? " Đã gửi mã QR cho khách qua {$sentEmail}."
                 : ' Khách chưa có email hợp lệ nên hệ thống chưa gửi được mã QR.';
+            if ($sentEmail === null) {
+                $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_missing', 'Chưa gửi được QR cho khách', "Lịch {$visit->code} đã duyệt nhưng khách chưa có email hợp lệ. Vui lòng bổ sung email hoặc gửi QR thủ công.", 'warning', $visit);
+            }
         } catch (\Throwable $exception) {
             $errorMessage = 'Lịch đã được duyệt nhưng chưa gửi được email QR: '.$exception->getMessage();
+            $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_failed', 'Gửi QR cho khách bị lỗi', "Lịch {$visit->code} đã duyệt nhưng gửi email QR thất bại. Vui lòng kiểm tra cấu hình Gmail hoặc gửi lại từ chi tiết lịch.", 'danger', $visit);
         }
 
         if ($request->expectsJson()) {
@@ -3062,6 +3071,9 @@ XML;
             'visitor_phone' => ['nullable', 'string', 'max:30'],
             'visitor_email' => ['nullable', 'email', 'max:160'],
             'visitor_company' => ['nullable', 'string', 'max:160'],
+            'visitor_identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
+            'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'visitor_note' => ['nullable', 'string', 'max:1000'],
             'host_employee_id' => ['required', 'exists:employees,id'],
             'visit_date' => ['required', 'date'],
@@ -3178,20 +3190,18 @@ XML;
         if (! empty($validated['existing_visitor_id'])) {
             $visitor = Visitor::query()->findOrFail((int) $validated['existing_visitor_id']);
 
-            $visitor->update([
-                'full_name' => $validated['visitor_name'],
-                'phone' => $validated['visitor_phone'] ?? null,
-                'email' => $validated['visitor_email'] ?? null,
-                'company' => $validated['visitor_company'] ?? null,
-                'note' => $validated['visitor_note'] ?? null,
-            ]);
+            $visitor->update($this->visitorPayloadFromVisitForm($validated));
 
             return $visitor;
         }
 
         $visitor = null;
 
-        if (! empty($validated['visitor_phone'])) {
+        if (! empty($validated['visitor_identity_no'])) {
+            $visitor = Visitor::query()->where('identity_no', $validated['visitor_identity_no'])->first();
+        }
+
+        if ($visitor === null && ! empty($validated['visitor_phone'])) {
             $visitor = Visitor::query()->where('phone', $validated['visitor_phone'])->first();
         }
 
@@ -3200,24 +3210,30 @@ XML;
         }
 
         if ($visitor === null) {
-            return Visitor::query()->create([
-                'full_name' => $validated['visitor_name'],
-                'phone' => $validated['visitor_phone'] ?? null,
-                'email' => $validated['visitor_email'] ?? null,
-                'company' => $validated['visitor_company'] ?? null,
-                'note' => $validated['visitor_note'] ?? null,
-            ]);
+            return Visitor::query()->create($this->visitorPayloadFromVisitForm($validated));
         }
 
-        $visitor->update([
+        $visitor->update($this->visitorPayloadFromVisitForm($validated));
+
+        return $visitor;
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function visitorPayloadFromVisitForm(array $validated): array
+    {
+        return [
             'full_name' => $validated['visitor_name'],
             'phone' => $validated['visitor_phone'] ?? null,
             'email' => $validated['visitor_email'] ?? null,
             'company' => $validated['visitor_company'] ?? null,
+            'identity_no' => $validated['visitor_identity_no'] ?? null,
+            'identity_issued_place' => $validated['visitor_identity_issued_place'] ?? null,
+            'identity_issued_date' => $validated['visitor_identity_issued_date'] ?? null,
             'note' => $validated['visitor_note'] ?? null,
-        ]);
-
-        return $visitor;
+        ];
     }
 
     /**
@@ -3234,13 +3250,7 @@ XML;
             ]);
         }
 
-        $visitor->update([
-            'full_name' => $validated['visitor_name'],
-            'phone' => $validated['visitor_phone'] ?? null,
-            'email' => $validated['visitor_email'] ?? null,
-            'company' => $validated['visitor_company'] ?? null,
-            'note' => $validated['visitor_note'] ?? null,
-        ]);
+        $visitor->update($this->visitorPayloadFromVisitForm($validated));
 
         return $visitor;
     }

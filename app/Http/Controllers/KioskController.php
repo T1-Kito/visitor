@@ -117,7 +117,7 @@ class KioskController extends Controller
             'expected_checkout_at' => $expectedCheckoutAt,
             'status' => 'pending',
             'purpose' => $validated['purpose'],
-            'access_zone' => 'Tang 1 - Le tan',
+            'access_zone' => $this->defaultAccessZone(),
             'checkin_method' => 'qr',
             'qr_token' => $this->generateQrToken(),
             'qr_expires_at' => $scheduledAt->copy()->addDay(),
@@ -473,6 +473,16 @@ class KioskController extends Controller
         ]);
 
         return $badge;
+    }
+
+    private function defaultAccessZone(): string
+    {
+        $settings = SystemSetting::values([
+            'access.default_zone' => 'Tang 1 - Le tan',
+        ]);
+        $zone = trim((string) ($settings['access.default_zone'] ?? ''));
+
+        return $zone !== '' ? $zone : 'Tang 1 - Le tan';
     }
 
     private function generateVisitCode(): string

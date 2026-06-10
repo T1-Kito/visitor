@@ -331,7 +331,7 @@
             <div class="m-visitor-lookup">
                 <div class="m-lookup-title">
                     <strong>Tìm khách đã từng đến</strong>
-                    <span>Mã khách, tên, SĐT, email</span>
+                    <span>Mã khách, CCCD, tên, SĐT, email</span>
                 </div>
                 <div class="m-control">
                     <i class="bi bi-search"></i>
@@ -379,6 +379,33 @@
                         <input id="visitorCompany" name="visitor_company" value="{{ old('visitor_company') }}" placeholder="Tên công ty">
                     </div>
                     @error('visitor_company')<span class="m-error">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="m-field">
+                    <label>CCCD / giấy tờ</label>
+                    <div class="m-control">
+                        <i class="bi bi-card-text"></i>
+                        <input id="visitorIdentityNo" name="visitor_identity_no" value="{{ old('visitor_identity_no') }}" placeholder="Nhập số CCCD / hộ chiếu">
+                    </div>
+                    @error('visitor_identity_no')<span class="m-error">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="m-field">
+                    <label>Nơi cấp</label>
+                    <div class="m-control">
+                        <i class="bi bi-geo-alt"></i>
+                        <input id="visitorIdentityIssuedPlace" name="visitor_identity_issued_place" value="{{ old('visitor_identity_issued_place') }}" placeholder="Nhập nơi cấp">
+                    </div>
+                    @error('visitor_identity_issued_place')<span class="m-error">{{ $message }}</span>@enderror
+                </div>
+
+                <div class="m-field">
+                    <label>Ngày cấp</label>
+                    <div class="m-control">
+                        <i class="bi bi-calendar3"></i>
+                        <input id="visitorIdentityIssuedDate" type="date" name="visitor_identity_issued_date" value="{{ old('visitor_identity_issued_date') }}">
+                    </div>
+                    @error('visitor_identity_issued_date')<span class="m-error">{{ $message }}</span>@enderror
                 </div>
             </div>
         </section>
@@ -534,6 +561,9 @@
                 phone: document.getElementById('visitorPhone'),
                 email: document.getElementById('visitorEmail'),
                 company: document.getElementById('visitorCompany'),
+                identityNo: document.getElementById('visitorIdentityNo'),
+                identityIssuedPlace: document.getElementById('visitorIdentityIssuedPlace'),
+                identityIssuedDate: document.getElementById('visitorIdentityIssuedDate'),
                 note: document.getElementById('visitorNote'),
             };
             let searchTimer = null;
@@ -554,6 +584,9 @@
                 fields.phone.value = visitor.phone || '';
                 fields.email.value = visitor.email || '';
                 fields.company.value = visitor.company || '';
+                fields.identityNo.value = visitor.identity_no || '';
+                fields.identityIssuedPlace.value = visitor.identity_issued_place || '';
+                fields.identityIssuedDate.value = visitor.identity_issued_date || '';
                 fields.note.value = visitor.note || fields.note.value || '';
                 lookupInput.value = visitor.full_name || '';
                 selectedVisitorText.textContent = `Đã chọn: ${visitor.visitor_code ? visitor.visitor_code + ' - ' : ''}${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
@@ -589,7 +622,7 @@
                     const name = document.createElement('strong');
                     name.textContent = visitor.full_name || 'Khách chưa có tên';
                     const meta = document.createElement('span');
-                    meta.textContent = [visitor.visitor_code, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
+                    meta.textContent = [visitor.visitor_code, visitor.identity_no, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
 
                     info.appendChild(name);
                     info.appendChild(meta);
