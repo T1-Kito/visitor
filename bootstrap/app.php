@@ -8,6 +8,7 @@ use Illuminate\Session\TokenMismatchException;
 use App\Http\Middleware\EnsureLicensed;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\RedirectToCanonicalUrl;
+use App\Http\Middleware\ResolveTenant;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->append(RedirectToCanonicalUrl::class);
+        $middleware->append(ResolveTenant::class);
         $middleware->append(EnsureLicensed::class);
 
         $middleware->alias([
