@@ -40,12 +40,20 @@ foreach ($required in @(
     }
 }
 
+Write-Host "Dang bat IIS va CGI..."
+Enable-WindowsOptionalFeature -Online -FeatureName `
+    IIS-WebServerRole, IIS-WebServer, IIS-CommonHttpFeatures, IIS-StaticContent, `
+    IIS-DefaultDocument, IIS-HttpErrors, IIS-ApplicationDevelopment, IIS-CGI, `
+    IIS-ISAPIExtensions, IIS-ISAPIFilter, IIS-ManagementConsole, `
+    IIS-ManagementScriptingTools `
+    -All -NoRestart | Out-Null
+Import-Module WebAdministration -ErrorAction Stop
+
 Write-Host "Dang dung ban cai cu neu co..."
-Import-Module WebAdministration -ErrorAction SilentlyContinue
-if ((Get-WebsiteState -Name $siteName -ErrorAction SilentlyContinue).Value -eq "Started") {
+if (Test-Path "IIS:\Sites\$siteName") {
     Stop-Website -Name $siteName -ErrorAction SilentlyContinue
 }
-if ((Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue).Value -eq "Started") {
+if (Test-Path "IIS:\AppPools\$appPoolName") {
     Stop-WebAppPool -Name $appPoolName -ErrorAction SilentlyContinue
 }
 if (Get-Service $databaseService -ErrorAction SilentlyContinue) {
@@ -55,13 +63,6 @@ Get-Process mariadbd, mysql, php-cgi -ErrorAction SilentlyContinue |
     Where-Object { $_.Path -like "$InstallPath*" } |
     Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 2
-
-Write-Host "Dang bat IIS va CGI..."
-Enable-WindowsOptionalFeature -Online -FeatureName `
-    IIS-WebServerRole, IIS-WebServer, IIS-CommonHttpFeatures, IIS-StaticContent, `
-    IIS-DefaultDocument, IIS-HttpErrors, IIS-ApplicationDevelopment, IIS-CGI, `
-    IIS-ISAPIExtensions, IIS-ISAPIFilter, IIS-ManagementConsole `
-    -All -NoRestart | Out-Null
 
 $vcRedist = Join-Path $sourceRuntime "VC_redist.x64.exe"
 if (Test-Path $vcRedist) {
