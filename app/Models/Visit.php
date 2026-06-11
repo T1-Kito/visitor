@@ -16,6 +16,7 @@ class Visit extends Model
         'code',
         'visitor_id',
         'host_employee_id',
+        'created_by_user_id',
         'scheduled_at',
         'expected_checkout_at',
         'actual_checkin_at',
@@ -48,6 +49,11 @@ class Visit extends Model
     public function hostEmployee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'host_employee_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function approval(): HasOne
