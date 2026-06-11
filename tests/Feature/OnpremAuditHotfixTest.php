@@ -53,6 +53,27 @@ class OnpremAuditHotfixTest extends TestCase
             ->assertJsonPath('data.0.identity_issued_place', 'Cuc CSQLHC ve TTXH');
     }
 
+    public function test_admin_visitor_search_matches_vietnamese_name_without_accents(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+
+        Visitor::query()->create([
+            'full_name' => 'Nguyễn Ngọc Uẩn',
+            'phone' => '0982751075',
+            'email' => 'uan@example.test',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson(route('admin.visitors.search', ['q' => 'nguye']))
+            ->assertOk()
+            ->assertJsonFragment([
+                'full_name' => 'Nguyễn Ngọc Uẩn',
+                'phone' => '0982751075',
+            ]);
+    }
+
     public function test_watchlist_is_scanned_again_when_pending_visit_is_approved(): void
     {
         $this->seed(VmsSeeder::class);
@@ -102,4 +123,3 @@ class OnpremAuditHotfixTest extends TestCase
             ->exists());
     }
 }
-

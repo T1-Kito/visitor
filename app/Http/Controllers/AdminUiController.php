@@ -846,6 +846,19 @@ class AdminUiController extends Controller
             return response()->json(['data' => []]);
         }
 
+        $visitorColumns = [
+            'id',
+            'visitor_code',
+            'full_name',
+            'phone',
+            'email',
+            'company',
+            'identity_no',
+            'identity_issued_place',
+            'identity_issued_date',
+            'note',
+        ];
+
         $visitors = Visitor::query()
             ->withCount('visits')
             ->where(function (Builder $query) use ($keyword): void {
@@ -860,7 +873,34 @@ class AdminUiController extends Controller
             ->orderByDesc('visits_count')
             ->orderBy('full_name')
             ->limit(8)
-            ->get(['id', 'visitor_code', 'full_name', 'phone', 'email', 'company', 'identity_no', 'identity_issued_place', 'identity_issued_date', 'note']);
+            ->get($visitorColumns);
+
+        if ($visitors->count() < 8) {
+            $normalizedKeyword = Str::lower(Str::ascii($keyword));
+            $selectedIds = $visitors->modelKeys();
+
+            Visitor::query()
+                ->withCount('visits')
+                ->when($selectedIds !== [], fn (Builder $query): Builder => $query->whereNotIn('id', $selectedIds))
+                ->orderByDesc('visits_count')
+                ->orderBy('full_name')
+                ->select($visitorColumns)
+                ->cursor()
+                ->filter(function (Visitor $visitor) use ($normalizedKeyword): bool {
+                    $searchableText = implode(' ', array_filter([
+                        $visitor->visitor_code,
+                        $visitor->full_name,
+                        $visitor->phone,
+                        $visitor->email,
+                        $visitor->company,
+                        $visitor->identity_no,
+                    ]));
+
+                    return str_contains(Str::lower(Str::ascii($searchableText)), $normalizedKeyword);
+                })
+                ->take(8 - $visitors->count())
+                ->each(fn (Visitor $visitor) => $visitors->push($visitor));
+        }
 
         return response()->json([
             'data' => $visitors->map(fn (Visitor $visitor): array => [
@@ -3889,4 +3929,3 @@ XML;
         ]);
     }
 }
-

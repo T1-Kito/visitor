@@ -37,7 +37,7 @@
                             </div>
                             <div class="vc-control">
                                 <i class="bi bi-person-lines-fill"></i>
-                                <input id="visitorLookup" class="form-control" autocomplete="off" placeholder="Ví dụ: Nguyễn Văn A, 0909..., ABC Logistics" data-search-url="{{ route('admin.visitors.search') }}">
+                                <input id="visitorLookup" class="form-control" autocomplete="off" placeholder="Ví dụ: Nguyễn Văn A, 0909..., ABC Logistics" data-search-url="{{ route('admin.visitors.search', [], false) }}">
                             </div>
                             <div id="visitorSuggestions" class="vc-suggestions"></div>
                             <div id="selectedVisitorBox" class="vc-selected">

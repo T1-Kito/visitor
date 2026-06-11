@@ -335,7 +335,7 @@
                 </div>
                 <div class="m-control">
                     <i class="bi bi-search"></i>
-                    <input id="visitorLookup" type="search" autocomplete="off" placeholder="Gõ ít nhất 2 ký tự..." data-search-url="{{ route('admin.visitors.search') }}">
+                    <input id="visitorLookup" type="search" autocomplete="off" placeholder="Gõ ít nhất 2 ký tự..." data-search-url="{{ route('admin.visitors.search', [], false) }}">
                 </div>
                 <div id="visitorSuggestions" class="m-suggestions"></div>
                 <div id="selectedVisitorBox" class="m-selected-visitor">
