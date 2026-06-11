@@ -880,11 +880,11 @@ class AdminUiController extends Controller
             $selectedIds = $visitors->modelKeys();
 
             Visitor::query()
+                ->select($visitorColumns)
                 ->withCount('visits')
                 ->when($selectedIds !== [], fn (Builder $query): Builder => $query->whereNotIn('id', $selectedIds))
                 ->orderByDesc('visits_count')
                 ->orderBy('full_name')
-                ->select($visitorColumns)
                 ->cursor()
                 ->filter(function (Visitor $visitor) use ($normalizedKeyword): bool {
                     $searchableText = implode(' ', array_filter([

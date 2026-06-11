@@ -1,0 +1,44 @@
+@media (min-width: 992px) {
+    html,
+    body {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .dashboard-shell {
+        height: 100vh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .sidebar-panel {
+        position: relative;
+        top: auto;
+        height: 100vh;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .content-panel {
+        display: flex;
+        min-height: 0;
+        height: 100vh;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .topbar {
+        position: relative;
+        top: auto;
+        flex: 0 0 auto;
+    }
+
+    .workspace {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+    }
+}
