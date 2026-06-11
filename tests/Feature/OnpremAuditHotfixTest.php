@@ -43,8 +43,10 @@ class OnpremAuditHotfixTest extends TestCase
             ->assertRedirect();
 
         $visitor = Visitor::query()->where('identity_no', '079200012345')->firstOrFail();
+        $createdVisit = Visit::query()->where('visitor_id', $visitor->id)->firstOrFail();
 
         $this->assertSame('Cuc CSQLHC ve TTXH', $visitor->identity_issued_place);
+        $this->assertSame($admin->id, $createdVisit->created_by_user_id);
 
         $this->actingAs($admin)
             ->getJson(route('admin.visitors.search', ['q' => '079200012345']))

@@ -939,6 +939,7 @@ class AdminUiController extends Controller
             'code' => $this->generateVisitCode(),
             'visitor_id' => $visitor->id,
             'host_employee_id' => (int) $validated['host_employee_id'],
+            'created_by_user_id' => $this->actingUserId(),
             'scheduled_at' => $scheduledAt,
             'expected_checkout_at' => $expectedCheckoutAt,
             'status' => 'pending',
@@ -1232,6 +1233,7 @@ class AdminUiController extends Controller
                 'company' => $visit->visitor?->company ?? '-',
                 'host' => $visit->hostEmployee?->name ?? '-',
                 'department' => $visit->hostEmployee?->department?->name ?? '-',
+                'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
                 'created_time' => $createdAt?->format('H:i - d/m/Y') ?? '-',
@@ -3066,7 +3068,7 @@ XML;
 
     private function baseVisitQuery(): Builder
     {
-        return Visit::query()->with(['visitor', 'hostEmployee.department', 'activeBadge']);
+        return Visit::query()->with(['visitor', 'hostEmployee.department', 'creator', 'activeBadge']);
     }
 
     /**
