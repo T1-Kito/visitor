@@ -316,6 +316,7 @@
 
     <form class="m-create-form" action="{{ route('admin.visits.store') }}" method="post">
         @csrf
+        <input type="hidden" name="visit_form_token" value="{{ $visitFormToken }}">
         <input type="hidden" name="mobile" value="1">
         <input id="existingVisitorId" type="hidden" name="existing_visitor_id" value="{{ old('existing_visitor_id') }}">
 

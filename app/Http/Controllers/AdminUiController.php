@@ -383,6 +383,7 @@ class AdminUiController extends Controller
         return view('mobile.visits-create', $this->withBase([
             'hosts' => $this->hostsForSelect(),
             'accessZones' => $this->accessZones(),
+            'visitFormToken' => $this->createVisitFormToken(),
         ]));
     }
 
@@ -835,6 +836,7 @@ class AdminUiController extends Controller
         return view('admin.visits.create', $this->withBase([
             'hosts' => $this->hostsForSelect(),
             'accessZones' => $this->accessZones(),
+            'visitFormToken' => $this->createVisitFormToken(),
         ]));
     }
 
@@ -929,6 +931,13 @@ class AdminUiController extends Controller
                 ->back()
                 ->withInput()
                 ->with('error', 'Gio ra du kien phai lon hon gio vao.');
+        }
+
+        if (! $this->consumeVisitFormToken($request)) {
+            return redirect()
+                ->route($request->boolean('mobile') ? 'mobile.visits.create' : 'admin.visits.create')
+                ->withInput()
+                ->with('error', 'Yeu cau tao lich da duoc gui hoac da het han. Vui long kiem tra danh sach lich hen truoc khi tao lai.');
         }
 
         $visitor = $this->firstOrCreateVisitor($validated);
@@ -1292,12 +1301,25 @@ class AdminUiController extends Controller
             return redirect()->back()->with('error', "Lịch {$visit->code} không ở trạng thái chờ duyệt.");
         }
 
-        $visit->update([
+        $approved = Visit::query()
+            ->whereKey($visit->id)
+            ->where('status', 'pending')
+            ->update([
             'status' => 'approved',
             'rejection_reason' => null,
             'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
             'qr_expires_at' => $visit->qr_expires_at ?? ($visit->scheduled_at?->lt(now()) ? now() : ($visit->scheduled_at ?? now()))->copy()->addDay(),
         ]);
+
+        if ($approved !== 1) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Lịch {$visit->code} đã được xử lý trước đó."], 409);
+            }
+
+            return redirect()->back()->with('error', "Lịch {$visit->code} đã được xử lý trước đó.");
+        }
+
+        $visit->refresh();
 
         Approval::query()->updateOrCreate(
             ['visit_id' => $visit->id],
@@ -1368,10 +1390,23 @@ class AdminUiController extends Controller
 
         $reason = trim((string) $request->input('reason', 'Không phù hợp lịch tiếp khách.'));
 
-        $visit->update([
+        $rejected = Visit::query()
+            ->whereKey($visit->id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->update([
             'status' => 'rejected',
             'rejection_reason' => $reason,
         ]);
+
+        if ($rejected !== 1) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Lịch {$visit->code} đã được xử lý trước đó."], 409);
+            }
+
+            return redirect()->back()->with('error', "Lịch {$visit->code} đã được xử lý trước đó.");
+        }
+
+        $visit->refresh();
 
         Approval::query()->updateOrCreate(
             ['visit_id' => $visit->id],
@@ -2926,12 +2961,43 @@ XML;
                 'visitor' => $visit->visitor?->full_name ?? '-',
                 'host' => $visit->hostEmployee?->name ?? '-',
                 'department' => $visit->hostEmployee?->department?->name ?? '-',
+                'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
                 'status' => $visit->status,
                 'purpose' => $visit->purpose,
             ];
         })->all();
+    }
+
+    private function createVisitFormToken(): string
+    {
+        $token = (string) Str::uuid();
+        session()->put($this->visitFormTokenSessionKey($token), now()->addMinutes(30)->toIso8601String());
+
+        return $token;
+    }
+
+    private function consumeVisitFormToken(Request $request): bool
+    {
+        $token = (string) $request->input('visit_form_token', '');
+
+        if ($token === '') {
+            return false;
+        }
+
+        $expiresAt = session()->pull($this->visitFormTokenSessionKey($token));
+
+        if (! is_string($expiresAt)) {
+            return false;
+        }
+
+        return Carbon::parse($expiresAt)->isFuture();
+    }
+
+    private function visitFormTokenSessionKey(string $token): string
+    {
+        return 'visit_create_token_'.$token;
     }
 
     /**
@@ -3396,10 +3462,22 @@ XML;
             return $windowError;
         }
 
-        $visit->update([
+        $checkedInAt = $visit->actual_checkin_at ?? now();
+        $checkedIn = Visit::query()
+            ->whereKey($visit->id)
+            ->where('status', 'approved')
+            ->update([
             'status' => 'checked_in',
-            'actual_checkin_at' => $visit->actual_checkin_at ?? now(),
+            'actual_checkin_at' => $checkedInAt,
         ]);
+
+        if ($checkedIn !== 1) {
+            $visit->refresh();
+
+            return "Lịch {$visit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($visit->status)}.";
+        }
+
+        $visit->refresh();
 
         $badge = $this->issueBadgeForVisit($visit);
 
@@ -3466,10 +3544,21 @@ XML;
             };
         }
 
-        $visit->update([
+        $checkedOut = Visit::query()
+            ->whereKey($visit->id)
+            ->where('status', 'checked_in')
+            ->update([
             'status' => 'checked_out',
             'actual_checkout_at' => now(),
         ]);
+
+        if ($checkedOut !== 1) {
+            $visit->refresh();
+
+            return "Lịch {$visit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($visit->status)}.";
+        }
+
+        $visit->refresh();
 
         $badge = Badge::query()
             ->where('visit_id', $visit->id)

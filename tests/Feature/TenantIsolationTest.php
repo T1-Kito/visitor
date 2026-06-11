@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\Concerns\TenantAware;
 use App\Models\Department;
 use App\Models\SystemSetting;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class TenantIsolationTest extends TestCase
@@ -66,5 +69,80 @@ class TenantIsolationTest extends TestCase
 
         $this->assertSame(2, $totalDepartments);
     }
-}
 
+    public function test_strict_mode_blocks_queries_when_no_tenant_is_set(): void
+    {
+        config(['saas.mode' => 'multi']);
+
+        $tenant = Tenant::query()->create([
+            'name' => 'Customer A',
+            'slug' => 'customer-a',
+            'status' => 'active',
+        ]);
+
+        app(TenantContext::class)->set($tenant->id);
+        Department::query()->create(['code' => 'OPS-A', 'name' => 'Van hanh A']);
+
+        app(TenantContext::class)->set(null);
+
+        $this->assertSame(0, Department::query()->count());
+
+        $total = app(TenantContext::class)->withoutTenant(
+            fn () => Department::query()->count(),
+        );
+        $this->assertSame(1, $total);
+    }
+
+    public function test_users_email_is_unique_per_tenant_not_globally(): void
+    {
+        $tenantA = Tenant::query()->create([
+            'name' => 'Customer A', 'slug' => 'customer-a', 'status' => 'active',
+        ]);
+        $tenantB = Tenant::query()->create([
+            'name' => 'Customer B', 'slug' => 'customer-b', 'status' => 'active',
+        ]);
+
+        app(TenantContext::class)->set($tenantA->id);
+        User::query()->create([
+            'name' => 'Admin A',
+            'email' => 'admin@company.local',
+            'password' => Hash::make('secret'),
+        ]);
+
+        app(TenantContext::class)->set($tenantB->id);
+        $userB = User::query()->create([
+            'name' => 'Admin B',
+            'email' => 'admin@company.local',
+            'password' => Hash::make('secret'),
+        ]);
+
+        $this->assertSame($tenantB->id, $userB->tenant_id);
+
+        $total = app(TenantContext::class)->withoutTenant(
+            fn () => User::query()->where('email', 'admin@company.local')->count(),
+        );
+        $this->assertSame(2, $total);
+    }
+
+    public function test_tenant_aware_trait_captures_and_applies_tenant(): void
+    {
+        config(['saas.mode' => 'multi']);
+
+        $tenant = Tenant::query()->create([
+            'name' => 'Customer A', 'slug' => 'customer-a', 'status' => 'active',
+        ]);
+
+        app(TenantContext::class)->set($tenant->id);
+
+        $job = new class {
+            use TenantAware;
+        };
+        $job->captureTenant();
+
+        app(TenantContext::class)->set(null);
+        $this->assertNull(app(TenantContext::class)->id());
+
+        $job->applyTenant();
+        $this->assertSame($tenant->id, app(TenantContext::class)->id());
+    }
+}

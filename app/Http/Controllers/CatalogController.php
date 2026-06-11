@@ -21,7 +21,11 @@ class CatalogController extends Controller
     public function departmentsIndex(Request $request): View
     {
         $keyword = trim((string) $request->input('q', ''));
-        $query = Department::query()->withCount('employees')->orderBy('name');
+        $query = Department::query()
+            ->with('parent')
+            ->withCount(['employees', 'children'])
+            ->orderByRaw('COALESCE(parent_id, id) ASC')
+            ->orderBy('name');
 
         if ($keyword !== '') {
             $query->where(function ($departmentQuery) use ($keyword): void {
@@ -33,6 +37,7 @@ class CatalogController extends Controller
 
         return view('admin.departments.index', $this->withBase([
             'departments' => $query->get(),
+            'departmentOptions' => Department::query()->orderBy('name')->get(),
             'filters' => ['q' => $keyword],
         ]));
     }
@@ -41,6 +46,7 @@ class CatalogController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
+            'parent_id' => ['nullable', 'exists:departments,id'],
         ]);
 
         $validated['code'] = $this->generateDepartmentCode($validated['name']);
@@ -52,10 +58,12 @@ class CatalogController extends Controller
 
     public function departmentsShow(Department $department): View
     {
-        $department->loadCount('employees');
         $department->load([
+            'parent',
+            'children' => fn ($query) => $query->withCount('employees')->orderBy('name'),
             'employees' => fn ($query) => $query->withCount('hostedVisits')->orderBy('name'),
         ]);
+        $department->loadCount(['employees', 'children']);
 
         return view('admin.departments.show', $this->withBase([
             'department' => $department,
@@ -64,8 +72,17 @@ class CatalogController extends Controller
 
     public function departmentsEdit(Department $department): View
     {
+        $blockedDepartmentIds = array_values(array_unique(array_merge(
+            [$department->id],
+            $this->departmentDescendantIds($department)
+        )));
+
         return view('admin.departments.edit', $this->withBase([
             'department' => $department,
+            'departmentOptions' => Department::query()
+                ->whereNotIn('id', $blockedDepartmentIds)
+                ->orderBy('name')
+                ->get(),
         ]));
     }
 
@@ -73,6 +90,14 @@ class CatalogController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
+            'parent_id' => [
+                'nullable',
+                'exists:departments,id',
+                Rule::notIn(array_values(array_unique(array_merge(
+                    [$department->id],
+                    $this->departmentDescendantIds($department)
+                )))),
+            ],
         ]);
 
         $validated['code'] = $this->generateDepartmentCode($validated['name'], $department->id);
@@ -86,6 +111,12 @@ class CatalogController extends Controller
 
     public function departmentsDestroy(Department $department): RedirectResponse
     {
+        if ($department->children()->exists()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Khong the xoa phong ban dang co phong ban cap duoi.');
+        }
+
         if ($department->employees()->exists()) {
             return redirect()
                 ->back()
@@ -656,6 +687,22 @@ class CatalogController extends Controller
         }
 
         return $candidate;
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    private function departmentDescendantIds(Department $department): array
+    {
+        $department->loadMissing('children');
+
+        $ids = [];
+        foreach ($department->children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $this->departmentDescendantIds($child));
+        }
+
+        return $ids;
     }
 
     /**

@@ -82,9 +82,9 @@
                 </div>
 
                 @if ($scannedVisit->status === 'approved' && !$scannedQrExpired)
-                    <form action="{{ route('admin.checkin.confirm', $scannedVisit) }}" method="post">
+                    <form action="{{ route('admin.checkin.confirm', $scannedVisit) }}" method="post" data-disable-on-submit>
                         @csrf
-                        <button class="ci-btn-checkin" type="submit">
+                        <button class="ci-btn-checkin" type="submit" data-loading-text="Đang xác nhận...">
                             <i class="bi bi-check-circle-fill"></i>
                             Xác nhận khách vào
                         </button>

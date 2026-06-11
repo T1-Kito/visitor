@@ -25,7 +25,20 @@ class TenantContext
             return $this->tenantId;
         }
 
+        if ($this->isStrict()) {
+            return null;
+        }
+
         return $this->defaultTenantId();
+    }
+
+    public function isStrict(): bool
+    {
+        if ($this->disabled) {
+            return false;
+        }
+
+        return config('saas.mode') === 'multi';
     }
 
     public function withoutTenant(callable $callback): mixed

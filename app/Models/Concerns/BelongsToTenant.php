@@ -12,9 +12,14 @@ trait BelongsToTenant
     protected static function bootBelongsToTenant(): void
     {
         static::addGlobalScope('tenant', function (Builder $builder): void {
-            $tenantId = app(TenantContext::class)->id();
+            $context = app(TenantContext::class);
+            $tenantId = $context->id();
             if ($tenantId !== null) {
                 $builder->where($builder->getModel()->getTable().'.tenant_id', $tenantId);
+                return;
+            }
+            if ($context->isStrict()) {
+                $builder->whereRaw('0 = 1');
             }
         });
 

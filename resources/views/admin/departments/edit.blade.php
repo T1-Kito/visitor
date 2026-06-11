@@ -25,6 +25,19 @@
                         <label class="form-label">Tên phòng ban</label>
                         <input class="form-control" name="name" value="{{ old('name', $department->name) }}" required>
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">Phòng ban cha</label>
+                        <select class="form-select" name="parent_id">
+                            <option value="">Không có - phòng ban cấp 1</option>
+                            @foreach (($departmentOptions ?? collect()) as $option)
+                                @continue((int) $option->id === (int) $department->id)
+                                <option value="{{ $option->id }}" @selected((string) old('parent_id', $department->parent_id) === (string) $option->id)>
+                                    {{ $option->name }} ({{ $option->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Chọn phòng ban cha nếu muốn đưa phòng ban này vào cây tổ chức.</div>
+                    </div>
                 </div>
             </section>
         </div>
