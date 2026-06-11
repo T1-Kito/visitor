@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Approval;
 use App\Models\Badge;
 use App\Models\AccessControlLog;
+use App\Models\AuditLog;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Permission;
@@ -226,19 +227,29 @@ class VmsSeeder extends Seeder
      */
     private function seedDepartments(): Collection
     {
-        return collect([
-            ['code' => 'SALES', 'name' => 'Sales'],
-            ['code' => 'OPS', 'name' => 'Operations'],
-            ['code' => 'IT', 'name' => 'IT'],
-            ['code' => 'FIN', 'name' => 'Finance'],
-        ])->mapWithKeys(function (array $data): array {
+        $items = collect([
+            ['code' => 'HQ', 'name' => 'Khối vận hành', 'parent_code' => null],
+            ['code' => 'SALES', 'name' => 'Sales', 'parent_code' => 'HQ'],
+            ['code' => 'OPS', 'name' => 'Operations', 'parent_code' => 'HQ'],
+            ['code' => 'IT', 'name' => 'IT', 'parent_code' => 'HQ'],
+            ['code' => 'FIN', 'name' => 'Finance', 'parent_code' => 'HQ'],
+        ]);
+
+        $departments = collect();
+
+        foreach ($items as $data) {
             $department = Department::query()->updateOrCreate(
                 ['code' => $data['code']],
-                ['name' => $data['name']]
+                [
+                    'name' => $data['name'],
+                    'parent_id' => $data['parent_code'] ? $departments[$data['parent_code']]->id ?? null : null,
+                ]
             );
 
-            return [$department->code => $department];
-        });
+            $departments->put($department->code, $department);
+        }
+
+        return $departments;
     }
 
     /**
@@ -355,6 +366,12 @@ class VmsSeeder extends Seeder
     {
         $today = Carbon::today();
         $approverId = $users['admin@company.local']->id ?? null;
+        $creatorIds = collect([
+            $users['admin@company.local']->id ?? null,
+            $users['reception1@company.local']->id ?? null,
+            $users['employee1@company.local']->id ?? null,
+            null,
+        ]);
         $badgeIndex = 1;
 
         $visits = [
@@ -395,6 +412,7 @@ class VmsSeeder extends Seeder
                 [
                     'visitor_id' => $visitors[$data['visitor']]->id,
                     'host_employee_id' => $employees[$data['host']]->id,
+                    'created_by_user_id' => $creatorIds[$index % $creatorIds->count()],
                     'scheduled_at' => $scheduledAt,
                     'expected_checkout_at' => $expectedCheckoutAt,
                     'actual_checkin_at' => $actualCheckinAt,
@@ -424,6 +442,22 @@ class VmsSeeder extends Seeder
                         ? 'Khung gio khong kha dung.'
                         : ($approvalStatus === 'approved' ? 'Da duyet lich tiep don.' : null),
                     'acted_at' => $approvalStatus === 'pending' ? null : $scheduledAt->copy()->subMinutes(30),
+                ]
+            );
+
+            AuditLog::query()->updateOrCreate(
+                [
+                    'action' => 'visit.created',
+                    'entity_type' => 'visit',
+                    'entity_id' => (string) $visit->id,
+                ],
+                [
+                    'user_id' => $visit->created_by_user_id,
+                    'meta' => [
+                        'code' => $visit->code,
+                        'source' => $visit->created_by_user_id === null ? 'kiosk' : 'admin',
+                        'demo' => true,
+                    ],
                 ]
             );
 
@@ -492,6 +526,13 @@ class VmsSeeder extends Seeder
     {
         $adminId = $users['admin@company.local']->id ?? null;
         $receptionId = $users['reception1@company.local']->id ?? null;
+        $creatorIds = collect([
+            $adminId,
+            $receptionId,
+            $users['employee2@company.local']->id ?? null,
+            $users['employee3@company.local']->id ?? null,
+            null,
+        ]);
         $today = Carbon::today();
 
         $demoVisits = [
@@ -573,6 +614,7 @@ class VmsSeeder extends Seeder
                 [
                     'visitor_id' => $visitors[$data['visitor']]->id,
                     'host_employee_id' => $employees[$data['host']]->id,
+                    'created_by_user_id' => $creatorIds[$index % $creatorIds->count()],
                     'scheduled_at' => $scheduledAt,
                     'expected_checkout_at' => $expectedCheckoutAt,
                     'actual_checkin_at' => $actualCheckinAt,
@@ -606,6 +648,40 @@ class VmsSeeder extends Seeder
                     'acted_at' => $approvalStatus === 'pending' ? null : $scheduledAt->copy()->subMinutes(25),
                 ]
             );
+
+            AuditLog::query()->updateOrCreate(
+                [
+                    'action' => 'visit.created',
+                    'entity_type' => 'visit',
+                    'entity_id' => (string) $visit->id,
+                ],
+                [
+                    'user_id' => $visit->created_by_user_id,
+                    'meta' => [
+                        'code' => $visit->code,
+                        'source' => $visit->created_by_user_id === null ? 'kiosk' : 'admin',
+                        'demo' => true,
+                    ],
+                ]
+            );
+
+            if ($approvalStatus !== 'pending') {
+                AuditLog::query()->updateOrCreate(
+                    [
+                        'action' => 'visit.'.$approvalStatus,
+                        'entity_type' => 'visit',
+                        'entity_id' => (string) $visit->id,
+                    ],
+                    [
+                        'user_id' => $adminId,
+                        'meta' => [
+                            'code' => $visit->code,
+                            'status' => $approvalStatus,
+                            'demo' => true,
+                        ],
+                    ]
+                );
+            }
 
             if (in_array($data['status'], ['checked_in', 'checked_out'], true)) {
                 $badge = Badge::query()->updateOrCreate(

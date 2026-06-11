@@ -197,6 +197,33 @@
                 }
             });
         });
+
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.matches('[data-disable-on-submit]')) {
+                return;
+            }
+
+            if (form.dataset.submitted === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.submitted = '1';
+            form.querySelectorAll('button[type="submit"]').forEach((button) => {
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+                const loadingText = button.dataset.loadingText;
+                if (loadingText) {
+                    const label = button.querySelector('span');
+                    if (label) {
+                        label.textContent = loadingText;
+                    } else {
+                        button.textContent = loadingText;
+                    }
+                }
+            });
+        });
     </script>
     @stack('scripts')
 </body>

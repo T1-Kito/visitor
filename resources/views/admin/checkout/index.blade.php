@@ -85,9 +85,9 @@
                         </div>
                     </div>
                     <div class="co-actions">
-                        <form action="{{ route('admin.checkout.confirm', $scannedVisit) }}" method="post">
+                        <form action="{{ route('admin.checkout.confirm', $scannedVisit) }}" method="post" data-disable-on-submit>
                             @csrf
-                            <button class="co-btn-red" type="submit"><i class="bi bi-box-arrow-left"></i> Xác nhận khách ra</button>
+                            <button class="co-btn-red" type="submit" data-loading-text="Đang xác nhận..."><i class="bi bi-box-arrow-left"></i> Xác nhận khách ra</button>
                         </form>
                         <a class="co-btn-cancel d-flex align-items-center justify-content-center text-decoration-none" href="{{ route('admin.checkout.index') }}">Hủy thao tác</a>
                     </div>

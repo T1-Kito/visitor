@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\AuditLog;
+use App\Models\Approval;
+use App\Models\Department;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Visit;
@@ -22,9 +24,12 @@ class OnpremAuditHotfixTest extends TestCase
 
         $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
         $hostVisit = Visit::query()->firstOrFail();
+        $formToken = 'visit-form-token-cccd';
 
         $this->actingAs($admin)
+            ->withSession(['visit_create_token_'.$formToken => now()->addMinutes(30)->toIso8601String()])
             ->post(route('admin.visits.store'), [
+                'visit_form_token' => $formToken,
                 'visitor_name' => 'Nguyen Can Cuoc',
                 'visitor_phone' => '0909911222',
                 'visitor_email' => 'cccd@example.test',
@@ -47,6 +52,20 @@ class OnpremAuditHotfixTest extends TestCase
 
         $this->assertSame('Cuc CSQLHC ve TTXH', $visitor->identity_issued_place);
         $this->assertSame($admin->id, $createdVisit->created_by_user_id);
+
+        $visitsResponse = $this->actingAs($admin)
+            ->get(route('admin.visits.index'))
+            ->assertOk()
+            ->assertSee('Người tạo')
+            ->assertSee('Kiem tra CCCD');
+
+        $createdVisitRow = collect($visitsResponse->viewData('visits'))
+            ->firstWhere('id', $createdVisit->id);
+
+        $this->assertNotNull($createdVisitRow);
+        $this->assertSame($admin->name, $createdVisitRow['creator']);
+        $this->assertSame('Nguyen Can Cuoc', $createdVisitRow['visitor']);
+        $this->assertSame('Kiem tra CCCD', $createdVisitRow['purpose']);
 
         $this->actingAs($admin)
             ->getJson(route('admin.visitors.search', ['q' => '079200012345']))
@@ -82,9 +101,12 @@ class OnpremAuditHotfixTest extends TestCase
 
         $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
         $hostVisit = Visit::query()->firstOrFail();
+        $formToken = 'visit-form-token-watchlist';
 
         $this->actingAs($admin)
+            ->withSession(['visit_create_token_'.$formToken => now()->addMinutes(30)->toIso8601String()])
             ->post(route('admin.visits.store'), [
+                'visit_form_token' => $formToken,
                 'visitor_name' => 'Tran Watch Approve',
                 'visitor_phone' => '0909911333',
                 'visitor_email' => 'watch.approve@example.test',
@@ -123,5 +145,93 @@ class OnpremAuditHotfixTest extends TestCase
             ->where('type', 'watchlist.match')
             ->where('level', 'danger')
             ->exists());
+    }
+
+    public function test_admin_cannot_reapprove_the_same_visit_twice(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $visit = Visit::query()->where('status', 'pending')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('admin.approvals.approve', $visit))
+            ->assertRedirect();
+
+        $visit->refresh();
+
+        $this->assertSame('approved', $visit->status);
+        $this->assertSame(1, Approval::query()->where('visit_id', $visit->id)->count());
+
+        $this->actingAs($admin)
+            ->post(route('admin.approvals.approve', $visit))
+            ->assertRedirect();
+
+        $visit->refresh();
+
+        $this->assertSame('approved', $visit->status);
+        $this->assertSame(1, Approval::query()->where('visit_id', $visit->id)->count());
+        $this->assertSame(0, Approval::query()->where('visit_id', $visit->id)->where('status', 'pending')->count());
+    }
+
+    public function test_admin_visit_creation_rejects_reused_submit_token(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $hostVisit = Visit::query()->firstOrFail();
+        $formToken = 'visit-form-token-double-submit';
+        $payload = [
+            'visit_form_token' => $formToken,
+            'visitor_name' => 'Double Submit Visitor',
+            'visitor_phone' => '0909911444',
+            'visitor_email' => 'double.submit@example.test',
+            'visitor_company' => 'Double Submit Co',
+            'visitor_identity_no' => '079200099999',
+            'host_employee_id' => $hostVisit->host_employee_id,
+            'visit_date' => now()->addDay()->toDateString(),
+            'visit_time' => '09:00',
+            'expected_checkout_time' => '10:30',
+            'purpose' => 'Kiem tra double submit',
+            'access_zone' => 'Tang 1 - Le tan',
+            'checkin_method' => 'qr',
+        ];
+
+        $this->actingAs($admin)
+            ->withSession(['visit_create_token_'.$formToken => now()->addMinutes(30)->toIso8601String()])
+            ->post(route('admin.visits.store'), $payload)
+            ->assertRedirect();
+
+        $this->actingAs($admin)
+            ->post(route('admin.visits.store'), $payload)
+            ->assertRedirect(route('admin.visits.create'));
+
+        $visitor = Visitor::query()->where('identity_no', '079200099999')->firstOrFail();
+
+        $this->assertSame(1, Visit::query()->where('visitor_id', $visitor->id)->count());
+    }
+
+    public function test_department_tree_data_includes_parent_child_hierarchy(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.departments.index'))
+            ->assertOk();
+
+        $departments = collect($response->viewData('departments'));
+
+        $rootDepartment = $departments->firstWhere('code', 'HQ');
+        $childDepartment = $departments->firstWhere('code', 'SALES');
+
+        $this->assertNotNull($rootDepartment);
+        $this->assertSame(null, $rootDepartment->parent_id);
+        $this->assertGreaterThan(0, (int) $rootDepartment->children_count);
+
+        $this->assertNotNull($childDepartment);
+        $this->assertInstanceOf(Department::class, $childDepartment->parent);
+        $this->assertSame('HQ', $childDepartment->parent?->code);
     }
 }

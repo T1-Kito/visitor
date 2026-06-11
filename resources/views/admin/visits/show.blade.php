@@ -228,7 +228,7 @@
                     @if ($visit->qr_token)
                         <div class="va-share-actions mt-2">
                             @if ($shareEmail)
-                                <form action="{{ route('admin.visits.send-qr-email', $visit) }}" method="post">@csrf<button class="va-btn danger w-100" type="submit"><i class="bi bi-envelope"></i>Gmail</button></form>
+                                <form action="{{ route('admin.visits.send-qr-email', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="Đang gửi..."><i class="bi bi-envelope"></i>Gmail</button></form>
                             @else
                                 <span class="va-btn danger" aria-disabled="true"><i class="bi bi-envelope"></i>Gmail</span>
                             @endif
@@ -242,14 +242,14 @@
                 <div class="va-panel-head"><h2>Xử lý</h2></div>
                 <div class="va-body va-action-stack">
                     @if ($visit->status === 'pending')
-                        <form action="{{ route('admin.approvals.approve', $visit) }}" method="post">@csrf<button class="va-btn success w-100" type="submit"><i class="bi bi-check-circle"></i>Duyệt lịch</button></form>
-                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post">@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit"><i class="bi bi-x-circle"></i>Từ chối</button></form>
+                        <form action="{{ route('admin.approvals.approve', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check-circle"></i>Duyệt lịch</button></form>
+                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x-circle"></i>Từ chối</button></form>
                     @elseif ($visit->status === 'approved')
                         <span class="va-btn soft w-100"><i class="bi bi-check-circle"></i>Đã duyệt</span>
-                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post">@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit"><i class="bi bi-x-circle"></i>Từ chối</button></form>
-                        <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post">@csrf<button class="va-btn primary w-100" type="submit"><i class="bi bi-box-arrow-in-right"></i>Cho khách vào</button></form>
+                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x-circle"></i>Từ chối</button></form>
+                        <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="Đang xử lý..."><i class="bi bi-box-arrow-in-right"></i>Cho khách vào</button></form>
                     @elseif ($visit->status === 'checked_in')
-                        <form action="{{ route('admin.checkout.confirm', $visit) }}" method="post">@csrf<button class="va-btn danger w-100" type="submit"><i class="bi bi-box-arrow-left"></i>Cho khách ra</button></form>
+                        <form action="{{ route('admin.checkout.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="Đang xử lý..."><i class="bi bi-box-arrow-left"></i>Cho khách ra</button></form>
                     @else
                         <span class="va-btn soft w-100">{{ $statusText }}</span>
                     @endif
