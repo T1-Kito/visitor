@@ -234,4 +234,58 @@ class OnpremAuditHotfixTest extends TestCase
         $this->assertInstanceOf(Department::class, $childDepartment->parent);
         $this->assertSame('HQ', $childDepartment->parent?->code);
     }
+
+    public function test_audit_log_keeps_actor_and_request_context_snapshot(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $originalName = $admin->name;
+        $originalEmail = $admin->email;
+
+        $this->actingAs($admin)
+            ->withServerVariables([
+                'REMOTE_ADDR' => '10.20.30.40',
+                'HTTP_USER_AGENT' => 'VMS-Audit-Test',
+            ])
+            ->post(route('admin.departments.store'), [
+                'name' => 'Audit Snapshot Department',
+                'parent_id' => null,
+            ])
+            ->assertRedirect();
+
+        $log = AuditLog::query()
+            ->where('action', 'department.created')
+            ->latest('id')
+            ->firstOrFail();
+
+        $this->assertSame($admin->id, $log->user_id);
+        $this->assertSame($originalName, $log->actor_name);
+        $this->assertSame($originalEmail, $log->actor_email);
+        $this->assertSame('10.20.30.40', $log->ip_address);
+        $this->assertSame('POST', $log->request_method);
+        $this->assertStringContainsString('/departments', (string) $log->request_url);
+        $this->assertSame('VMS-Audit-Test', $log->user_agent);
+
+        $admin->update([
+            'name' => 'Renamed Administrator',
+            'email' => 'renamed-admin@example.test',
+        ]);
+
+        $log->refresh();
+
+        $this->assertSame($originalName, $log->actor_name);
+        $this->assertSame($originalEmail, $log->actor_email);
+
+        $this->actingAs($admin)
+            ->get(route('admin.audit-logs.index', [
+                'from_date' => now()->toDateString(),
+                'to_date' => now()->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee($originalName)
+            ->assertSee($originalEmail)
+            ->assertSee('10.20.30.40')
+            ->assertSee('POST');
+    }
 }

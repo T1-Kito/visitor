@@ -101,6 +101,19 @@ class SystemSetting extends Model
     /**
      * @return array<string, string|null>
      */
+    public static function adminThemeDefaults(): array
+    {
+        return [
+            'admin.navbar_color' => '#ffffff',
+            'admin.content_background' => '#f8fafc',
+            'admin.primary_color' => '#d40511',
+            'admin.secondary_color' => '#ffcc00',
+        ];
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
     public static function accessDefaults(): array
     {
         return [
@@ -121,11 +134,17 @@ class SystemSetting extends Model
         return [
             'mail.host' => 'smtp.gmail.com',
             'mail.port' => '587',
-            'mail.scheme' => null,
+            'mail.scheme' => 'smtp',
+            'mail.auth_mode' => 'login',
             'mail.username' => config('mail.mailers.smtp.username'),
             'mail.password' => null,
             'mail.from_address' => config('mail.from.address'),
             'mail.from_name' => config('mail.from.name') ?: config('app.name'),
+            'mail.reply_to' => null,
+            'mail.local_domain' => config('mail.mailers.smtp.local_domain'),
+            'mail.timeout' => '30',
+            'mail.trigger_qr_approved' => '1',
+            'mail.trigger_host_checkin' => '1',
         ];
     }
 }

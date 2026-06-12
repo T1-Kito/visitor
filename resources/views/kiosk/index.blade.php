@@ -588,6 +588,33 @@
             font-weight: 700;
         }
 
+        .kiosk-registration-qr {
+            display: grid;
+            place-items: center;
+            gap: .45rem;
+            padding: .75rem;
+        }
+
+        .kiosk-registration-qr svg {
+            display: block;
+            width: 92px;
+            height: 92px;
+        }
+
+        .kiosk-registration-qr strong {
+            color: var(--kiosk-ink);
+            font-size: .76rem;
+            font-weight: 700;
+        }
+
+        .kiosk-registration-qr span {
+            margin: 0;
+            color: #617893;
+            font-size: .68rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
         .kiosk-scan-mode {
             display: grid;
             grid-template-columns: 1fr;
@@ -1170,6 +1197,7 @@
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
     $lastVisit = $lastKioskVisit ?? null;
+    $selfRegistrationUrl = request()->getSchemeAndHttpHost().route('kiosk.register', [], false);
     $lastStatusLabels = [
         'pending' => 'Đang chờ phê duyệt',
         'approved' => 'Đã được duyệt',
@@ -1389,24 +1417,27 @@
             <aside class="kiosk-side">
                 <section class="kiosk-card kiosk-side-card">
                     <div class="kiosk-side-title">
-                        <h2 id="kioskLookupHeading">Check-in trực tiếp</h2>
-                        <p id="kioskLookupHelp">Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.</p>
+                        <h2>Đăng ký nhanh</h2>
+                        <p>Quét QR bằng điện thoại để mở form kiosk và nhập thông tin trước.</p>
                     </div>
 
-                    <div class="kiosk-qr-box qr-camera-frame" id="kioskQrFrame">
-                        <video class="qr-camera-video" id="kioskQrVideo" playsinline muted></video>
-                        <div class="qr-camera-placeholder">
-                            <i class="bi bi-qr-code"></i>
-                            <span>Đưa mã QR vào khung</span>
-                        </div>
+                    <div class="kiosk-qr-box kiosk-registration-qr">
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(108)->margin(1)->errorCorrection('M')->generate($selfRegistrationUrl) !!}
+                        <strong>Quét để đăng ký</strong>
+                        <span>{{ parse_url($selfRegistrationUrl, PHP_URL_HOST) }}</span>
                     </div>
 
                     <div class="kiosk-camera-note">
                         <i class="bi bi-info-circle"></i>
-                        <span id="kioskQrStatus">Nếu không có mã QR, khách có thể nhập mã lịch hẹn bên dưới.</span>
+                        <span>Khách có thể dùng điện thoại cá nhân để nhập thông tin nhanh hơn, hoặc lễ tân gửi link này trước cho khách.</span>
                     </div>
 
                     <div class="kiosk-side-divider" id="kioskLookupDivider">Hoặc nhập mã check-in</div>
+
+                    <div class="kiosk-side-title kiosk-lookup-title">
+                        <h2 id="kioskLookupHeading">Check-in trực tiếp</h2>
+                        <p id="kioskLookupHelp">Nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.</p>
+                    </div>
 
                     <form
                         id="kioskLookupForm"
@@ -1499,8 +1530,6 @@
         </section>
     </div>
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="{{ \App\Support\AssetVersion::url('js/gatehouse-qr-scanner.js') }}"></script>
     <script>
         const kioskTranslations = {
             'Hệ thống quản lý khách đến': 'Visitor management system',
@@ -1531,12 +1560,16 @@
             'Khác': 'Other',
             'Tôi đồng ý tuân thủ quy định ra/vào và hướng dẫn của lễ tân/bảo vệ.': 'I agree to follow the access rules and instructions from reception/security.',
             'Gửi yêu cầu tiếp khách': 'Submit visit request',
+            'Đăng ký nhanh': 'Quick registration',
+            'Quét QR bằng điện thoại để mở form kiosk và nhập thông tin trước.': 'Scan the QR code with a phone to open the kiosk form and enter information in advance.',
+            'Quét để đăng ký': 'Scan to register',
+            'Khách có thể dùng điện thoại cá nhân để nhập thông tin nhanh hơn, hoặc lễ tân gửi link này trước cho khách.': 'Visitors can use their phone to enter information faster, or reception can send this link in advance.',
             'Check-in trực tiếp': 'Direct check-in',
             'Check-out trực tiếp': 'Direct check-out',
             'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Scan the QR code or enter an approved visit code to check in.',
+            'Nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Enter an approved visit code to check in.',
             'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Scan the QR code or enter the visit code of a visitor currently inside to check out.',
-            'Đưa mã QR vào khung': 'Place the QR code inside the frame',
-            'Nếu không có mã QR, khách có thể nhập mã lịch hẹn bên dưới.': 'If no QR code is available, enter the visit code below.',
+            'Nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Enter the visit code of a visitor currently inside to check out.',
             'Hoặc nhập mã check-in': 'Or enter a check-in code',
             'Hoặc nhập mã check-out': 'Or enter a check-out code',
             'Check-in ngay': 'Check in now',
@@ -1615,14 +1648,6 @@
 
         updateClock();
         setInterval(updateClock, 30000);
-
-        GatehouseQrScanner.create({
-            frame: '#kioskQrFrame',
-            video: '#kioskQrVideo',
-            input: '#kioskQrInput',
-            form: '#kioskLookupForm',
-            status: '#kioskQrStatus'
-        });
 
         const extraPanel = document.querySelector('[data-kiosk-extra-panel]');
         const extraToggle = document.querySelector('[data-kiosk-extra-toggle]');
@@ -1754,8 +1779,8 @@
 
             if (lookupHelp) {
                 lookupHelp.textContent = normalizedMode === 'checkout'
-                    ? kioskText('Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.')
-                    : kioskText('Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.');
+                    ? kioskText('Nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.')
+                    : kioskText('Nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.');
             }
 
             if (lookupDivider) {

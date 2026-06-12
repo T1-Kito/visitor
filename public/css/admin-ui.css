@@ -31,9 +31,9 @@ body {
     font-family: "Manrope", sans-serif;
     color: var(--gate-ink);
     background:
-        radial-gradient(circle at 12% 0%, rgba(12, 180, 216, 0.18), transparent 34%),
-        radial-gradient(circle at 88% 0%, rgba(20, 107, 215, 0.16), transparent 34%),
-        linear-gradient(180deg, #f8fbff 0%, var(--gate-bg) 48%, #eef5fb 100%);
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--gate-cyan) 10%, transparent), transparent 34%),
+        radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--gate-blue) 7%, transparent), transparent 34%),
+        linear-gradient(180deg, var(--admin-content-background, #f8fafc) 0%, var(--gate-bg) 48%, #f8fafc 100%);
 }
 
 a {
@@ -46,14 +46,16 @@ a {
 }
 
 .sidebar-panel {
-    width: 268px;
+    width: 240px;
     flex-shrink: 0;
     color: #1f2f46;
-    padding: 1rem;
+    padding: 0.85rem 0.75rem;
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
-    background: linear-gradient(180deg, #f6fbff 0%, #eef6fc 100%);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--gate-cyan) 10%, #ffffff) 0 4px, transparent 4px),
+        linear-gradient(180deg, var(--admin-navbar-color, #ffffff) 0%, color-mix(in srgb, var(--gate-cyan) 4%, #ffffff) 100%);
     border-right: 1px solid #d8e6f3;
     box-shadow: 10px 0 32px rgba(17, 39, 68, 0.045);
 }
@@ -125,6 +127,7 @@ a {
 }
 
 .sidebar-link {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.22rem;
@@ -140,22 +143,51 @@ a {
 .sidebar-link i {
     width: 20px;
     font-size: 0.95rem;
-    color: #6f86a1;
+    color: var(--gate-blue);
 }
 
 .sidebar-link:hover {
-    background: #eaf4ff;
-    color: #146bd7;
+    background: transparent;
+    color: var(--gate-blue);
 }
 
 .sidebar-link.active {
-    color: #0d5fc7;
-    background: #dceeff;
-    box-shadow: inset 3px 0 0 #146bd7;
+    color: var(--gate-blue);
+    background: transparent;
+    box-shadow: none;
+}
+
+.sidebar-link.active::before,
+.sidebar-link.active::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 22px;
+    border-top: 2px solid var(--gate-blue);
+    border-bottom: 2px solid var(--gate-blue);
+    transform: translateY(-50%);
+}
+
+.sidebar-link.active::before {
+    left: 0;
+    border-left: 2px solid var(--gate-blue);
+    border-radius: 5px 0 0 5px;
+}
+
+.sidebar-link.active::after {
+    right: 0;
+    border-right: 2px solid var(--gate-blue);
+    border-radius: 0 5px 5px 0;
 }
 
 .sidebar-link.active i {
-    color: #146bd7;
+    color: var(--gate-blue);
+}
+
+.topbar-right .btn:not(.btn-brand):not(.btn-soft-danger) > i,
+.topbar-left .btn > i {
+    color: var(--gate-blue);
 }
 
 
@@ -247,6 +279,7 @@ a {
 .content-panel {
     flex: 1;
     min-width: 0;
+    background: var(--admin-content-background, transparent);
 }
 
 .topbar {
@@ -258,7 +291,7 @@ a {
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem 1.35rem;
-    background: rgba(248, 251, 255, 0.82);
+    background: #ffffff;
     border-bottom: 1px solid rgba(199, 214, 231, 0.72);
     backdrop-filter: blur(14px);
 }
@@ -268,6 +301,113 @@ a {
     display: flex;
     align-items: center;
     gap: 0.85rem;
+}
+
+.admin-theme-picker {
+    position: relative;
+}
+
+.admin-theme-menu {
+    width: 310px;
+    padding: 0;
+    border: 1px solid #dbe7f4;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 18px 44px rgba(15, 38, 66, 0.16);
+    overflow: hidden;
+}
+
+.admin-theme-menu-head {
+    display: grid;
+    gap: 0.18rem;
+    padding: 0.82rem 0.9rem;
+    border-bottom: 1px solid #edf3fb;
+}
+
+.admin-theme-menu-head strong {
+    color: #10233d;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.admin-theme-menu-head span {
+    color: #71849c;
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.admin-theme-field {
+    display: grid;
+    gap: 0.36rem;
+    padding: 0.72rem 0.9rem 0;
+}
+
+.admin-theme-field > span {
+    color: #38516c;
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.admin-theme-field > div {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 0.45rem;
+}
+
+.admin-theme-field input[type="color"] {
+    width: 46px;
+    height: 38px;
+    padding: 0.22rem;
+    border: 1px solid #d8e6f4;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.admin-theme-field input[type="text"] {
+    min-height: 38px;
+    padding: 0.5rem 0.62rem;
+    border: 1px solid #d8e6f4;
+    border-radius: 11px;
+    background: #fbfdff;
+    color: #10233d;
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.admin-theme-presets {
+    display: flex;
+    gap: 0.42rem;
+    padding: 0.82rem 0.9rem 0.72rem;
+}
+
+.admin-theme-presets button {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #d8e6f4;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.admin-theme-presets span {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.admin-theme-save {
+    width: calc(100% - 1.8rem);
+    min-height: 38px;
+    margin: 0 0.9rem 0.9rem;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--gate-blue), color-mix(in srgb, var(--gate-blue) 72%, var(--gate-cyan)));
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 .page-title {
@@ -323,6 +463,7 @@ a {
 
 .workspace {
     padding: 1.35rem;
+    background: var(--admin-content-background, transparent);
 }
 
 .gate-hero {
@@ -603,8 +744,8 @@ a {
 .btn-brand {
     border: 0;
     color: #fff;
-    background: linear-gradient(135deg, var(--gate-blue), var(--gate-blue-2));
-    box-shadow: 0 14px 28px rgba(20, 107, 215, 0.22);
+    background: linear-gradient(135deg, var(--gate-blue), color-mix(in srgb, var(--gate-blue) 76%, #071421));
+    box-shadow: 0 14px 28px color-mix(in srgb, var(--gate-blue) 20%, transparent);
 }
 
 .btn-brand:hover {
@@ -2967,8 +3108,8 @@ a {
 /* Gatehouse Pro UI polish layer for admin demo screens. */
 .content-panel {
     background:
-        radial-gradient(circle at 5% 0%, rgba(12, 180, 216, 0.08), transparent 30%),
-        linear-gradient(180deg, #f7fbff 0%, #eaf2fa 100%);
+        radial-gradient(circle at 5% 0%, color-mix(in srgb, var(--gate-cyan) 7%, transparent), transparent 30%),
+        linear-gradient(180deg, var(--admin-content-background, #f8fafc) 0%, var(--admin-content-background, #f8fafc) 100%);
 }
 
 .workspace {
@@ -3086,17 +3227,13 @@ a {
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    scrollbar-width: thin;
+    scrollbar-width: none;
     padding-top: 0;
 }
 
 .sidebar-panel::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar-panel::-webkit-scrollbar-thumb {
-    background: #cbd8e7;
-    border-radius: 999px;
+    display: none;
+    width: 0;
 }
 
 @media (min-width: 1400px) {

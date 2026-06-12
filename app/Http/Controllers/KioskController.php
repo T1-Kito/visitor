@@ -41,6 +41,13 @@ class KioskController extends Controller
         ]);
     }
 
+    public function register(): View
+    {
+        return view('kiosk.register', [
+            'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
+        ]);
+    }
+
     public function searchEmployees(Request $request): JsonResponse
     {
         $term = trim((string) $request->query('q', ''));
@@ -564,6 +571,10 @@ class KioskController extends Controller
 
     private function sendHostCheckinEmail(Visit $visit): void
     {
+        if (! DynamicMailSettings::triggerEnabled('mail.trigger_host_checkin')) {
+            return;
+        }
+
         $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department']);
 
         $email = trim((string) ($visit->hostEmployee?->email ?: $visit->hostEmployee?->user?->email ?: ''));
@@ -579,9 +590,12 @@ class KioskController extends Controller
         ])->render();
 
         try {
-            DynamicMailSettings::apply();
-            Mail::html($html, function ($message) use ($email, $subject): void {
+            $mailSettings = DynamicMailSettings::apply();
+            Mail::html($html, function ($message) use ($email, $subject, $mailSettings): void {
                 $message->to($email)->subject($subject);
+                if (! empty($mailSettings['mail.reply_to'])) {
+                    $message->replyTo($mailSettings['mail.reply_to']);
+                }
             });
 
             AuditLog::query()->create([

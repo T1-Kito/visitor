@@ -22,7 +22,12 @@ class CatalogController extends Controller
     {
         $keyword = trim((string) $request->input('q', ''));
         $query = Department::query()
-            ->with('parent')
+            ->with([
+                'parent',
+                'employees' => fn ($employeeQuery) => $employeeQuery
+                    ->orderByDesc('is_active')
+                    ->orderBy('name'),
+            ])
             ->withCount(['employees', 'children'])
             ->orderByRaw('COALESCE(parent_id, id) ASC')
             ->orderBy('name');
@@ -105,8 +110,8 @@ class CatalogController extends Controller
         $this->logAudit('department.updated', 'department', (string) $department->id, $validated);
 
         return redirect()
-            ->route('admin.departments.show', $department)
-            ->with('status', 'Da cap nhat phong ban.');
+            ->route('admin.departments.index')
+            ->with('status', 'Đã cập nhật phòng ban.');
     }
 
     public function departmentsDestroy(Department $department): RedirectResponse
@@ -500,6 +505,7 @@ class CatalogController extends Controller
         return view('admin.employees.show', $this->withBase([
             'employee' => $employee,
             'visits' => $visits,
+            'departments' => Department::query()->orderBy('name')->get(),
         ]));
     }
 
@@ -528,8 +534,8 @@ class CatalogController extends Controller
         $this->logAudit('employee.updated', 'employee', (string) $employee->id, ['email' => $employee->email]);
 
         return redirect()
-            ->route('admin.employees.show', $employee)
-            ->with('status', 'Da cap nhat nhan vien.');
+            ->back()
+            ->with('status', 'Đã cập nhật nhân viên.');
     }
 
     public function employeesDestroy(Employee $employee): RedirectResponse

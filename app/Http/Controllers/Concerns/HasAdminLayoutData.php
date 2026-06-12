@@ -51,6 +51,7 @@ trait HasAdminLayoutData
         }
 
         $kioskSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+        $adminTheme = SystemSetting::values(SystemSetting::adminThemeDefaults());
         $brandName = trim((string) ($kioskSettings['kiosk.system_name'] ?? 'Gatehouse Pro'));
         $brandSubtitle = trim((string) ($kioskSettings['kiosk.subtitle'] ?? 'Quản lý khách ra vào'));
         $brandInitials = collect(preg_split('/\s+/', $brandName) ?: [])
@@ -75,6 +76,7 @@ trait HasAdminLayoutData
                 'favicon_url' => $kioskSettings['app.favicon_url'] ?? $adminLogoUrl,
                 'initials' => mb_strtoupper($brandInitials !== '' ? $brandInitials : 'VMS'),
             ],
+            'adminTheme' => $adminTheme,
             'licenseNotice' => $licenseNotice,
         ], $data);
     }

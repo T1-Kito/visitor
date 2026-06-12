@@ -55,7 +55,9 @@ class AdminUiController extends Controller
             $recentFilters['status'] = 'all';
         }
 
-        $recentVisits = $this->recentVisitsForDashboard($recentFilters)->limit(8)->get();
+        $recentVisits = $this->recentVisitsForDashboard($recentFilters)
+            ->paginate(8, ['*'], 'recent_page')
+            ->withQueryString();
         $summary = $this->dashboardSummaryData();
 
         $alertsData = collect($this->dashboardAlertsData())->take(5)->values()->all();
@@ -68,7 +70,8 @@ class AdminUiController extends Controller
                 'checked_out'  => $summary['checked_out_today'],
                 'overstay'     => $summary['overstay'] ?? 0,
             ],
-            'visits' => $this->mapVisitRows($recentVisits),
+            'visits' => $this->mapVisitRows($recentVisits->getCollection()),
+            'recentVisits' => $recentVisits,
             'recentFilters' => $recentFilters,
             'alerts' => $alertsData,
         ]));
@@ -1177,7 +1180,7 @@ class AdminUiController extends Controller
         }
 
         try {
-            $sentEmail = $this->sendQrEmailToVisitor($visit);
+            $sentEmail = $this->sendQrEmailToVisitor($visit, false);
         } catch (\Throwable $exception) {
             return redirect()
                 ->route('admin.visits.show', $visit)
@@ -1341,17 +1344,21 @@ class AdminUiController extends Controller
         $statusMessage = "Đã duyệt lịch {$visit->code}. Mã QR đã sẵn sàng.";
         $errorMessage = null;
 
-        try {
-            $sentEmail = $this->sendQrEmailToVisitor($visit);
-            $statusMessage .= $sentEmail
-                ? " Đã gửi mã QR cho khách qua {$sentEmail}."
-                : ' Khách chưa có email hợp lệ nên hệ thống chưa gửi được mã QR.';
-            if ($sentEmail === null) {
-                $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_missing', 'Chưa gửi được QR cho khách', "Lịch {$visit->code} đã duyệt nhưng khách chưa có email hợp lệ. Vui lòng bổ sung email hoặc gửi QR thủ công.", 'warning', $visit);
+        if (DynamicMailSettings::triggerEnabled('mail.trigger_qr_approved')) {
+            try {
+                $sentEmail = $this->sendQrEmailToVisitor($visit);
+                $statusMessage .= $sentEmail
+                    ? " Đã gửi mã QR cho khách qua {$sentEmail}."
+                    : ' Khách chưa có email hợp lệ nên hệ thống chưa gửi được mã QR.';
+                if ($sentEmail === null) {
+                    $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_missing', 'Chưa gửi được QR cho khách', "Lịch {$visit->code} đã duyệt nhưng khách chưa có email hợp lệ. Vui lòng bổ sung email hoặc gửi QR thủ công.", 'warning', $visit);
+                }
+            } catch (\Throwable $exception) {
+                $errorMessage = 'Lịch đã được duyệt nhưng chưa gửi được email QR: '.$exception->getMessage();
+                $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_failed', 'Gửi QR cho khách bị lỗi', "Lịch {$visit->code} đã duyệt nhưng gửi email QR thất bại. Vui lòng kiểm tra cấu hình email hoặc gửi lại từ chi tiết lịch.", 'danger', $visit);
             }
-        } catch (\Throwable $exception) {
-            $errorMessage = 'Lịch đã được duyệt nhưng chưa gửi được email QR: '.$exception->getMessage();
-            $this->notifyUsersWithPermission('visits.manage', 'visit.qr_email_failed', 'Gửi QR cho khách bị lỗi', "Lịch {$visit->code} đã duyệt nhưng gửi email QR thất bại. Vui lòng kiểm tra cấu hình Gmail hoặc gửi lại từ chi tiết lịch.", 'danger', $visit);
+        } else {
+            $statusMessage .= ' Trigger gửi email QR tự động đang tắt.';
         }
 
         if ($request->expectsJson()) {
@@ -1580,14 +1587,14 @@ class AdminUiController extends Controller
 
     public function accessListsIndex(Request $request): View
     {
-        $data = $this->accessListData($request);
+        $data = $this->accessListData($request, true);
 
         return view('admin.access.lists', $this->withBase($data));
     }
 
     public function accessListsExport(Request $request): StreamedResponse
     {
-        $data = $this->accessListData($request);
+        $data = $this->accessListData($request, false);
         $rows = $data['accessRows'];
         $filename = 'danh-sach-ra-vao-'.$data['filters']['type'].'-'.$data['filters']['from'].'-'.$data['filters']['to'].'.csv';
 
@@ -1619,7 +1626,7 @@ class AdminUiController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function accessListData(Request $request): array
+    private function accessListData(Request $request, bool $paginate = false): array
     {
         $type = in_array($request->query('type'), ['inside', 'in', 'out', 'all'], true)
             ? (string) $request->query('type')
@@ -1662,15 +1669,15 @@ class AdminUiController extends Controller
             });
         }
 
+        $totalRows = (clone $query)->count();
+
         match ($type) {
             'inside', 'in' => $query->orderByDesc('actual_checkin_at'),
             'out' => $query->orderByDesc('actual_checkout_at'),
             default => $query->orderByRaw('COALESCE(actual_checkout_at, actual_checkin_at, scheduled_at) DESC'),
         };
 
-        $visits = $query->get();
-
-        $rows = $visits->map(function (Visit $visit) use ($type): array {
+        $mapRow = function (Visit $visit) use ($type): array {
             $label = match ($type) {
                 'inside' => 'Đang trong công ty',
                 'in' => 'Khách vào',
@@ -1700,7 +1707,14 @@ class AdminUiController extends Controller
                 'checkout_at' => $visit->actual_checkout_at?->format('H:i d/m/Y') ?? '-',
                 'detail_url' => route('admin.visits.show', $visit),
             ];
-        })->all();
+        };
+
+        if ($paginate) {
+            $rows = $query->paginate(10)->withQueryString();
+            $rows->getCollection()->transform($mapRow);
+        } else {
+            $rows = $query->get()->map($mapRow);
+        }
 
         $today = now()->toDateString();
 
@@ -1717,7 +1731,7 @@ class AdminUiController extends Controller
                 'inside' => Visit::query()->where('status', 'checked_in')->count(),
                 'in_today' => Visit::query()->whereDate('actual_checkin_at', $today)->count(),
                 'out_today' => Visit::query()->whereDate('actual_checkout_at', $today)->count(),
-                'all_range' => count($rows),
+                'all_range' => $totalRows,
             ],
             'departments' => Department::query()->orderBy('name')->pluck('name')->all(),
         ];
@@ -3855,6 +3869,10 @@ XML;
 
     private function sendHostCheckinEmail(Visit $visit): void
     {
+        if (! DynamicMailSettings::triggerEnabled('mail.trigger_host_checkin')) {
+            return;
+        }
+
         $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department']);
 
         $email = trim((string) ($visit->hostEmployee?->email ?: $visit->hostEmployee?->user?->email ?: ''));
@@ -3870,9 +3888,12 @@ XML;
         ])->render();
 
         try {
-            DynamicMailSettings::apply();
-            Mail::html($html, function ($message) use ($email, $subject): void {
+            $mailSettings = DynamicMailSettings::apply();
+            Mail::html($html, function ($message) use ($email, $subject, $mailSettings): void {
                 $message->to($email)->subject($subject);
+                if (! empty($mailSettings['mail.reply_to'])) {
+                    $message->replyTo($mailSettings['mail.reply_to']);
+                }
             });
 
             $this->logAudit('visit.host_checkin_email_sent', 'visit', (string) $visit->id, [
@@ -3888,8 +3909,12 @@ XML;
         }
     }
 
-    private function sendQrEmailToVisitor(Visit $visit): ?string
+    private function sendQrEmailToVisitor(Visit $visit, bool $respectTrigger = true): ?string
     {
+        if ($respectTrigger && ! DynamicMailSettings::triggerEnabled('mail.trigger_qr_approved')) {
+            return null;
+        }
+
         $visit->loadMissing(['visitor', 'hostEmployee.department']);
 
         $email = trim((string) ($visit->visitor?->email ?? ''));
@@ -3923,8 +3948,11 @@ XML;
             'mailBrandName' => $mailSettings['mail.from_name'] ?: 'VMS Kiosk',
         ])->render();
 
-        Mail::html($html, function ($message) use ($email, $subject): void {
+        Mail::html($html, function ($message) use ($email, $subject, $mailSettings): void {
             $message->to($email)->subject($subject);
+            if (! empty($mailSettings['mail.reply_to'])) {
+                $message->replyTo($mailSettings['mail.reply_to']);
+            }
         });
 
         $this->logAudit('visit.qr_emailed', 'visit', (string) $visit->id, [

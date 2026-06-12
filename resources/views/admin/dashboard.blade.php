@@ -4,6 +4,16 @@
 @section('page_title', 'Tổng quan vận hành')
 @section('page_subtitle', 'Theo dõi khách ra/vào, phê duyệt, check-in/check-out và cảnh báo trong thời gian thực')
 
+@section('topbar_meta')
+    <div class="db-topbar-time d-none d-xl-inline-flex">
+        <i class="bi bi-calendar3"></i>
+        <span>{{ now()->isoFormat('dddd, DD/MM/YYYY') }}</span>
+        <span class="db-topbar-separator">|</span>
+        <i class="bi bi-clock"></i>
+        <span data-db-clock>{{ now()->format('H:i:s') }}</span>
+    </div>
+@endsection
+
 @push('styles')
 <style>
 /* ===== DASHBOARD HERO ===== */
@@ -246,6 +256,8 @@
 
 /* ===== CARDS ===== */
 .db-card {
+    display: flex;
+    flex-direction: column;
     background: #fff;
     border: 1px solid #e4edf8;
     border-radius: 22px;
@@ -322,36 +334,58 @@
 }
 
 .db-filter-btn {
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .35rem;
-    padding: 0 .85rem;
-    border: 0;
-    border-radius: 12px;
-    color: #fff;
-    background: linear-gradient(135deg, #146bd7, #0cb4d8);
-    font-size: .8rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.db-reset-link {
-    height: 36px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: .35rem;
     padding: 0 .75rem;
-    border: 1px solid #dde8f5;
-    border-radius: 12px;
-    color: #526b87;
-    background: #fff;
-    font-size: .78rem;
+    border: 1px solid color-mix(in srgb, var(--gate-blue) 78%, #ffffff);
+    border-radius: 10px;
+    color: #fff;
+    background: var(--gate-blue);
+    font-size: .76rem;
     font-weight: 600;
+    white-space: nowrap;
+}
+
+.db-reset-link {
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    padding: 0 .7rem;
+    border: 1px solid color-mix(in srgb, var(--gate-blue) 18%, #dde8f5);
+    border-radius: 10px;
+    color: var(--gate-blue);
+    background: #fff;
+    font-size: .76rem;
+    font-weight: 500;
     text-decoration: none;
     white-space: nowrap;
+}
+
+.db-see-all {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .78rem;
+    border: 1px solid color-mix(in srgb, var(--gate-blue) 25%, #dde8f5);
+    border-radius: 10px;
+    color: var(--gate-blue);
+    background: #fff;
+    font-size: .76rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.db-see-all:hover,
+.db-reset-link:hover {
+    border-color: var(--gate-blue);
+    color: var(--gate-blue);
+    background: color-mix(in srgb, var(--gate-blue) 5%, #ffffff);
 }
 
 /* table cells */
@@ -469,6 +503,119 @@
 
 .db-view-all:hover { background:#f0f7ff; }
 
+/* Compact enterprise dashboard header: the page topbar already owns the title and primary actions. */
+.db-hero {
+    display: none;
+    min-height: 0;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+    color: #7187a3;
+}
+
+.db-hero::before,
+.db-hero-eyebrow,
+.db-hero h1,
+.db-hero p,
+.db-hero-actions {
+    display: none;
+}
+
+.db-hero-date {
+    justify-content: flex-end;
+    margin: 0;
+    color: #7187a3;
+    font-size: .76rem;
+    font-weight: 500;
+}
+
+.db-hero-date i {
+    color: var(--gate-blue);
+}
+
+.db-topbar-time {
+    align-items: center;
+    gap: .45rem;
+    min-height: 38px;
+    padding: 0 .72rem;
+    border: 1px solid #edf3fb;
+    border-radius: 12px;
+    background: #fff;
+    color: #7187a3;
+    font-size: .76rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.db-topbar-time i {
+    color: var(--gate-blue);
+}
+
+.db-topbar-separator {
+    color: #c4d2e1;
+}
+
+.dashboard-recent-card {
+    min-height: calc(100vh - 500px);
+}
+
+.dashboard-recent-table {
+    flex: 1 1 auto;
+    min-height: 205px;
+}
+
+.dashboard-recent-table .modern-table {
+    height: 100%;
+}
+
+.db-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding: .78rem 1.25rem;
+    border-top: 1px solid #edf3fb;
+    color: #7187a3;
+    font-size: .76rem;
+}
+
+.db-pagination nav,
+.db-pagination .pagination {
+    margin: 0;
+}
+
+.db-pagination .pagination {
+    gap: .28rem;
+}
+
+.db-pagination .page-link {
+    min-width: 32px;
+    min-height: 32px;
+    display: grid;
+    place-items: center;
+    padding: .3rem .58rem;
+    border-color: #dbe7f4;
+    border-radius: 9px;
+    color: #315b89;
+    font-size: .76rem;
+    box-shadow: none;
+}
+
+.db-pagination .page-item.active .page-link {
+    border-color: var(--gate-blue);
+    background: var(--gate-blue);
+}
+
+.db-pagination svg {
+    width: 13px;
+    height: 13px;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .db-metrics { grid-template-columns: repeat(3, 1fr); }
@@ -571,14 +718,13 @@
 <div class="row g-3">
 
     <div class="col-12">
-        <div class="db-card">
+        <div class="db-card dashboard-recent-card">
             <div class="db-card-head">
                 <div>
                     <h3>Lịch hẹn gần đây</h3>
                     <p>Mặc định hiển thị lịch mới nhất trong ngày, có thể lọc theo ngày và trạng thái.</p>
                 </div>
-                <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.visits.index') }}"
-                   style="border-radius:10px;font-weight:700;font-size:.78rem;">Xem tất cả</a>
+                <a class="db-see-all" href="{{ route('admin.visits.index') }}">Xem tất cả</a>
             </div>
 
             @php
@@ -608,7 +754,7 @@
                 <a class="db-reset-link" href="{{ route('admin.dashboard') }}"><i class="bi bi-arrow-clockwise"></i>Mới nhất</a>
             </form>
 
-            <div class="table-responsive">
+            <div class="table-responsive dashboard-recent-table">
                 <table class="table modern-table align-middle mb-0">
                     <thead>
                         <tr>
@@ -621,7 +767,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @forelse (array_slice($visits, 0, 8) as $visit)
+                    @forelse ($visits as $visit)
                         <tr>
                             <td>
                                 <div class="db-code">
@@ -668,6 +814,14 @@
                     </tbody>
                 </table>
             </div>
+            <div class="db-pagination">
+                <span>
+                    Hiển thị {{ $recentVisits->firstItem() ?? 0 }} - {{ $recentVisits->lastItem() ?? 0 }} / {{ $recentVisits->total() }} lịch
+                </span>
+                @if ($recentVisits->hasPages())
+                    {{ $recentVisits->links() }}
+                @endif
+            </div>
         </div>
     </div>
 
@@ -675,11 +829,13 @@
 
 <script>
 (function() {
-    const el = document.getElementById('dbClock');
-    if (!el) return;
+    const clocks = document.querySelectorAll('[data-db-clock], #dbClock');
+    if (clocks.length === 0) return;
     setInterval(function() {
         const n = new Date();
-        el.textContent = n.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        clocks.forEach((el) => {
+            el.textContent = n.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        });
     }, 1000);
 })();
 </script>

@@ -13,7 +13,7 @@
 
         .audit-filter {
             display: grid;
-            grid-template-columns: minmax(260px, 1fr) 320px 150px;
+            grid-template-columns: minmax(240px, 1fr) minmax(240px, .8fr) 150px 150px 120px;
             gap: .85rem;
             align-items: end;
         }
@@ -99,6 +99,28 @@
             font-size: .72rem;
         }
 
+        .audit-context {
+            display: grid;
+            gap: .18rem;
+            margin-top: .38rem;
+            color: #7187a3;
+            font-size: .7rem;
+        }
+
+        .audit-context span {
+            display: flex;
+            align-items: center;
+            gap: .32rem;
+            min-width: 0;
+        }
+
+        .audit-context .audit-url {
+            max-width: 260px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .audit-action i {
             width: 30px;
             height: 30px;
@@ -152,6 +174,44 @@
             padding: 3rem 1rem;
             color: #7187a3;
             text-align: center;
+        }
+
+        .audit-pagination {
+            display: flex;
+            justify-content: flex-end;
+            padding: .85rem 1rem;
+        }
+
+        .audit-pagination nav {
+            margin: 0;
+        }
+
+        .audit-pagination .pagination {
+            margin: 0;
+            gap: .3rem;
+        }
+
+        .audit-pagination .page-link {
+            min-width: 34px;
+            min-height: 34px;
+            display: grid;
+            place-items: center;
+            padding: .35rem .65rem;
+            border-color: #dbe7f4;
+            border-radius: 9px;
+            color: #315b89;
+            font-size: .78rem;
+            box-shadow: none;
+        }
+
+        .audit-pagination .page-item.active .page-link {
+            border-color: var(--gate-blue);
+            background: var(--gate-blue);
+        }
+
+        .audit-pagination svg {
+            width: 14px;
+            height: 14px;
         }
 
         @media (max-width: 992px) {
@@ -277,6 +337,16 @@
                     </select>
                 </div>
 
+                <div class="audit-field">
+                    <label>Từ ngày</label>
+                    <input type="date" class="form-control" name="from_date" value="{{ $filters['from_date'] }}">
+                </div>
+
+                <div class="audit-field">
+                    <label>Đến ngày</label>
+                    <input type="date" class="form-control" name="to_date" value="{{ $filters['to_date'] }}">
+                </div>
+
                 <button class="btn btn-brand w-100" type="submit">
                     <i class="bi bi-funnel"></i>
                     Lọc
@@ -308,20 +378,40 @@
                             <td class="audit-id">{{ $log->id }}</td>
                             <td>
                                 <div class="audit-time">
-                                    <strong>{{ $log->created_at?->format('H:i') }}</strong>
+                                    <strong>{{ $log->created_at?->format('H:i:s') }}</strong>
                                     <span>{{ $log->created_at?->format('d/m/Y') }}</span>
                                 </div>
                             </td>
                             <td>
                                 <div class="audit-user">
-                                    <strong>{{ $log->user?->name ?? 'Hệ thống' }}</strong>
-                                    <span>{{ $log->user?->email ?? 'Tự động' }}</span>
+                                    <strong>{{ $log->actor_name ?: ($log->user?->name ?? 'Hệ thống') }}</strong>
+                                    <span>{{ $log->actor_email ?: ($log->user?->email ?? 'Tự động') }}</span>
+                                    <div class="audit-context">
+                                        <span>
+                                            <i class="bi bi-globe2"></i>
+                                            {{ $log->ip_address ?: 'Không ghi nhận IP' }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="audit-action">
                                     <strong><i class="bi bi-activity"></i>{{ $actionLabel }}</strong>
                                     <span>{{ $log->action }}</span>
+                                    @if ($log->request_method || $log->request_url)
+                                        <div class="audit-context">
+                                            <span>
+                                                <i class="bi bi-arrow-right-circle"></i>
+                                                {{ $log->request_method ?: '-' }}
+                                            </span>
+                                            @if ($log->request_url)
+                                                <span class="audit-url" title="{{ $log->request_url }}">
+                                                    <i class="bi bi-link-45deg"></i>
+                                                    {{ $log->request_url }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -354,7 +444,7 @@
                 </table>
             </div>
 
-            <div class="mt-3">
+            <div class="audit-pagination">
                 {{ $logs->links() }}
             </div>
         </section>

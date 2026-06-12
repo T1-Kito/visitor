@@ -524,8 +524,15 @@ class SystemAdminController extends Controller
 
     public function auditLogsIndex(Request $request): View
     {
+        $request->validate([
+            'from_date' => ['nullable', 'date'],
+            'to_date' => ['nullable', 'date', 'after_or_equal:from_date'],
+        ]);
+
         $action = trim((string) $request->input('action', ''));
         $userId = $request->input('user_id');
+        $fromDate = trim((string) $request->input('from_date', ''));
+        $toDate = trim((string) $request->input('to_date', ''));
 
         $query = AuditLog::query()
             ->with('user')
@@ -544,8 +551,12 @@ class SystemAdminController extends Controller
                 'gửi qr' => ['visit.qr_emailed'],
                 'gui qr' => ['visit.qr_emailed'],
                 'kiosk' => ['settings.kiosk_updated', 'kiosk.walk_in_created', 'kiosk.checked_in', 'kiosk.checked_out'],
-                'cài đặt' => ['settings.kiosk_updated', 'settings.printer_updated'],
-                'cai dat' => ['settings.kiosk_updated', 'settings.printer_updated'],
+                'cài đặt' => ['settings.kiosk_updated', 'settings.printer_updated', 'settings.mail_updated', 'settings.mail_tested', 'settings.admin_theme_updated'],
+                'cai dat' => ['settings.kiosk_updated', 'settings.printer_updated', 'settings.mail_updated', 'settings.mail_tested', 'settings.admin_theme_updated'],
+                'giao diện' => ['settings.admin_theme_updated'],
+                'giao dien' => ['settings.admin_theme_updated'],
+                'email' => ['settings.mail_updated', 'settings.mail_tested', 'visit.qr_emailed', 'visit.host_checkin_email_sent'],
+                'smtp' => ['settings.mail_updated', 'settings.mail_tested'],
                 'phân quyền' => ['rbac.user_role_updated', 'rbac.role_permissions_updated', 'rbac.permission_matrix_updated'],
                 'phan quyen' => ['rbac.user_role_updated', 'rbac.role_permissions_updated', 'rbac.permission_matrix_updated'],
                 'cảnh báo' => ['watchlist.matched', 'watchlist.created', 'watchlist.updated', 'watchlist.deleted'],
@@ -572,6 +583,14 @@ class SystemAdminController extends Controller
             $query->where('user_id', (int) $userId);
         }
 
+        if ($fromDate !== '') {
+            $query->whereDate('created_at', '>=', $fromDate);
+        }
+
+        if ($toDate !== '') {
+            $query->whereDate('created_at', '<=', $toDate);
+        }
+
         $logs = $query->paginate(20)->withQueryString();
         $users = User::query()->orderBy('name')->get(['id', 'name', 'email']);
 
@@ -581,6 +600,8 @@ class SystemAdminController extends Controller
             'filters' => [
                 'action' => $action,
                 'user_id' => (string) $userId,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
             ],
         ]));
     }
@@ -588,6 +609,37 @@ class SystemAdminController extends Controller
     public function settingsIndex(): View
     {
         return view('admin.settings.index', $this->withBase([]));
+    }
+
+    public function adminThemeSettingsUpdate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'navbar_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'content_background' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'secondary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        ], [
+            'navbar_color.regex' => 'Màu thanh điều hướng phải đúng định dạng HEX, ví dụ #f6fbff.',
+            'content_background.regex' => 'Màu nền nội dung phải đúng định dạng HEX, ví dụ #ffffff.',
+            'primary_color.regex' => 'Màu nhấn chính phải đúng định dạng HEX, ví dụ #d40511.',
+            'secondary_color.regex' => 'Màu nhấn phụ phải đúng định dạng HEX, ví dụ #ffcc00.',
+        ]);
+
+        SystemSetting::putMany([
+            'admin.navbar_color' => strtolower($validated['navbar_color']),
+            'admin.content_background' => strtolower($validated['content_background']),
+            'admin.primary_color' => strtolower($validated['primary_color']),
+            'admin.secondary_color' => strtolower($validated['secondary_color']),
+        ]);
+
+        $this->logAudit('settings.admin_theme_updated', 'system_setting', 'admin_theme', [
+            'navbar_color' => strtolower($validated['navbar_color']),
+            'content_background' => strtolower($validated['content_background']),
+            'primary_color' => strtolower($validated['primary_color']),
+            'secondary_color' => strtolower($validated['secondary_color']),
+        ]);
+
+        return back()->with('status', 'Đã cập nhật màu giao diện admin.');
     }
 
     public function accessQuickSettingsUpdate(Request $request): RedirectResponse
@@ -649,15 +701,26 @@ class SystemAdminController extends Controller
     public function mailSettingsUpdate(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'host' => ['required', 'string', 'max:190'],
+            'port' => ['required', 'integer', 'min:1', 'max:65535'],
+            'scheme' => ['required', Rule::in(['none', 'tls', 'ssl'])],
+            'auth_mode' => ['required', Rule::in(['login'])],
             'from_name' => ['required', 'string', 'max:120'],
             'from_address' => ['required', 'email:rfc', 'max:190'],
-            'app_password' => ['nullable', 'string', 'min:16', 'max:100'],
+            'username' => ['nullable', 'string', 'max:190'],
+            'smtp_password' => ['nullable', 'string', 'max:190'],
+            'app_password' => ['nullable', 'string', 'max:190'],
+            'reply_to' => ['nullable', 'email:rfc', 'max:190'],
+            'local_domain' => ['nullable', 'string', 'max:190'],
+            'timeout' => ['required', 'integer', 'min:5', 'max:120'],
+            'trigger_qr_approved' => ['nullable', 'boolean'],
+            'trigger_host_checkin' => ['nullable', 'boolean'],
             'remove_password' => ['nullable', 'boolean'],
         ]);
 
         $passwordSetting = SystemSetting::query()->where('key', 'mail.password')->first();
         $password = $passwordSetting?->value;
-        $submittedPassword = preg_replace('/\s+/', '', (string) ($validated['app_password'] ?? ''));
+        $submittedPassword = trim((string) ($validated['smtp_password'] ?? $validated['app_password'] ?? ''));
 
         if ($request->boolean('remove_password')) {
             $password = null;
@@ -670,24 +733,44 @@ class SystemAdminController extends Controller
                 : null;
         }
 
+        $scheme = match ($validated['scheme']) {
+            'none' => 'smtp',
+            'ssl' => 'smtps',
+            default => 'smtp',
+        };
+        $authMode = 'login';
+        $username = trim((string) ($validated['username'] ?: $validated['from_address']));
+
         SystemSetting::putMany([
-            'mail.host' => 'smtp.gmail.com',
-            'mail.port' => '587',
-            'mail.scheme' => null,
-            'mail.username' => strtolower($validated['from_address']),
+            'mail.host' => trim($validated['host']),
+            'mail.port' => (string) $validated['port'],
+            'mail.scheme' => $scheme,
+            'mail.auth_mode' => $authMode,
+            'mail.username' => $username,
             'mail.password' => $password,
             'mail.from_address' => strtolower($validated['from_address']),
             'mail.from_name' => trim($validated['from_name']),
+            'mail.reply_to' => isset($validated['reply_to']) ? strtolower((string) $validated['reply_to']) : null,
+            'mail.local_domain' => trim((string) ($validated['local_domain'] ?? '')),
+            'mail.timeout' => (string) $validated['timeout'],
+            'mail.trigger_qr_approved' => $request->boolean('trigger_qr_approved') ? '1' : '0',
+            'mail.trigger_host_checkin' => $request->boolean('trigger_host_checkin') ? '1' : '0',
         ]);
 
         $this->logAudit('settings.mail_updated', 'system_setting', 'mail', [
+            'host' => trim($validated['host']),
+            'port' => (int) $validated['port'],
+            'scheme' => $validated['scheme'],
+            'auth_mode' => $authMode,
             'from_address' => strtolower($validated['from_address']),
             'from_name' => trim($validated['from_name']),
+            'trigger_qr_approved' => $request->boolean('trigger_qr_approved'),
+            'trigger_host_checkin' => $request->boolean('trigger_host_checkin'),
         ]);
 
         return redirect()
             ->route('admin.settings.mail')
-            ->with('status', 'Đã lưu cấu hình Gmail.');
+            ->with('status', 'Đã lưu cấu hình email.');
     }
 
     public function mailSettingsTest(Request $request): RedirectResponse
@@ -697,25 +780,28 @@ class SystemAdminController extends Controller
         ]);
 
         $settings = DynamicMailSettings::apply();
-        if (! $settings['mail.username'] || ! $settings['mail.password']) {
+        if (($settings['mail.auth_mode'] ?? 'login') !== 'none' && (! $settings['mail.username'] || ! $settings['mail.password'])) {
             return back()->withErrors([
-                'test_email' => 'Hãy lưu Gmail và App Password trước khi gửi thử.',
+                'test_email' => 'Hãy lưu tài khoản SMTP và mật khẩu trước khi gửi thử, hoặc chọn chế độ không cần xác thực.',
             ]);
         }
 
         try {
             $recipient = strtolower($validated['test_email']);
             Mail::html(
-                '<p>Gửi email thử thành công từ hệ thống quản lý khách.</p>',
-                function ($message) use ($recipient): void {
-                    $message->to($recipient)->subject('Kiểm tra cấu hình Gmail');
+                '<p>Gửi email thử thành công từ hệ thống quản lý khách.</p><p>Cấu hình SMTP đang hoạt động.</p>',
+                function ($message) use ($recipient, $settings): void {
+                    $message->to($recipient)->subject('Kiểm tra cấu hình email VMS');
+                    if (! empty($settings['mail.reply_to'])) {
+                        $message->replyTo($settings['mail.reply_to']);
+                    }
                 }
             );
         } catch (\Throwable $exception) {
             report($exception);
 
             return back()->withErrors([
-                'test_email' => 'Không gửi được email. Hãy kiểm tra Gmail và App Password.',
+                'test_email' => 'Không gửi được email. Hãy kiểm tra SMTP host, port, bảo mật, tài khoản hoặc IP relay.',
             ]);
         }
 

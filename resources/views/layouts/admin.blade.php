@@ -15,6 +15,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ \App\Support\AssetVersion::url('css/admin-ui.css') }}" rel="stylesheet">
     <link href="{{ \App\Support\AssetVersion::url('css/admin-fixed-shell.css') }}" rel="stylesheet">
+    @php
+        $adminThemeNavbar = $adminTheme['admin.navbar_color'] ?? '#ffffff';
+        $adminThemeContent = $adminTheme['admin.content_background'] ?? '#f8fafc';
+        $adminThemePrimary = $adminTheme['admin.primary_color'] ?? '#d40511';
+        $adminThemeSecondary = $adminTheme['admin.secondary_color'] ?? '#ffcc00';
+    @endphp
+    <style>
+        :root {
+            --admin-navbar-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeNavbar) ? $adminThemeNavbar : '#ffffff' }};
+            --admin-content-background: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeContent) ? $adminThemeContent : '#f8fafc' }};
+            --admin-primary-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemePrimary) ? $adminThemePrimary : '#d40511' }};
+            --admin-secondary-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeSecondary) ? $adminThemeSecondary : '#ffcc00' }};
+            --gate-blue: var(--admin-primary-color);
+            --gate-blue-2: color-mix(in srgb, var(--admin-primary-color) 78%, #071421);
+            --gate-cyan: var(--admin-secondary-color);
+            --gate-bg: color-mix(in srgb, var(--admin-secondary-color) 5%, #f8fafc);
+            --gate-bg-2: color-mix(in srgb, var(--admin-secondary-color) 3%, #ffffff);
+        }
+    </style>
     @stack('styles')
 </head>
 <body>
@@ -66,6 +85,67 @@
                 </div>
 
                 <div class="topbar-right">
+                    @yield('topbar_meta')
+                    <div class="dropdown admin-theme-picker d-none d-md-inline-flex">
+                        <button class="btn btn-light d-inline-flex align-items-center gap-2"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                                title="Đổi màu giao diện admin"
+                                aria-label="Đổi màu giao diện admin">
+                            <i class="bi bi-palette"></i>
+                        </button>
+                        <form class="dropdown-menu dropdown-menu-end admin-theme-menu"
+                              method="post"
+                              action="{{ route('admin.settings.admin-theme.update') }}">
+                            @csrf
+                            @method('put')
+                            <div class="admin-theme-menu-head">
+                                <strong>Màu giao diện</strong>
+                                <span>Đổi nhanh màu thanh điều hướng và nền nội dung.</span>
+                            </div>
+                            <label class="admin-theme-field">
+                                <span>Thanh điều hướng</span>
+                                <div>
+                                    <input type="color" value="{{ $adminThemeNavbar }}" data-theme-color-picker="navbar_color">
+                                    <input type="text" name="navbar_color" value="{{ $adminThemeNavbar }}" maxlength="7" data-theme-color-text="navbar_color" required>
+                                </div>
+                            </label>
+                            <label class="admin-theme-field">
+                                <span>Nền nội dung</span>
+                                <div>
+                                    <input type="color" value="{{ $adminThemeContent }}" data-theme-color-picker="content_background">
+                                    <input type="text" name="content_background" value="{{ $adminThemeContent }}" maxlength="7" data-theme-color-text="content_background" required>
+                                </div>
+                            </label>
+                            <label class="admin-theme-field">
+                                <span>Màu nhấn chính</span>
+                                <div>
+                                    <input type="color" value="{{ $adminThemePrimary }}" data-theme-color-picker="primary_color">
+                                    <input type="text" name="primary_color" value="{{ $adminThemePrimary }}" maxlength="7" data-theme-color-text="primary_color" required>
+                                </div>
+                            </label>
+                            <label class="admin-theme-field">
+                                <span>Màu nhấn phụ</span>
+                                <div>
+                                    <input type="color" value="{{ $adminThemeSecondary }}" data-theme-color-picker="secondary_color">
+                                    <input type="text" name="secondary_color" value="{{ $adminThemeSecondary }}" maxlength="7" data-theme-color-text="secondary_color" required>
+                                </div>
+                            </label>
+                            <div class="admin-theme-presets" aria-label="Màu gợi ý">
+                                <button type="button" data-theme-preset data-nav="#f6fbff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" title="Mặc định"><span style="background:#f6fbff"></span></button>
+                                <button type="button" data-theme-preset data-nav="#ffffff" data-content="#f8fafc" data-primary="#d40511" data-secondary="#ffcc00" title="DHL hiện đại"><span style="background:linear-gradient(135deg,#ffcc00 0 55%,#d40511 55%)"></span></button>
+                                <button type="button" data-theme-preset data-nav="#f8fafc" data-content="#ffffff" data-primary="#334155" data-secondary="#64748b" title="Trắng xám"><span style="background:#f8fafc"></span></button>
+                                <button type="button" data-theme-preset data-nav="#eff6ff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" title="Xanh nhẹ"><span style="background:#eff6ff"></span></button>
+                                <button type="button" data-theme-preset data-nav="#f7fee7" data-content="#ffffff" data-primary="#15803d" data-secondary="#84cc16" title="Xanh lá nhẹ"><span style="background:#f7fee7"></span></button>
+                            </div>
+                            <button class="admin-theme-save" type="submit">
+                                <i class="bi bi-check2"></i>
+                                Lưu màu
+                            </button>
+                        </form>
+                    </div>
                     <a class="btn btn-light d-none d-md-inline-flex align-items-center gap-2" href="{{ route('kiosk.index') }}" target="_blank" rel="noopener">
                         <i class="bi bi-display"></i>
                         Kiosk
@@ -224,6 +304,54 @@
                 }
             });
         });
+
+        (() => {
+            const normalizeColor = (value) => /^#[0-9a-fA-F]{6}$/.test(value) ? value.toLowerCase() : null;
+            const setThemeColor = (key, value) => {
+                const color = normalizeColor(value);
+                if (!color) return;
+
+                document
+                    .querySelectorAll(`[data-theme-color-picker="${key}"], [data-theme-color-text="${key}"]`)
+                    .forEach((input) => {
+                        input.value = color;
+                    });
+
+                if (key === 'navbar_color') {
+                    document.documentElement.style.setProperty('--admin-navbar-color', color);
+                }
+
+                if (key === 'content_background') {
+                    document.documentElement.style.setProperty('--admin-content-background', color);
+                }
+
+                if (key === 'primary_color') {
+                    document.documentElement.style.setProperty('--admin-primary-color', color);
+                    document.documentElement.style.setProperty('--gate-blue', color);
+                }
+
+                if (key === 'secondary_color') {
+                    document.documentElement.style.setProperty('--admin-secondary-color', color);
+                    document.documentElement.style.setProperty('--gate-cyan', color);
+                }
+            };
+
+            document.querySelectorAll('[data-theme-color-picker], [data-theme-color-text]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    const key = input.dataset.themeColorPicker || input.dataset.themeColorText;
+                    setThemeColor(key, input.value);
+                });
+            });
+
+            document.querySelectorAll('[data-theme-preset]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    setThemeColor('navbar_color', button.dataset.nav || '#f6fbff');
+                    setThemeColor('content_background', button.dataset.content || '#ffffff');
+                    setThemeColor('primary_color', button.dataset.primary || '#146bd7');
+                    setThemeColor('secondary_color', button.dataset.secondary || '#0cb4d8');
+                });
+            });
+        })();
     </script>
     @stack('scripts')
 </body>

@@ -65,7 +65,21 @@
                     <div><h3>Thao tac</h3><p>Quan tri nhan vien.</p></div>
                 </div>
                 <div class="d-grid gap-2">
-                    <a class="btn btn-brand" href="{{ route('admin.employees.edit', $employee) }}">Sua nhan vien</a>
+                    <button class="btn btn-brand"
+                            type="button"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editEmployeeModal"
+                            data-edit-employee
+                            data-employee-id="{{ $employee->id }}"
+                            data-employee-name="{{ $employee->name }}"
+                            data-employee-email="{{ $employee->email }}"
+                            data-employee-phone="{{ $employee->phone }}"
+                            data-employee-job-title="{{ $employee->job_title }}"
+                            data-department-id="{{ $employee->department_id }}"
+                            data-employee-active="{{ $employee->is_active ? '1' : '0' }}"
+                            data-update-url="{{ route('admin.employees.update', $employee) }}">
+                        Sửa nhân viên
+                    </button>
                     @if ($visits->isEmpty())
                         <form method="post" action="{{ route('admin.employees.destroy', $employee) }}">
                             @csrf
@@ -78,4 +92,19 @@
             </section>
         </div>
     </div>
+
+    @include('admin.employees.partials.edit-modal')
 @endsection
+
+@if ($errors->any() && old('form_context') === 'edit_employee')
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalElement = document.getElementById('editEmployeeModal');
+            if (modalElement) {
+                new bootstrap.Modal(modalElement).show();
+            }
+        });
+    </script>
+    @endpush
+@endif

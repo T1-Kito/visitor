@@ -12,6 +12,7 @@ Route::get('/license', [LicenseController::class, 'show'])->name('license.show')
 Route::post('/license', [LicenseController::class, 'store'])->name('license.store');
 
 Route::get('/kiosk', [KioskController::class, 'index'])->name('kiosk.index');
+Route::get('/kiosk/register', [KioskController::class, 'register'])->name('kiosk.register');
 Route::get('/kiosk/employees/search', [KioskController::class, 'searchEmployees'])->name('kiosk.employees.search');
 Route::post('/kiosk/checkin/manual', [KioskController::class, 'storeWalkIn'])->name('kiosk.checkin.manual');
 Route::post('/kiosk/checkin/scan-qr', [KioskController::class, 'scanQr'])->name('kiosk.checkin.scan-qr');
@@ -365,6 +366,9 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/settings/kiosk', [SystemAdminController::class, 'kioskSettingsUpdate'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.kiosk.update');
+    Route::put('/settings/admin-theme', [SystemAdminController::class, 'adminThemeSettingsUpdate'])
+        ->middleware('permission:system.manage')
+        ->name('admin.settings.admin-theme.update');
     Route::get('/settings/logos', [SystemAdminController::class, 'logoSettingsEdit'])
         ->middleware('permission:system.manage')
         ->name('admin.settings.logos');

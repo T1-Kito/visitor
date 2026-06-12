@@ -101,7 +101,23 @@
                         <td>
                             <div class="resource-actions">
                                 <a class="resource-icon-btn" href="{{ route('admin.employees.show', $employee) }}" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
-                                <a class="resource-icon-btn" href="{{ route('admin.employees.edit', $employee) }}" title="Sửa nhân viên"><i class="bi bi-pencil"></i></a>
+                                <button class="resource-icon-btn"
+                                        type="button"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editEmployeeModal"
+                                        data-edit-employee
+                                        data-employee-id="{{ $employee->id }}"
+                                        data-employee-name="{{ $employee->name }}"
+                                        data-employee-email="{{ $employee->email }}"
+                                        data-employee-phone="{{ $employee->phone }}"
+                                        data-employee-job-title="{{ $employee->job_title }}"
+                                        data-department-id="{{ $employee->department_id }}"
+                                        data-employee-active="{{ $employee->is_active ? '1' : '0' }}"
+                                        data-update-url="{{ route('admin.employees.update', $employee) }}"
+                                        title="Sửa nhân viên"
+                                        aria-label="Sửa nhân viên {{ $employee->name }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 @if ($employee->hosted_visits_count === 0)
                                     <form method="post" action="{{ route('admin.employees.destroy', $employee) }}" onsubmit="return confirm('Xóa nhân viên này?')">
                                         @csrf
@@ -165,6 +181,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <form class="modal-content" method="post" action="{{ route('admin.employees.store') }}">
             @csrf
+            <input type="hidden" name="form_context" value="create_employee">
             <div class="modal-header">
                 <div>
                     <h5 class="modal-title" id="createEmployeeModalLabel">Tạo nhân viên</h5>
@@ -210,6 +227,8 @@
         </form>
     </div>
 </div>
+
+@include('admin.employees.partials.edit-modal')
 @endsection
 
 @if ($errors->any())
@@ -218,6 +237,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             @if ($errors->importEmployees->any())
                 new bootstrap.Modal(document.getElementById('importEmployeeModal')).show();
+            @elseif (old('form_context') === 'edit_employee')
+                new bootstrap.Modal(document.getElementById('editEmployeeModal')).show();
             @else
                 new bootstrap.Modal(document.getElementById('createEmployeeModal')).show();
             @endif
