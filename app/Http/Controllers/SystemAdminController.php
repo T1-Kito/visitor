@@ -618,11 +618,13 @@ class SystemAdminController extends Controller
             'content_background' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'kiosk_background_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ], [
             'navbar_color.regex' => 'Màu thanh điều hướng phải đúng định dạng HEX, ví dụ #f6fbff.',
             'content_background.regex' => 'Màu nền nội dung phải đúng định dạng HEX, ví dụ #ffffff.',
             'primary_color.regex' => 'Màu nhấn chính phải đúng định dạng HEX, ví dụ #d40511.',
             'secondary_color.regex' => 'Màu nhấn phụ phải đúng định dạng HEX, ví dụ #ffcc00.',
+            'kiosk_background_color.regex' => 'Màu nền kiosk phải đúng định dạng HEX, ví dụ #f4f8fd.',
         ]);
 
         SystemSetting::putMany([
@@ -630,6 +632,7 @@ class SystemAdminController extends Controller
             'admin.content_background' => strtolower($validated['content_background']),
             'admin.primary_color' => strtolower($validated['primary_color']),
             'admin.secondary_color' => strtolower($validated['secondary_color']),
+            'kiosk.background_color' => strtolower($validated['kiosk_background_color']),
         ]);
 
         $this->logAudit('settings.admin_theme_updated', 'system_setting', 'admin_theme', [
@@ -637,9 +640,10 @@ class SystemAdminController extends Controller
             'content_background' => strtolower($validated['content_background']),
             'primary_color' => strtolower($validated['primary_color']),
             'secondary_color' => strtolower($validated['secondary_color']),
+            'kiosk_background_color' => strtolower($validated['kiosk_background_color']),
         ]);
 
-        return back()->with('status', 'Đã cập nhật màu giao diện admin.');
+        return back()->with('status', 'Đã cập nhật màu giao diện.');
     }
 
     public function accessQuickSettingsUpdate(Request $request): RedirectResponse
@@ -866,6 +870,9 @@ class SystemAdminController extends Controller
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_background' => ['nullable', 'boolean'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'secondary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'background_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'surface_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
@@ -891,13 +898,18 @@ class SystemAdminController extends Controller
             'login.title' => $validated['login_title'],
             'login.subtitle' => $validated['login_subtitle'],
             'kiosk.background_url' => $backgroundUrl,
-            'kiosk.primary_color' => $validated['primary_color'],
+            'kiosk.primary_color' => strtolower($validated['primary_color']),
+            'kiosk.secondary_color' => strtolower($validated['secondary_color']),
+            'kiosk.background_color' => strtolower($validated['background_color']),
+            'kiosk.surface_color' => strtolower($validated['surface_color']),
         ]);
 
         $this->logAudit('settings.kiosk_updated', 'system_setting', 'kiosk', [
             'company_name' => $validated['company_name'],
             'system_name' => $validated['system_name'],
             'login_title' => $validated['login_title'],
+            'primary_color' => strtolower($validated['primary_color']),
+            'secondary_color' => strtolower($validated['secondary_color']),
         ]);
 
         return redirect()

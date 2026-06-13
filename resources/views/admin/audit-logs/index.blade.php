@@ -231,12 +231,27 @@
         $actionLabels = [
             'settings.kiosk_updated' => 'Cập nhật cài đặt kiosk',
             'settings.printer_updated' => 'Cập nhật máy in',
+            'settings.mail_updated' => 'Cập nhật cấu hình email',
+            'settings.mail_tested' => 'Gửi thử email',
+            'settings.admin_theme_updated' => 'Cập nhật màu giao diện',
+            'settings.access_updated' => 'Cập nhật cấu hình ra/vào',
+            'settings.logos_updated' => 'Cập nhật logo hệ thống',
             'visit.created' => 'Tạo lịch hẹn',
             'visit.updated' => 'Cập nhật lịch hẹn',
             'visit.deleted' => 'Xóa lịch hẹn',
+            'visit.cancelled' => 'Hủy lịch hẹn',
+            'visit.qr_generated' => 'Tạo mã QR cho lịch hẹn',
             'visit.qr_emailed' => 'Gửi mã QR cho khách',
+            'visit.qr_scanned_for_checkin' => 'Quét mã QR để làm thủ tục vào',
+            'visit.qr_scanned_for_checkout' => 'Quét mã QR để làm thủ tục ra',
+            'visit.badge_scanned_for_checkout' => 'Quét thẻ để làm thủ tục ra',
+            'visit.checked_in' => 'Xác nhận khách vào',
+            'visit.checked_out' => 'Xác nhận khách ra',
+            'visit.host_checkin_email_sent' => 'Gửi email báo người tiếp thành công',
+            'visit.host_checkin_email_failed' => 'Gửi email báo người tiếp thất bại',
             'approval.approved' => 'Duyệt lịch hẹn',
             'approval.rejected' => 'Từ chối lịch hẹn',
+            'approval.wait' => 'Chuyển lịch hẹn về chờ duyệt',
             'checkin.checked_in' => 'Cho khách vào',
             'checkout.checked_out' => 'Cho khách ra',
             'kiosk.walk_in_created' => 'Khách đăng ký tại kiosk',
@@ -251,15 +266,27 @@
             'rbac.user_role_updated' => 'Cập nhật vai trò tài khoản',
             'rbac.role_permissions_updated' => 'Cập nhật quyền vai trò',
             'rbac.permission_matrix_updated' => 'Cập nhật ma trận phân quyền',
+            'user.created' => 'Tạo tài khoản',
+            'user.updated' => 'Cập nhật tài khoản',
+            'user.deleted' => 'Xóa tài khoản',
+            'role.created' => 'Tạo vai trò',
+            'role.updated' => 'Cập nhật vai trò',
+            'role.deleted' => 'Xóa vai trò',
+            'permission.created' => 'Tạo quyền',
+            'permission.updated' => 'Cập nhật quyền',
+            'permission.deleted' => 'Xóa quyền',
             'department.created' => 'Tạo phòng ban',
             'department.updated' => 'Cập nhật phòng ban',
             'department.deleted' => 'Xóa phòng ban',
             'employee.created' => 'Tạo nhân viên',
+            'employee.imported' => 'Nhập danh sách nhân viên',
             'employee.updated' => 'Cập nhật nhân viên',
             'employee.deleted' => 'Xóa nhân viên',
             'visitor.created' => 'Tạo khách',
             'visitor.updated' => 'Cập nhật khách',
             'visitor.deleted' => 'Xóa khách',
+            'report.export_csv' => 'Xuất báo cáo CSV',
+            'report.export_xlsx' => 'Xuất báo cáo Excel',
         ];
 
         $entityLabels = [
@@ -269,18 +296,21 @@
             'department' => 'Phòng ban',
             'user' => 'Tài khoản',
             'role' => 'Vai trò',
+            'permission' => 'Quyền',
+            'report' => 'Báo cáo',
+            'badge' => 'Thẻ ra vào',
             'system_setting' => 'Cài đặt',
             'watchlist' => 'Cảnh báo',
             'printer' => 'Máy in',
-            'kiosk' => 'Kiosk',
+            'kiosk' => 'Máy kiosk',
         ];
 
         $metaLabels = [
             'code' => 'Mã lịch',
             'visit_code' => 'Mã lịch',
             'email' => 'Email',
-            'host_email' => 'Email host',
-            'host_name' => 'Người cần gặp',
+            'host_email' => 'Email người tiếp',
+            'host_name' => 'Người tiếp',
             'visitor_name' => 'Khách',
             'company_name' => 'Tên công ty',
             'company' => 'Công ty',
@@ -298,9 +328,55 @@
             'department' => 'Phòng ban',
             'reason' => 'Lý do',
             'error' => 'Lỗi',
+            'navbar_color' => 'Màu thanh điều hướng',
+            'content_background' => 'Màu nền nội dung',
+            'primary_color' => 'Màu nhấn chính',
+            'secondary_color' => 'Màu nhấn phụ',
+            'kiosk_background_color' => 'Màu nền kiosk',
+            'system_name' => 'Tên hệ thống',
+            'login_title' => 'Tiêu đề đăng nhập',
+            'recipient' => 'Người nhận',
+            'host' => 'Máy chủ email',
+            'port' => 'Cổng kết nối',
+            'scheme' => 'Kiểu bảo mật',
+            'auth_mode' => 'Kiểu xác thực',
+            'from_address' => 'Email người gửi',
+            'from_name' => 'Tên người gửi',
+            'trigger_qr_approved' => 'Gửi QR khi duyệt',
+            'trigger_host_checkin' => 'Báo người tiếp khi khách đến',
+            'count' => 'Số lượng',
+            'imported' => 'Đã nhập',
+            'skipped' => 'Bỏ qua',
+            'failed' => 'Thất bại',
+            'type' => 'Loại',
         ];
 
-        $formatMetaValue = function ($value): string {
+        $statusLabels = [
+            'pending' => 'Chờ duyệt',
+            'approved' => 'Đã duyệt',
+            'rejected' => 'Từ chối',
+            'checked_in' => 'Đang trong công ty',
+            'checked_out' => 'Đã rời công ty',
+            'cancelled' => 'Đã hủy',
+            'active' => 'Đang hoạt động',
+            'inactive' => 'Ngừng hoạt động',
+            'warning' => 'Cảnh báo',
+            'critical' => 'Nghiêm trọng',
+            'login' => 'Đăng nhập bằng tài khoản',
+            'none' => 'Không bảo mật',
+            'tls' => 'TLS / STARTTLS',
+            'ssl' => 'SSL',
+        ];
+
+        $methodLabels = [
+            'GET' => 'Xem dữ liệu',
+            'POST' => 'Tạo mới / gửi dữ liệu',
+            'PUT' => 'Cập nhật toàn bộ',
+            'PATCH' => 'Cập nhật',
+            'DELETE' => 'Xóa',
+        ];
+
+        $formatMetaValue = function ($key, $value) use ($statusLabels): string {
             if (is_bool($value)) {
                 return $value ? 'Có' : 'Không';
             }
@@ -313,7 +389,13 @@
                 return '-';
             }
 
-            return (string) $value;
+            $text = (string) $value;
+
+            if (in_array((string) $key, ['status', 'old_status', 'new_status', 'scheme', 'auth_mode'], true)) {
+                return $statusLabels[strtolower($text)] ?? $text;
+            }
+
+            return $text;
         };
     @endphp
 
@@ -370,9 +452,10 @@
                     <tbody>
                     @forelse ($logs as $log)
                         @php
-                            $actionLabel = $actionLabels[$log->action] ?? str_replace(['.', '_'], [' - ', ' '], $log->action);
-                            $entityLabel = $entityLabels[$log->entity_type] ?? str_replace('_', ' ', (string) $log->entity_type);
+                            $actionLabel = $actionLabels[$log->action] ?? 'Thao tác hệ thống';
+                            $entityLabel = $entityLabels[$log->entity_type] ?? 'Dữ liệu hệ thống';
                             $metaItems = collect($log->meta ?? [])->take(6);
+                            $requestMethodLabel = $methodLabels[strtoupper((string) $log->request_method)] ?? null;
                         @endphp
                         <tr>
                             <td class="audit-id">{{ $log->id }}</td>
@@ -397,17 +480,12 @@
                             <td>
                                 <div class="audit-action">
                                     <strong><i class="bi bi-activity"></i>{{ $actionLabel }}</strong>
-                                    <span>{{ $log->action }}</span>
                                     @if ($log->request_method || $log->request_url)
                                         <div class="audit-context">
-                                            <span>
-                                                <i class="bi bi-arrow-right-circle"></i>
-                                                {{ $log->request_method ?: '-' }}
-                                            </span>
-                                            @if ($log->request_url)
-                                                <span class="audit-url" title="{{ $log->request_url }}">
-                                                    <i class="bi bi-link-45deg"></i>
-                                                    {{ $log->request_url }}
+                                            @if ($requestMethodLabel)
+                                                <span>
+                                                    <i class="bi bi-arrow-right-circle"></i>
+                                                    {{ $requestMethodLabel }}
                                                 </span>
                                             @endif
                                         </div>
@@ -422,8 +500,8 @@
                                     <div class="audit-meta">
                                         @foreach ($metaItems as $key => $value)
                                             <span>
-                                                <b>{{ $metaLabels[$key] ?? str_replace('_', ' ', (string) $key) }}:</b>
-                                                {{ \Illuminate\Support\Str::limit($formatMetaValue($value), 80) }}
+                                                <b>{{ $metaLabels[$key] ?? 'Thông tin khác' }}:</b>
+                                                {{ \Illuminate\Support\Str::limit($formatMetaValue($key, $value), 80) }}
                                             </span>
                                         @endforeach
                                         @if (count($log->meta ?? []) > 6)

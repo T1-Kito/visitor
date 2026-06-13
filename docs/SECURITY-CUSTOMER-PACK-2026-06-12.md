@@ -5,7 +5,7 @@ Dự án: Visitor Management System (VMS)
 Phạm vi: Bản cài đặt on-premise / cloud riêng cho từng khách hàng  
 Loại tài liệu: Tự đánh giá bảo mật nội bộ và checklist triển khai
 
-> Lưu ý: Tài liệu này không phải chứng chỉ bảo mật, không phải báo cáo penetration testing/VAPT do đơn vị thứ ba cấp. Đây là gói bằng chứng kỹ thuật mà đội phát triển có thể cung cấp ngay để khách hàng tham khảo trước khi thực hiện kiểm thử độc lập.
+> Lưu ý: Tài liệu này cung cấp tổng quan về các biện pháp bảo mật, cơ chế kiểm soát truy cập, ghi nhận sự kiện và các khuyến nghị triển khai an toàn của hệ thống VMS. Các hoạt động đánh giá bảo mật độc lập (nếu được yêu cầu) sẽ được thực hiện theo phạm vi triển khai 
 
 ## 1. Tóm tắt hiện trạng
 

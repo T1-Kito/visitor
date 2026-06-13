@@ -1,5 +1,16 @@
 <!doctype html>
-<html lang="vi">
+@php
+    $pageSettings = $kioskSettings ?? [];
+    $pagePrimaryColor = $pageSettings['kiosk.primary_color'] ?? '#146bd7';
+    $pagePrimaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pagePrimaryColor) ? $pagePrimaryColor : '#146bd7';
+    $pageSecondaryColor = $pageSettings['kiosk.secondary_color'] ?? '#0cb4d8';
+    $pageSecondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageSecondaryColor) ? $pageSecondaryColor : '#0cb4d8';
+    $pageBackgroundColor = $pageSettings['kiosk.background_color'] ?? '#f4f8fd';
+    $pageBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageBackgroundColor) ? $pageBackgroundColor : '#f4f8fd';
+    $pageSurfaceColor = $pageSettings['kiosk.surface_color'] ?? '#ffffff';
+    $pageSurfaceColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageSurfaceColor) ? $pageSurfaceColor : '#ffffff';
+@endphp
+<html lang="vi" style="--kiosk-primary: {{ $pagePrimaryColor }}; --kiosk-secondary: {{ $pageSecondaryColor }}; --kiosk-background: {{ $pageBackgroundColor }}; --kiosk-surface-color: {{ $pageSurfaceColor }};">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,9 +33,10 @@
             --kiosk-ink: #0b1f3a;
             --kiosk-muted: #637895;
             --kiosk-line: #d8e6f5;
-            --kiosk-blue: var(--kiosk-primary, #146bd7);
-            --kiosk-cyan: #0cb4d8;
-            --kiosk-bg: #f4f8fd;
+            --kiosk-blue: {{ $pagePrimaryColor }};
+            --kiosk-cyan: {{ $pageSecondaryColor }};
+            --kiosk-bg: {{ $pageBackgroundColor }};
+            --kiosk-surface: {{ $pageSurfaceColor }};
         }
 
         * { box-sizing: border-box; }
@@ -37,10 +49,7 @@
         body {
             margin: 0;
             color: var(--kiosk-ink);
-            background:
-                radial-gradient(circle at 14% -6%, rgba(12, 180, 216, .16), transparent 34%),
-                radial-gradient(circle at 100% 8%, rgba(20, 107, 215, .10), transparent 30%),
-                linear-gradient(180deg, #ffffff 0%, var(--kiosk-bg) 100%);
+            background: var(--kiosk-bg);
             font-family: "Manrope", sans-serif;
         }
 
@@ -223,7 +232,7 @@
         .kiosk-card {
             border: 1px solid var(--kiosk-line);
             border-radius: 20px;
-            background: rgba(255, 255, 255, .96);
+            background: color-mix(in srgb, var(--kiosk-surface) 96%, transparent);
             box-shadow: 0 22px 58px rgba(17, 39, 68, .08);
         }
 
@@ -396,8 +405,9 @@
         .kiosk-flat-form .form-control:focus,
         .kiosk-flat-form .form-select:focus,
         .kiosk-side-card .form-control:focus {
-            border-color: var(--kiosk-blue);
-            box-shadow: 0 0 0 4px rgba(20, 107, 215, .10);
+            border-color: var(--kiosk-line);
+            box-shadow: none;
+            outline: none;
         }
 
         .kiosk-policy {
@@ -1196,6 +1206,12 @@
     $logoUrls = array_values(array_filter([$ownerLogoUrl, $customerLogoUrl]));
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
+    $secondaryColor = $settings['kiosk.secondary_color'] ?? '#0cb4d8';
+    $secondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $secondaryColor) ? $secondaryColor : '#0cb4d8';
+    $backgroundColor = $settings['kiosk.background_color'] ?? '#f4f8fd';
+    $backgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $backgroundColor) ? $backgroundColor : '#f4f8fd';
+    $surfaceColor = $settings['kiosk.surface_color'] ?? '#ffffff';
+    $surfaceColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $surfaceColor) ? $surfaceColor : '#ffffff';
     $lastVisit = $lastKioskVisit ?? null;
     $selfRegistrationUrl = request()->getSchemeAndHttpHost().route('kiosk.register', [], false);
     $lastStatusLabels = [
@@ -1207,7 +1223,7 @@
         'cancelled' => 'Đã hủy',
     ];
 @endphp
-<body style="--kiosk-primary: {{ $primaryColor }};">
+<body>
     <main class="kiosk-shell">
         @php
             $noticeType = session('error') || $errors->any() ? 'danger' : (session('status') ? 'success' : null);

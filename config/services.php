@@ -41,6 +41,9 @@ return [
         'desktop_icon_url' => env('APP_DESKTOP_ICON_URL', null),
         'background_url' => env('KIOSK_BACKGROUND_URL', null),
         'primary_color' => env('KIOSK_PRIMARY_COLOR', '#146bd7'),
+        'secondary_color' => env('KIOSK_SECONDARY_COLOR', '#0cb4d8'),
+        'background_color' => env('KIOSK_BACKGROUND_COLOR', '#f4f8fd'),
+        'surface_color' => env('KIOSK_SURFACE_COLOR', '#ffffff'),
     ],
 
 ];

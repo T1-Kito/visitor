@@ -28,6 +28,9 @@
                 <i class="bi {{ $item['icon'] }}"></i>
                 <span>{{ $item['label'] }}</span>
             </a>
+            @if ($routeName === 'admin.settings.index')
+                @include('admin.partials.theme-picker', ['placement' => 'sidebar'])
+            @endif
         @endforeach
     @endforeach
 </nav>

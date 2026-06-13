@@ -20,6 +20,7 @@
         $adminThemeContent = $adminTheme['admin.content_background'] ?? '#f8fafc';
         $adminThemePrimary = $adminTheme['admin.primary_color'] ?? '#d40511';
         $adminThemeSecondary = $adminTheme['admin.secondary_color'] ?? '#ffcc00';
+        $adminKioskBackground = $adminKioskTheme['background_color'] ?? '#f4f8fd';
     @endphp
     <style>
         :root {
@@ -86,66 +87,6 @@
 
                 <div class="topbar-right">
                     @yield('topbar_meta')
-                    <div class="dropdown admin-theme-picker d-none d-md-inline-flex">
-                        <button class="btn btn-light d-inline-flex align-items-center gap-2"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                data-bs-auto-close="outside"
-                                aria-expanded="false"
-                                title="Đổi màu giao diện admin"
-                                aria-label="Đổi màu giao diện admin">
-                            <i class="bi bi-palette"></i>
-                        </button>
-                        <form class="dropdown-menu dropdown-menu-end admin-theme-menu"
-                              method="post"
-                              action="{{ route('admin.settings.admin-theme.update') }}">
-                            @csrf
-                            @method('put')
-                            <div class="admin-theme-menu-head">
-                                <strong>Màu giao diện</strong>
-                                <span>Đổi nhanh màu thanh điều hướng và nền nội dung.</span>
-                            </div>
-                            <label class="admin-theme-field">
-                                <span>Thanh điều hướng</span>
-                                <div>
-                                    <input type="color" value="{{ $adminThemeNavbar }}" data-theme-color-picker="navbar_color">
-                                    <input type="text" name="navbar_color" value="{{ $adminThemeNavbar }}" maxlength="7" data-theme-color-text="navbar_color" required>
-                                </div>
-                            </label>
-                            <label class="admin-theme-field">
-                                <span>Nền nội dung</span>
-                                <div>
-                                    <input type="color" value="{{ $adminThemeContent }}" data-theme-color-picker="content_background">
-                                    <input type="text" name="content_background" value="{{ $adminThemeContent }}" maxlength="7" data-theme-color-text="content_background" required>
-                                </div>
-                            </label>
-                            <label class="admin-theme-field">
-                                <span>Màu nhấn chính</span>
-                                <div>
-                                    <input type="color" value="{{ $adminThemePrimary }}" data-theme-color-picker="primary_color">
-                                    <input type="text" name="primary_color" value="{{ $adminThemePrimary }}" maxlength="7" data-theme-color-text="primary_color" required>
-                                </div>
-                            </label>
-                            <label class="admin-theme-field">
-                                <span>Màu nhấn phụ</span>
-                                <div>
-                                    <input type="color" value="{{ $adminThemeSecondary }}" data-theme-color-picker="secondary_color">
-                                    <input type="text" name="secondary_color" value="{{ $adminThemeSecondary }}" maxlength="7" data-theme-color-text="secondary_color" required>
-                                </div>
-                            </label>
-                            <div class="admin-theme-presets" aria-label="Màu gợi ý">
-                                <button type="button" data-theme-preset data-nav="#f6fbff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" title="Mặc định"><span style="background:#f6fbff"></span></button>
-                                <button type="button" data-theme-preset data-nav="#ffffff" data-content="#f8fafc" data-primary="#d40511" data-secondary="#ffcc00" title="DHL hiện đại"><span style="background:linear-gradient(135deg,#ffcc00 0 55%,#d40511 55%)"></span></button>
-                                <button type="button" data-theme-preset data-nav="#f8fafc" data-content="#ffffff" data-primary="#334155" data-secondary="#64748b" title="Trắng xám"><span style="background:#f8fafc"></span></button>
-                                <button type="button" data-theme-preset data-nav="#eff6ff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" title="Xanh nhẹ"><span style="background:#eff6ff"></span></button>
-                                <button type="button" data-theme-preset data-nav="#f7fee7" data-content="#ffffff" data-primary="#15803d" data-secondary="#84cc16" title="Xanh lá nhẹ"><span style="background:#f7fee7"></span></button>
-                            </div>
-                            <button class="admin-theme-save" type="submit">
-                                <i class="bi bi-check2"></i>
-                                Lưu màu
-                            </button>
-                        </form>
-                    </div>
                     <a class="btn btn-light d-none d-md-inline-flex align-items-center gap-2" href="{{ route('kiosk.index') }}" target="_blank" rel="noopener">
                         <i class="bi bi-display"></i>
                         Kiosk
@@ -249,6 +190,73 @@
         </div>
     </div>
 
+    <div class="modal fade admin-theme-modal" id="adminThemeModal" tabindex="-1" aria-labelledby="adminThemeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="{{ route('admin.settings.admin-theme.update') }}">
+                @csrf
+                @method('put')
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="adminThemeModalLabel">Mau giao dien</h5>
+                        <p class="modal-subtitle">Doi nhanh mau admin va nen kiosk.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Dong"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="admin-theme-field">
+                        <span>Thanh dieu huong</span>
+                        <div>
+                            <input type="color" value="{{ $adminThemeNavbar }}" data-theme-color-picker="navbar_color">
+                            <input type="text" name="navbar_color" value="{{ $adminThemeNavbar }}" maxlength="7" data-theme-color-text="navbar_color" required>
+                        </div>
+                    </label>
+                    <label class="admin-theme-field">
+                        <span>Nen noi dung admin</span>
+                        <div>
+                            <input type="color" value="{{ $adminThemeContent }}" data-theme-color-picker="content_background">
+                            <input type="text" name="content_background" value="{{ $adminThemeContent }}" maxlength="7" data-theme-color-text="content_background" required>
+                        </div>
+                    </label>
+                    <label class="admin-theme-field">
+                        <span>Mau nhan chinh</span>
+                        <div>
+                            <input type="color" value="{{ $adminThemePrimary }}" data-theme-color-picker="primary_color">
+                            <input type="text" name="primary_color" value="{{ $adminThemePrimary }}" maxlength="7" data-theme-color-text="primary_color" required>
+                        </div>
+                    </label>
+                    <label class="admin-theme-field">
+                        <span>Mau nhan phu</span>
+                        <div>
+                            <input type="color" value="{{ $adminThemeSecondary }}" data-theme-color-picker="secondary_color">
+                            <input type="text" name="secondary_color" value="{{ $adminThemeSecondary }}" maxlength="7" data-theme-color-text="secondary_color" required>
+                        </div>
+                    </label>
+                    <label class="admin-theme-field">
+                        <span>Nen kiosk</span>
+                        <div>
+                            <input type="color" value="{{ $adminKioskBackground }}" data-theme-color-picker="kiosk_background_color">
+                            <input type="text" name="kiosk_background_color" value="{{ $adminKioskBackground }}" maxlength="7" data-theme-color-text="kiosk_background_color" required>
+                        </div>
+                    </label>
+                    <div class="admin-theme-presets" aria-label="Mau goi y">
+                        <button type="button" data-theme-preset data-nav="#f6fbff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" data-kiosk-bg="#f4f8fd" title="Mac dinh"><span style="background:#f6fbff"></span></button>
+                        <button type="button" data-theme-preset data-nav="#ffffff" data-content="#f8fafc" data-primary="#d40511" data-secondary="#ffcc00" data-kiosk-bg="#fff8df" title="DHL"><span style="background:linear-gradient(135deg,#ffcc00 0 55%,#d40511 55%)"></span></button>
+                        <button type="button" data-theme-preset data-nav="#f8fafc" data-content="#ffffff" data-primary="#334155" data-secondary="#64748b" data-kiosk-bg="#f8fafc" title="Trang xam"><span style="background:#f8fafc"></span></button>
+                        <button type="button" data-theme-preset data-nav="#eff6ff" data-content="#ffffff" data-primary="#146bd7" data-secondary="#0cb4d8" data-kiosk-bg="#eef7ff" title="Xanh nhe"><span style="background:#eff6ff"></span></button>
+                        <button type="button" data-theme-preset data-nav="#f7fee7" data-content="#ffffff" data-primary="#15803d" data-secondary="#84cc16" data-kiosk-bg="#f7fee7" title="Xanh la"><span style="background:#f7fee7"></span></button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Huy</button>
+                    <button class="admin-theme-save" type="submit">
+                        <i class="bi bi-check2"></i>
+                        Luu mau
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const adminNotice = document.getElementById('adminNotice');
@@ -349,6 +357,7 @@
                     setThemeColor('content_background', button.dataset.content || '#ffffff');
                     setThemeColor('primary_color', button.dataset.primary || '#146bd7');
                     setThemeColor('secondary_color', button.dataset.secondary || '#0cb4d8');
+                    setThemeColor('kiosk_background_color', button.dataset.kioskBg || '#f4f8fd');
                 });
             });
         })();

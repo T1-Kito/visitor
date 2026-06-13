@@ -1,104 +1,58 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'Chi tiet user | Visitor Management')
+@section('title', 'Chi tiết tài khoản | Visitor Management')
 @section('page_title', $user->name)
-@section('page_subtitle', 'Thong tin dang nhap, role va audit gan day')
+@section('page_subtitle', 'Thông tin đăng nhập, vai trò và nhật ký gần đây')
 
 @section('content')
-    <div class="row g-3">
-        <div class="col-xl-8">
-            <section class="panel-card mb-3">
-                <div class="panel-header">
-                    <div>
-                        <h3>{{ $user->name }}</h3>
-                        <p>{{ $user->email }}</p>
-                    </div>
-                    <span class="status-badge {{ $user->is_active ? 'status-approved' : 'status-checked-out' }}">
-                        {{ $user->is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                </div>
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <span>Email</span>
-                        <strong>{{ $user->email }}</strong>
-                    </div>
-                    <div class="detail-item">
-                        <span>Role</span>
-                        <strong>{{ $user->roles->first()?->name ?? 'No role' }}</strong>
-                    </div>
-                    <div class="detail-item">
-                        <span>Ho so nhan vien</span>
-                        <strong>{{ $user->employeeProfile?->name ?? '-' }}</strong>
-                    </div>
-                    <div class="detail-item">
-                        <span>Phong ban</span>
-                        <strong>{{ $user->employeeProfile?->department?->name ?? '-' }}</strong>
-                    </div>
-                    <div class="detail-item">
-                        <span>Ngay tao</span>
-                        <strong>{{ $user->created_at?->format('Y-m-d H:i') ?? '-' }}</strong>
-                    </div>
-                    <div class="detail-item">
-                        <span>Cap nhat</span>
-                        <strong>{{ $user->updated_at?->format('Y-m-d H:i') ?? '-' }}</strong>
-                    </div>
-                </div>
-            </section>
+    <section class="entity-detail">
+        <header class="entity-detail-head">
+            <div class="entity-detail-identity">
+                <div class="entity-detail-avatar">{{ strtoupper(mb_substr($user->name, 0, 1)) }}</div>
+                <div><h2 class="entity-detail-title">{{ $user->name }}</h2><p class="entity-detail-subtitle">{{ $user->email }}</p></div>
+            </div>
+            <div class="entity-detail-actions">
+                <span class="status-badge {{ $user->is_active ? 'status-approved' : 'status-checked-out' }}">
+                    {{ $user->is_active ? 'Đang hoạt động' : 'Đã khóa' }}
+                </span>
+                <a class="btn btn-light" href="{{ route('admin.rbac.index') }}"><i class="bi bi-arrow-left"></i>Quay lại</a>
+                <a class="btn btn-brand" href="{{ route('admin.rbac.users.edit', $user) }}"><i class="bi bi-pencil"></i>Sửa</a>
+                @if ((int) auth()->id() !== $user->id)
+                    <form method="post" action="{{ route('admin.rbac.users.destroy', $user) }}" onsubmit="return confirm('Xóa tài khoản này?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-outline-danger" type="submit" title="Xóa tài khoản"><i class="bi bi-trash"></i></button>
+                    </form>
+                @endif
+            </div>
+        </header>
 
-            <section class="panel-card">
-                <div class="panel-header">
-                    <div>
-                        <h3>Audit gan day</h3>
-                        <p>20 hanh dong moi nhat cua user nay.</p>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table modern-table align-middle mb-0">
-                        <thead>
-                        <tr>
-                            <th>Thoi gian</th>
-                            <th>Action</th>
-                            <th>Doi tuong</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @forelse ($logs as $log)
-                            <tr>
-                                <td>{{ $log->created_at?->format('Y-m-d H:i') }}</td>
-                                <td>{{ $log->action }}</td>
-                                <td>{{ $log->entity_type }} #{{ $log->entity_id }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-secondary">Chua co audit log.</td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+        <div class="entity-detail-fields">
+            <div class="entity-detail-field"><span>Email</span><strong>{{ $user->email }}</strong></div>
+            <div class="entity-detail-field"><span>Vai trò</span><strong>{{ $user->roles->first()?->name ?? 'Chưa phân quyền' }}</strong></div>
+            <div class="entity-detail-field"><span>Hồ sơ nhân viên</span><strong>{{ $user->employeeProfile?->name ?? '-' }}</strong></div>
+            <div class="entity-detail-field"><span>Phòng ban</span><strong>{{ $user->employeeProfile?->department?->name ?? '-' }}</strong></div>
         </div>
 
-        <div class="col-xl-4">
-            <section class="panel-card">
-                <div class="panel-header">
-                    <div>
-                        <h3>Thao tac</h3>
-                        <p>Quan tri tai khoan dang nhap.</p>
-                    </div>
-                </div>
-                <div class="d-grid gap-2">
-                    <a class="btn btn-brand" href="{{ route('admin.rbac.users.edit', $user) }}">Sua user</a>
-                    @if ((int) auth()->id() !== $user->id)
-                        <form method="post" action="{{ route('admin.rbac.users.destroy', $user) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-outline-danger w-100" type="submit">Xoa user</button>
-                        </form>
-                    @endif
-                    <a class="btn btn-light" href="{{ route('admin.rbac.index') }}">Quay lai RBAC</a>
-                </div>
-            </section>
+        <div class="entity-detail-section-head">
+            <div><h3>Nhật ký gần đây</h3><p>Các thao tác mới nhất của tài khoản.</p></div>
+            <span class="entity-detail-count">{{ $logs->count() }} sự kiện</span>
         </div>
-    </div>
+        <div class="table-responsive">
+            <table class="entity-detail-table">
+                <thead><tr><th>Thời gian</th><th>Hành động</th><th>Đối tượng</th></tr></thead>
+                <tbody>
+                @forelse ($logs as $log)
+                    <tr>
+                        <td>{{ $log->created_at?->format('H:i d/m/Y') }}</td>
+                        <td>{{ $log->action }}</td>
+                        <td>{{ $log->entity_type }} #{{ $log->entity_id }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="3" class="text-center text-secondary py-4">Chưa có nhật ký hoạt động.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
 @endsection

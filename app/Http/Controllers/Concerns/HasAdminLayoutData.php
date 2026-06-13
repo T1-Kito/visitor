@@ -77,6 +77,9 @@ trait HasAdminLayoutData
                 'initials' => mb_strtoupper($brandInitials !== '' ? $brandInitials : 'VMS'),
             ],
             'adminTheme' => $adminTheme,
+            'adminKioskTheme' => [
+                'background_color' => $kioskSettings['kiosk.background_color'] ?? '#f4f8fd',
+            ],
             'licenseNotice' => $licenseNotice,
         ], $data);
     }

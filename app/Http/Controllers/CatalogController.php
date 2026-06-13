@@ -63,6 +63,11 @@ class CatalogController extends Controller
 
     public function departmentsShow(Department $department): View
     {
+        $blockedDepartmentIds = array_values(array_unique(array_merge(
+            [$department->id],
+            $this->departmentDescendantIds($department)
+        )));
+
         $department->load([
             'parent',
             'children' => fn ($query) => $query->withCount('employees')->orderBy('name'),
@@ -72,6 +77,10 @@ class CatalogController extends Controller
 
         return view('admin.departments.show', $this->withBase([
             'department' => $department,
+            'departmentOptions' => Department::query()
+                ->whereNotIn('id', $blockedDepartmentIds)
+                ->orderBy('name')
+                ->get(),
         ]));
     }
 
@@ -587,6 +596,8 @@ class CatalogController extends Controller
             'email' => ['nullable', 'email', 'max:160'],
             'company' => ['nullable', 'string', 'max:160'],
             'identity_no' => ['nullable', 'string', 'max:80'],
+            'identity_issued_place' => ['nullable', 'string', 'max:160'],
+            'identity_issued_date' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 

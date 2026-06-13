@@ -876,6 +876,9 @@ class VmsSeeder extends Seeder
             'kiosk.logo_url' => null,
             'kiosk.background_url' => null,
             'kiosk.primary_color' => '#0f6eea',
+            'kiosk.secondary_color' => '#0cb4d8',
+            'kiosk.background_color' => '#f4f8fd',
+            'kiosk.surface_color' => '#ffffff',
         ]);
     }
 }

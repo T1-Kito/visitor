@@ -93,6 +93,9 @@ class SystemSetting extends Model
             'kiosk.logo_url' => config('services.kiosk.logo_url'),
             'kiosk.background_url' => config('services.kiosk.background_url'),
             'kiosk.primary_color' => config('services.kiosk.primary_color'),
+            'kiosk.secondary_color' => config('services.kiosk.secondary_color', '#0cb4d8'),
+            'kiosk.background_color' => config('services.kiosk.background_color', '#f4f8fd'),
+            'kiosk.surface_color' => config('services.kiosk.surface_color', '#ffffff'),
             'app.favicon_url' => config('services.kiosk.favicon_url'),
             'app.desktop_icon_url' => config('services.kiosk.desktop_icon_url'),
         ];
