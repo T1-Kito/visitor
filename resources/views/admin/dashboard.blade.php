@@ -135,8 +135,7 @@
 
 .db-metric {
     border-radius: 12px;
-    min-height: 122px;
-    padding: 0.95rem 1rem;
+    padding: 0.5rem 1rem;
     position: relative;
     overflow: hidden;
     color: #10233d;

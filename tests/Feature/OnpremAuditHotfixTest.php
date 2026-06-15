@@ -163,6 +163,16 @@ class OnpremAuditHotfixTest extends TestCase
         $this->assertSame('approved', $visit->status);
         $this->assertSame(1, Approval::query()->where('visit_id', $visit->id)->count());
 
+        $visitsResponse = $this->actingAs($admin)
+            ->get(route('admin.visits.index'))
+            ->assertOk()
+            ->assertSee('Người duyệt');
+
+        $visitRow = collect($visitsResponse->viewData('visits'))->firstWhere('id', $visit->id);
+
+        $this->assertNotNull($visitRow);
+        $this->assertSame($admin->name, $visitRow['approver']);
+
         $this->actingAs($admin)
             ->post(route('admin.approvals.approve', $visit))
             ->assertRedirect();

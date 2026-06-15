@@ -19,11 +19,11 @@
 .vs-pager{min-height:52px;padding:.5rem 1.15rem;border-top:1px solid #edf3fb}
 .vs-layout{display:block}
 .vs-table-scroll{width:100%;overflow-x:auto}
-.vs-table{width:100%;min-width:1080px;border-collapse:collapse;table-layout:fixed}
+.vs-table{width:100%;min-width:1240px;border-collapse:collapse;table-layout:fixed}
 .vs-table th{height:38px;padding:8px 12px;border-top:1px solid #edf3fb;border-bottom:1px solid #dfe8f2;background:#f8fafc;color:#71839a;font-size:11px;font-weight:600;text-align:left;text-transform:uppercase}
 .vs-table td{height:60px;padding:8px 12px;border-bottom:1px solid #e8eef5;background:#fff;color:#20364f;font-size:13px;vertical-align:middle}
 .vs-table tbody tr:hover td{background:#f8fbff}
-.vs-table th:nth-child(1){width:145px}.vs-table th:nth-child(2){width:18%}.vs-table th:nth-child(3){width:18%}.vs-table th:nth-child(4){width:14%}.vs-table th:nth-child(5){width:14%}.vs-table th:nth-child(6){width:125px}.vs-table th:nth-child(7){width:125px}.vs-table th:nth-child(8){width:105px;text-align:right}
+.vs-table th:nth-child(1){width:145px}.vs-table th:nth-child(2){width:16%}.vs-table th:nth-child(3){width:16%}.vs-table th:nth-child(4){width:13%}.vs-table th:nth-child(5){width:13%}.vs-table th:nth-child(6){width:12%}.vs-table th:nth-child(7){width:120px}.vs-table th:nth-child(8){width:120px}.vs-table th:nth-child(9){width:105px;text-align:right}
 .vs-table td:last-child{text-align:right}
 .vs-table-code{color:#146bd7;font-weight:600;text-decoration:none;white-space:nowrap}
 .vs-table-primary{display:block;color:#10233d;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -87,6 +87,7 @@
                         <th>Khách</th>
                         <th>Người gặp</th>
                         <th>Người tạo</th>
+                        <th>Người duyệt</th>
                         <th>Phòng ban</th>
                         <th>Giờ hẹn</th>
                         <th>Trạng thái</th>
@@ -96,7 +97,7 @@
                 <tbody id="visitsGrid">
                 @forelse ($visits as $visit)
                     <tr class="vs-row"
-                        data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['department'].' '.$visit['purpose']) }}"
+                        data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['approver'].' '.$visit['department'].' '.$visit['purpose']) }}"
                         data-status="{{ $visit['status'] }}"
                         data-department="{{ strtolower($visit['department']) }}"
                         data-creator="{{ str_starts_with($visit['creator'], 'Kiosk') ? 'kiosk' : strtolower($visit['creator']) }}">
@@ -111,6 +112,9 @@
                                 {{ str_starts_with($visit['creator'], 'Kiosk') ? 'Kiosk' : $visit['creator'] }}
                             </span>
                             <span class="vs-table-secondary">{{ str_starts_with($visit['creator'], 'Kiosk') ? 'Khách tự đăng ký' : 'Tài khoản hệ thống' }}</span>
+                        </td>
+                        <td>
+                            <span class="vs-table-primary" title="{{ $visit['approver'] }}">{{ $visit['approver'] }}</span>
                         </td>
                         <td><span class="vs-table-primary">{{ $visit['department'] }}</span></td>
                         <td>
@@ -134,7 +138,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td class="vs-empty" colspan="8">Chưa có lịch hẹn.</td></tr>
+                    <tr><td class="vs-empty" colspan="9">Chưa có lịch hẹn.</td></tr>
                 @endforelse
                 </tbody>
             </table>

@@ -2979,6 +2979,8 @@ XML;
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
                 'status' => $visit->status,
+                'approver' => $visit->approval?->approver?->name
+                    ?? ($visit->status === 'pending' ? 'Chưa duyệt' : 'Chưa có thông tin'),
                 'purpose' => $visit->purpose,
             ];
         })->all();
@@ -3148,7 +3150,13 @@ XML;
 
     private function baseVisitQuery(): Builder
     {
-        return Visit::query()->with(['visitor', 'hostEmployee.department', 'creator', 'activeBadge']);
+        return Visit::query()->with([
+            'visitor',
+            'hostEmployee.department',
+            'creator',
+            'approval.approver',
+            'activeBadge',
+        ]);
     }
 
     /**
