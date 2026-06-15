@@ -8,10 +8,10 @@
 <style>
 .dept-shell{display:grid;gap:1rem}
 .dept-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
-.dept-stat{display:flex;align-items:center;gap:.85rem;background:#fff;border:1px solid #dce9f6;border-radius:16px;padding:.9rem 1rem}
-.dept-stat-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#eef6ff;color:#146bd7;font-size:1.05rem}
-.dept-stat span{display:block;color:#647d99;font-size:.78rem}
-.dept-stat strong{display:block;color:#0b1f3a;font-size:1.45rem;font-weight:700;line-height:1.1}
+.dept-stat{display:flex;align-items:center;gap:.85rem;background:#ffcc00;border:1px solid #e0b400;border-radius:16px;padding:.9rem 1rem;box-shadow:none}
+.dept-stat-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.48);border:1px solid rgba(212,5,17,.18);color:#d40511;font-size:1.05rem}
+.dept-stat span{display:block;color:#111827;font-size:.78rem}
+.dept-stat strong{display:block;color:#111827;font-size:1.45rem;font-weight:700;line-height:1.1}
 .dept-card{background:#fff;border:1px solid #dce9f6;border-radius:18px;overflow:hidden}
 .dept-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:1rem 1.1rem;border-bottom:1px solid #edf3fb}
 .dept-toolbar form{display:flex;align-items:center;gap:.65rem;flex:1;min-width:0}
@@ -66,6 +66,7 @@
 .dept-employee-status.active{background:#12b76a}
 .dept-empty{padding:2.2rem;text-align:center;color:#7a93b0}
 .dept-footer{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.9rem 1.1rem;border-top:1px solid #edf3fb;color:#526b87}
+@media(min-width:992px){.dept-shell{padding-inline:1rem}}
 @media(max-width:1100px){.dept-summary{grid-template-columns:1fr}.dept-tree-head{display:none}.dept-node-main{grid-template-columns:1fr;gap:.45rem;padding:.7rem 0}.dept-count,.dept-actions{margin-left:calc(var(--level,0) * 28px + 37px)}.dept-actions{justify-content:flex-start}.dept-employees{margin-left:calc(var(--level,0) * 28px + 37px)}.dept-toolbar{align-items:stretch;flex-direction:column}.dept-toolbar form{max-width:none}.dept-search{max-width:none}}
 </style>
 @endpush

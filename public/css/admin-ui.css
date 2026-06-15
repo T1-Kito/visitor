@@ -53,10 +53,8 @@ a {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
-    background:
-        linear-gradient(180deg, color-mix(in srgb, var(--gate-cyan) 10%, #ffffff) 0 4px, transparent 4px),
-        linear-gradient(180deg, var(--admin-navbar-color, #ffffff) 0%, color-mix(in srgb, var(--gate-cyan) 4%, #ffffff) 100%);
-    border-right: 1px solid #d8e6f3;
+    background: var(--admin-navbar-color, #ffcc00);
+    border-right: 1px solid color-mix(in srgb, var(--admin-navbar-color, #ffcc00) 82%, #b38f00);
     box-shadow: 10px 0 32px rgba(17, 39, 68, 0.045);
 }
 
@@ -796,15 +794,45 @@ a {
 }
 
 .btn-brand {
-    border: 0;
-    color: #fff;
-    background: linear-gradient(135deg, var(--gate-blue), color-mix(in srgb, var(--gate-blue) 76%, #071421));
-    box-shadow: 0 14px 28px color-mix(in srgb, var(--gate-blue) 20%, transparent);
+    border: 1px solid #e0b400;
+    color: #111827;
+    background: #ffcc00;
+    box-shadow: 0 6px 14px rgba(212, 5, 17, .1);
+    font-weight: 700;
 }
 
-.btn-brand:hover {
-    color: #fff;
-    transform: translateY(-1px);
+.btn-brand > i {
+    color: #d40511;
+}
+
+.btn-brand:hover,
+.btn-brand:focus,
+.btn-brand:active {
+    color: #111827 !important;
+    background: #ffcc00 !important;
+    border-color: #e0b400 !important;
+    box-shadow: 0 6px 14px rgba(212, 5, 17, .1);
+    transform: none;
+}
+
+.btn-brand:hover > i,
+.btn-brand:focus > i,
+.btn-brand:active > i {
+    color: #d40511;
+}
+
+.btn-brand:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 .2rem rgba(212, 5, 17, .18);
+}
+
+.btn-brand:disabled,
+.btn-brand.disabled {
+    color: rgba(17, 24, 39, .62);
+    background: #ffe680;
+    border-color: #e8cb55;
+    box-shadow: none;
+    transform: none;
 }
 
 .btn-soft-danger {
@@ -2166,7 +2194,7 @@ a {
 }
 
 .mobile-sidebar {
-    background: #f8fbff;
+    background: var(--admin-navbar-color, #ffcc00);
 }
 
 .mobile-sidebar .offcanvas-body {
@@ -3680,6 +3708,17 @@ a {
     gap: 1.1rem;
 }
 
+@media (min-width: 992px) {
+    .employee-resource-shell,
+    .visitor-resource-shell {
+        padding-inline: 1rem;
+    }
+
+    .employee-resource-shell {
+        padding-inline: 1.35rem;
+    }
+}
+
 .resource-summary {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3721,6 +3760,90 @@ a {
     font-size: 1.8rem;
     font-weight: 600;
     letter-spacing: 0;
+}
+
+.resource-summary-dhl .resource-stat {
+    min-height: 82px;
+    gap: .75rem;
+    padding: .72rem .9rem;
+    border-color: #e0b400;
+    border-radius: 16px;
+    background: #ffcc00;
+    box-shadow: none;
+}
+
+.resource-summary-dhl .resource-stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #d40511;
+    border: 1px solid rgba(212, 5, 17, .18);
+    background: rgba(255, 255, 255, .48);
+    font-size: 1.05rem;
+}
+
+.resource-summary-dhl .resource-stat span,
+.resource-summary-dhl .resource-stat strong {
+    color: #111827;
+}
+
+.resource-summary-dhl .resource-stat span {
+    font-size: .76rem;
+}
+
+.resource-summary-dhl .resource-stat strong {
+    margin-top: .08rem;
+    font-size: 1.45rem;
+    line-height: 1.05;
+}
+
+.employee-resource-shell {
+    gap: .9rem;
+}
+
+.employee-resource-shell .resource-summary {
+    gap: 1.15rem;
+}
+
+.employee-resource-shell .resource-summary-dhl .resource-stat {
+    min-height: 68px;
+    gap: .65rem;
+    padding: .5rem .75rem;
+}
+
+.employee-resource-shell .resource-summary-dhl .resource-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: .95rem;
+}
+
+.employee-resource-shell .resource-summary-dhl .resource-stat strong {
+    font-size: 1.3rem;
+}
+
+.employee-resource-shell .resource-toolbar {
+    padding: .75rem 1rem;
+}
+
+.employee-resource-shell .resource-search .form-control,
+.employee-resource-shell .resource-toolbar .form-select {
+    min-height: 42px;
+    border-radius: 12px;
+}
+
+.employee-resource-shell .resource-table th {
+    padding: .65rem 1rem;
+}
+
+.employee-resource-shell .resource-table td {
+    padding: .55rem 1rem;
+}
+
+.employee-resource-shell .resource-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
 }
 
 .resource-card {

@@ -12,6 +12,107 @@
 .access-history{border:1px solid #e2edf8;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(17,39,68,.05);overflow:hidden}.access-history-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1rem;border-bottom:1px solid #eef4fb}.access-history-title h3{margin:0;color:#10233d;font-size:.98rem;font-weight:600}.access-history-title p{margin:.14rem 0 0;color:#7187a3;font-size:.76rem}.access-history-filter{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}.access-history-filter input,.access-history-filter select{min-height:36px;border:1px solid #d8e5f2;border-radius:11px;color:#526b87;font-size:.78rem}.access-history-filter button{min-height:36px;display:inline-flex;align-items:center;gap:.35rem;border:0;border-radius:11px;padding:0 .72rem;background:#eff6ff;color:#1976d2;font-size:.78rem;font-weight:500}.access-history-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;padding:1rem}.access-history-item{display:grid;gap:.5rem;padding:.75rem;border:1px solid #edf3fb;border-radius:16px;background:linear-gradient(135deg,#fff,#f8fbff);text-decoration:none;color:#10233d}.access-history-item:hover{border-color:#b8d5f2;background:#f7fbff}.access-history-top{display:flex;align-items:center;justify-content:space-between;gap:.6rem}.access-history-code{color:#1976d2;font-size:.82rem;font-weight:600}.access-history-time{color:#10233d;font-size:.9rem;font-weight:600}.access-history-person{display:flex;align-items:center;gap:.55rem}.access-history-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#edf6ff;color:#1976d2;font-weight:600}.access-history-name{font-size:.86rem;font-weight:600}.access-history-company,.access-history-meta{color:#7187a3;font-size:.72rem}.access-history-badge{display:inline-flex;width:max-content;align-items:center;gap:.3rem;padding:.22rem .55rem;border-radius:999px;font-size:.72rem;font-weight:500}.access-history-badge.in{background:#ecfdf5;color:#047857}.access-history-badge.out{background:#fff7ed;color:#c2410c}.access-history-empty{padding:1.2rem;text-align:center;color:#879ab2;font-size:.84rem}@media(max-width:1300px){.access-history-list{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:768px){.access-history-head{align-items:flex-start;flex-direction:column}.access-history-filter{width:100%}.access-history-filter input,.access-history-filter select,.access-history-filter button{width:100%}.access-history-list{grid-template-columns:1fr}}
 .access-stat{text-decoration:none}.access-stat:hover{transform:translateY(-1px);border-color:#bdd8f4}.access-history-close{min-height:36px;display:inline-flex;align-items:center;gap:.35rem;padding:0 .72rem;border:1px solid #d8e5f2;border-radius:11px;background:#fff;color:#526b87;text-decoration:none;font-size:.78rem;font-weight:500}.access-history-list{display:grid;grid-template-columns:1fr;gap:0;padding:0}.access-history-item{display:grid;grid-template-columns:110px 92px minmax(220px,1.2fr) minmax(180px,1fr) 120px;gap:.75rem;align-items:center;padding:.72rem 1rem;border:0;border-bottom:1px solid #eef4fb;border-radius:0;background:#fff;text-decoration:none;color:#10233d}.access-history-item:hover{background:#f7fbff}.access-history-top{display:contents}.access-history-person{min-width:0}.access-history-meta{font-size:.78rem}.access-history-badge{justify-self:start}@media(max-width:1100px){.access-history-item{grid-template-columns:1fr;gap:.35rem}.access-history-top{display:flex}.access-history-badge{justify-self:start}}@media(max-width:768px){.access-history-filter input,.access-history-filter button,.access-history-close{width:100%;justify-content:center}}
 .access-hero-actions{display:flex;align-items:center;gap:.5rem}.access-settings-btn{width:42px;height:42px;display:grid;place-items:center;flex:0 0 42px;border:1px solid #d8e6f4;border-radius:13px;background:#fff;color:#42617f;font-size:1rem;transition:.18s ease}.access-settings-btn:hover{border-color:#9fc6ec;background:#edf6ff;color:#1976d2;transform:rotate(12deg)}.access-settings-btn:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(25,118,210,.14)}.access-settings-modal .modal-content{border:0;border-radius:22px;box-shadow:0 24px 70px rgba(16,35,61,.2)}.access-settings-modal .modal-header{padding:1rem 1.15rem;border-bottom:1px solid #edf3fa}.access-settings-modal .modal-title{font-size:1rem;font-weight:600;color:#10233d}.access-settings-modal .modal-body{display:grid;gap:.85rem;padding:1rem 1.15rem}.access-setting-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.72rem .8rem;border:1px solid #e5edf7;border-radius:15px;background:#fbfdff}.access-setting-copy label{display:block;margin:0;color:#203852;font-size:.86rem;font-weight:500}.access-setting-copy span{display:block;margin-top:.12rem;color:#788ba3;font-size:.72rem}.access-minutes{width:112px}.access-minutes .input-group-text,.access-minutes .form-control{min-height:38px;border-color:#d9e6f3;font-size:.78rem}.access-warning-field label{margin-bottom:.35rem;color:#203852;font-size:.82rem;font-weight:500}.access-warning-field textarea{min-height:82px;border-color:#d9e6f3;border-radius:13px;font-size:.82rem;resize:vertical}.access-settings-modal .modal-footer{padding:.8rem 1.15rem;border-top:1px solid #edf3fa}.access-settings-save{min-height:40px;padding:0 1rem;border:0;border-radius:12px;background:linear-gradient(135deg,#1976d2,#11a9c7);color:#fff;font-size:.82rem;font-weight:500}@media(max-width:768px){.access-hero-actions{width:100%}.access-tabs{flex:1}.access-setting-row{align-items:flex-start}.access-minutes{width:100px}}
+
+/* DHL enterprise theme: yellow actions, red icons, neutral operational surfaces. */
+.access-tabs {
+    border-color: #ead98d;
+    background: #fffdf5;
+}
+.access-tab {
+    color: #374151;
+}
+.access-tab i {
+    color: #d40511;
+}
+.access-tab.is-active {
+    color: #111827;
+    background: #ffcc00;
+    box-shadow: 0 6px 14px rgba(212, 5, 17, .1);
+}
+.access-tab.is-active i {
+    color: #d40511;
+}
+.access-stat,
+.access-stat.stat-waiting,
+.access-stat.stat-inside,
+.access-stat.stat-in,
+.access-stat.stat-out,
+.access-stat.stat-late {
+    border-color: #e5e7eb;
+    background: #fff;
+    --stat-glow: transparent;
+}
+.access-stat::after {
+    display: none;
+}
+.access-stat strong,
+.access-stat.stat-waiting strong,
+.access-stat.stat-inside strong,
+.access-stat.stat-in strong,
+.access-stat.stat-out strong {
+    color: #111827;
+}
+.access-stat.stat-late strong {
+    color: #d40511;
+}
+.access-stat:hover {
+    border-color: #e5e7eb;
+    transform: none;
+}
+.access-frame {
+    border-color: #e5c23d;
+    background:
+        linear-gradient(90deg, rgba(212, 5, 17, .035) 1px, transparent 1px),
+        linear-gradient(rgba(212, 5, 17, .035) 1px, transparent 1px),
+        #fffdf5;
+    background-size: 24px 24px;
+}
+.access-frame-copy i,
+.access-corner {
+    color: #d40511;
+    border-color: #d40511;
+}
+.access-input-wrap input:focus {
+    border-color: #d8e5f2;
+    box-shadow: none;
+}
+.access-btn.primary,
+.access-result-link.primary,
+.access-settings-save {
+    border: 1px solid #e0b400;
+    color: #111827;
+    background: #ffcc00;
+    box-shadow: none;
+}
+.access-btn.primary i,
+.access-result-link.primary i,
+.access-settings-save i {
+    color: #d40511;
+}
+.access-btn.primary:hover,
+.access-result-link.primary:hover,
+.access-settings-save:hover {
+    border-color: #e0b400;
+    color: #111827;
+    background: #ffcc00;
+    box-shadow: none;
+    transform: none;
+}
+.access-settings-btn {
+    border-color: #ead98d;
+    color: #d40511;
+    background: #fffdf5;
+}
+.access-settings-btn:hover {
+    border-color: #ead98d;
+    color: #d40511;
+    background: #fffdf5;
+    transform: none;
+}
+.access-pill {
+    background: #fff7d6;
+    color: #8a5a00;
+}
 </style>
 @endpush
 

@@ -129,29 +129,25 @@
 .db-metrics {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 1.1rem;
+    margin: 0 1rem 1rem;
 }
 
 .db-metric {
-    border-radius: 20px;
-    padding: 1.25rem;
+    border-radius: 12px;
+    min-height: 122px;
+    padding: 0.95rem 1rem;
     position: relative;
     overflow: hidden;
     color: #10233d;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid #e1ebf6;
-    box-shadow: 0 10px 28px rgba(17, 39, 68, 0.045);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-top: 3px solid #d40511;
+    box-shadow: 0 5px 14px rgba(15, 23, 42, 0.05);
 }
 
 .db-metric::after {
-    content: '';
-    position: absolute;
-    right: -34px; bottom: -34px;
-    width: 104px; height: 104px;
-    border-radius: 50%;
-    background: var(--db-metric-soft);
-    z-index: 0;
+    display: none;
 }
 
 .db-metric > * {
@@ -159,47 +155,56 @@
     z-index: 1;
 }
 
-.db-metric-blue   { --db-metric-color: #146bd7; --db-metric-soft: #eaf4ff; }
-.db-metric-cyan   { --db-metric-color: #078b82; --db-metric-soft: #e8fbf8; }
-.db-metric-amber  { --db-metric-color: #d97706; --db-metric-soft: #fff4e5; }
-.db-metric-red    { --db-metric-color: #c83245; --db-metric-soft: #fff0f2; }
-.db-metric-slate  { --db-metric-color: #526b7a; --db-metric-soft: #eef4f7; }
+.db-metric-blue,
+.db-metric-cyan,
+.db-metric-amber,
+.db-metric-red,
+.db-metric-slate {
+    --db-metric-color: #d40511;
+    --db-metric-soft: #ffcc00;
+}
 
 .db-metric-label {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #7187a3;
-    margin-bottom: 0.55rem;
+    color: #667085;
+    margin-bottom: 0.35rem;
 }
 
 .db-metric-value {
     font-family: "Plus Jakarta Sans", sans-serif;
     font-weight: 650;
-    font-size: 2.4rem;
+    font-size: 2.05rem;
     letter-spacing: 0;
     line-height: 1;
-    margin-bottom: 0.4rem;
-    color: var(--db-metric-color);
+    margin-bottom: 0.3rem;
+    color: #111827;
+}
+
+.db-metric-amber .db-metric-value,
+.db-metric-red .db-metric-value {
+    color: #d40511;
 }
 
 .db-metric-note {
     font-size: 0.75rem;
-    color: #7187a3;
+    color: #667085;
     font-weight: 500;
 }
 
 .db-metric-icon {
     position: absolute;
-    right: 1.1rem; top: 1.1rem;
-    width: 42px; height: 42px;
+    right: 0.9rem; top: 0.85rem;
+    width: 38px; height: 38px;
     background: var(--db-metric-soft);
     color: var(--db-metric-color);
-    border-radius: 14px;
+    border: 1px solid #e0b400;
+    border-radius: 10px;
     display: grid;
     place-items: center;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     z-index: 1;
 }
 
@@ -207,49 +212,56 @@
 .db-actions {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.85rem;
-    margin-bottom: 1.5rem;
+    gap: 1.1rem;
+    margin: 0 1rem 1rem;
+}
+
+.db-recent-section {
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
 }
 
 .db-action-btn {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.9rem 1rem;
+    gap: 0.65rem;
+    min-height: 64px;
+    padding: 0.65rem 0.85rem;
     background: #fff;
-    border: 1px solid #e4edf8;
-    border-radius: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     text-decoration: none;
-    box-shadow: 0 2px 12px rgba(17,39,68,0.06);
-    transition: box-shadow 0.15s, border-color 0.15s, transform 0.12s;
+    box-shadow: 0 5px 14px rgba(15,23,42,0.04);
+    transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 .db-action-btn:hover {
-    box-shadow: 0 6px 24px rgba(20,107,215,0.13);
-    border-color: #c2d9f8;
-    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15,23,42,0.07);
+    border-color: #d7dee8;
+    background: #fff;
 }
 
 .db-action-icon {
-    width: 40px; height: 40px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #146bd7, #0cb4d8);
+    width: 36px; height: 36px;
+    border: 1px solid #e0b400;
+    border-radius: 9px;
+    background: #ffcc00;
     display: grid;
     place-items: center;
-    font-size: 1.05rem;
-    color: #fff;
+    font-size: 0.95rem;
+    color: #d40511;
     flex-shrink: 0;
 }
 
 .db-action-title {
-    font-size: 0.85rem;
-    font-weight: 800;
+    font-size: 0.82rem;
+    font-weight: 700;
     color: #0b1f3a;
     line-height: 1.2;
 }
 
 .db-action-sub {
-    font-size: 0.72rem;
+    font-size: 0.69rem;
     color: #7a93b0;
     line-height: 1.2;
 }
@@ -270,7 +282,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.25rem 1.5rem 1rem;
+    padding: 1rem 1.25rem 0.75rem;
 }
 
 .db-card-head h3 {
@@ -293,7 +305,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 0.6rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.65rem 1.25rem;
     background: #f8fbff;
     border-bottom: 1px solid #edf3fb;
 }
@@ -552,7 +564,7 @@
 }
 
 .db-topbar-time i {
-    color: var(--gate-blue);
+    color: #d40511;
 }
 
 .db-topbar-separator {
@@ -624,6 +636,15 @@
 @media (max-width: 768px) {
     .db-metrics { grid-template-columns: repeat(2, 1fr); }
     .db-actions  { grid-template-columns: repeat(2, 1fr); }
+    .db-metrics,
+    .db-actions {
+        margin-right: 0;
+        margin-left: 0;
+    }
+    .db-recent-section {
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+    }
     .db-hero     { flex-direction: column; }
     .db-hero-actions { flex-direction: column; width: 100%; }
 }
@@ -668,13 +689,13 @@
         <div class="db-metric-icon"><i class="bi bi-person-walking"></i></div>
         <p class="db-metric-label">Đang trong công ty</p>
         <p class="db-metric-value">{{ $stats['in_company'] }}</p>
-        <span class="db-metric-note">Live visitors</span>
+        <span class="db-metric-note">Khách đang hiện diện</span>
     </div>
     <div class="db-metric db-metric-amber">
         <div class="db-metric-icon"><i class="bi bi-hourglass-split"></i></div>
         <p class="db-metric-label">Chờ phê duyệt</p>
         <p class="db-metric-value">{{ $stats['pending'] }}</p>
-        <span class="db-metric-note">Cần host xử lý</span>
+        <span class="db-metric-note">Cần người tiếp xử lý</span>
     </div>
     <div class="db-metric db-metric-red">
         <div class="db-metric-icon"><i class="bi bi-alarm"></i></div>
@@ -701,21 +722,21 @@
         <div><div class="db-action-title">Duyệt lịch</div><div class="db-action-sub">Xử lý yêu cầu chờ</div></div>
     </a>
     <a href="{{ route('admin.access.index', ['mode' => 'checkin']) }}" class="db-action-btn">
-        <div class="db-action-icon" style="background:linear-gradient(135deg,#059669,#10b981)"><i class="bi bi-qr-code-scan"></i></div>
-        <div><div class="db-action-title">Check-in</div><div class="db-action-sub">Scan QR, cấp badge</div></div>
+        <div class="db-action-icon"><i class="bi bi-qr-code-scan"></i></div>
+        <div><div class="db-action-title">Check-in</div><div class="db-action-sub">Quét QR, cấp thẻ</div></div>
     </a>
     <a href="{{ route('admin.access.index', ['mode' => 'checkout']) }}" class="db-action-btn">
-        <div class="db-action-icon" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)"><i class="bi bi-box-arrow-left"></i></div>
+        <div class="db-action-icon"><i class="bi bi-box-arrow-left"></i></div>
         <div><div class="db-action-title">Check-out</div><div class="db-action-sub">Thu hồi quyền ra/vào</div></div>
     </a>
     <a href="{{ route('admin.reports.index') }}" class="db-action-btn">
-        <div class="db-action-icon" style="background:linear-gradient(135deg,#0891b2,#06b6d4)"><i class="bi bi-file-earmark-arrow-down"></i></div>
+        <div class="db-action-icon"><i class="bi bi-file-earmark-arrow-down"></i></div>
         <div><div class="db-action-title">Xuất báo cáo</div><div class="db-action-sub">CSV, Excel, in ấn</div></div>
     </a>
 </div>
 
 {{-- RECENT VISITS --}}
-<div class="row g-3">
+<div class="row g-3 db-recent-section">
 
     <div class="col-12">
         <div class="db-card dashboard-recent-card">

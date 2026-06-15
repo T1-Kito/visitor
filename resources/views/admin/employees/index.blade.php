@@ -12,8 +12,8 @@
     $totalHostedVisits = $employeeCollection->sum('hosted_visits_count');
 @endphp
 
-<div class="resource-shell">
-    <section class="resource-summary">
+<div class="resource-shell employee-resource-shell">
+    <section class="resource-summary resource-summary-dhl">
         <div class="resource-stat">
             <div class="resource-stat-icon"><i class="bi bi-people"></i></div>
             <div><span>Tổng nhân viên</span><strong>{{ $totalEmployees }}</strong></div>

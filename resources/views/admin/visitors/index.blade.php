@@ -12,8 +12,8 @@
     $withCompany = $visitorCollection->filter(fn ($visitor) => filled($visitor->company))->count();
 @endphp
 
-<div class="resource-shell">
-    <section class="resource-summary">
+<div class="resource-shell visitor-resource-shell">
+    <section class="resource-summary resource-summary-dhl">
         <div class="resource-stat">
             <div class="resource-stat-icon"><i class="bi bi-people"></i></div>
             <div><span>Tổng hồ sơ khách</span><strong>{{ $totalVisitors }}</strong></div>
