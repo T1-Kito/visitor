@@ -32,9 +32,9 @@
         }
 
         .m-visit-status-tab.active {
-            border-color: #93c5fd;
-            background: #eff6ff;
-            color: #0f6eea;
+            border-color: #f0cf43;
+            background: #fff8d6;
+            color: #111827;
         }
 
         .m-visit-quick-actions {
@@ -59,9 +59,13 @@
         }
 
         .m-visit-action.primary {
-            border-color: #0f6eea;
-            background: linear-gradient(135deg, #0f6eea, #11abc7);
-            color: #fff;
+            border-color: #e8b900;
+            background: var(--m-secondary);
+            color: #111827;
+        }
+
+        .m-visit-action.primary i {
+            color: var(--m-primary);
         }
 
         .m-visit-card-list {
@@ -125,15 +129,15 @@
         }
 
         .m-visit-card-meta i {
-            color: #0f6eea;
+            color: var(--m-primary);
         }
 
         .m-status-pill {
             align-self: start;
             padding: 5px 9px;
             border-radius: 999px;
-            background: #eef6ff;
-            color: #0f6eea;
+            background: #fff8d6;
+            color: var(--m-primary);
             font-size: .72rem;
             white-space: nowrap;
         }

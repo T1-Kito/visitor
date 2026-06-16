@@ -292,8 +292,12 @@
 
         .m-form-actions button {
             border: 0;
-            color: #fff;
-            background: linear-gradient(135deg, var(--m-blue), var(--m-cyan));
+            color: #111827;
+            background: var(--m-secondary);
+        }
+
+        .m-form-actions button i {
+            color: var(--m-primary);
         }
     </style>
 @endpush

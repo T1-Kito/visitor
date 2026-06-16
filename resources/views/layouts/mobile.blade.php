@@ -1,9 +1,28 @@
 <!doctype html>
 <html lang="vi">
 <head>
+    @php
+        $mobileThemeNavbar = $adminTheme['admin.navbar_color'] ?? '#ffcc00';
+        $mobileThemeContent = $adminTheme['admin.content_background'] ?? '#f8fafc';
+        $mobileThemePrimary = $adminTheme['admin.primary_color'] ?? '#d40511';
+        $mobileThemeSecondary = $adminTheme['admin.secondary_color'] ?? '#ffcc00';
+
+        $mobileThemeNavbar = is_string($mobileThemeNavbar) && preg_match('/^#[0-9a-fA-F]{6}$/', $mobileThemeNavbar)
+            ? strtolower($mobileThemeNavbar)
+            : '#ffcc00';
+        $mobileThemeContent = is_string($mobileThemeContent) && preg_match('/^#[0-9a-fA-F]{6}$/', $mobileThemeContent)
+            ? strtolower($mobileThemeContent)
+            : '#f8fafc';
+        $mobileThemePrimary = is_string($mobileThemePrimary) && preg_match('/^#[0-9a-fA-F]{6}$/', $mobileThemePrimary)
+            ? strtolower($mobileThemePrimary)
+            : '#d40511';
+        $mobileThemeSecondary = is_string($mobileThemeSecondary) && preg_match('/^#[0-9a-fA-F]{6}$/', $mobileThemeSecondary)
+            ? strtolower($mobileThemeSecondary)
+            : '#ffcc00';
+    @endphp
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#edf4f2">
+    <meta name="theme-color" content="{{ $mobileThemeNavbar }}">
     <title>@yield('title', 'VMS Mobile')</title>
     @if (! empty($adminBrand['favicon_url']))
         <link rel="icon" href="{{ $adminBrand['favicon_url'] }}">
@@ -16,6 +35,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ \App\Support\AssetVersion::url('css/mobile-ui.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --m-bg: {{ $mobileThemeContent }};
+            --m-navbar: {{ $mobileThemeNavbar }};
+            --m-primary: {{ $mobileThemePrimary }};
+            --m-secondary: {{ $mobileThemeSecondary }};
+            --m-blue: {{ $mobileThemePrimary }};
+            --m-cyan: {{ $mobileThemePrimary }};
+        }
+    </style>
     @stack('styles')
 </head>
 <body>

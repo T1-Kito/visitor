@@ -17,14 +17,14 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            border: 1px solid #bfdbfe;
+            border: 1px solid rgba(212, 5, 17, .18);
             border-radius: 999px;
-            background: rgba(255, 255, 255, .9);
-            color: #0f6eea;
+            background: #fff8d6;
+            color: var(--m-primary);
             font: inherit;
             font-size: .86rem;
             padding: 0 14px;
-            box-shadow: 0 10px 22px rgba(15, 111, 234, .12);
+            box-shadow: 0 10px 22px rgba(212, 5, 17, .08);
         }
 
         .m-camera-btn i {
@@ -167,7 +167,7 @@
         }
 
         .m-access-switch:checked {
-            background: #1976d2;
+            background: var(--m-primary);
         }
 
         .m-access-switch:checked::after {
@@ -175,7 +175,7 @@
         }
 
         .m-access-switch:focus-visible {
-            outline: 3px solid rgba(25, 118, 210, .18);
+            outline: 3px solid rgba(212, 5, 17, .18);
             outline-offset: 2px;
         }
 
@@ -219,8 +219,8 @@
             margin-top: 12px;
             border: 0;
             border-radius: 13px;
-            background: linear-gradient(135deg, #1976d2, #11a9c7);
-            color: #fff;
+            background: var(--m-secondary);
+            color: #111827;
             font: inherit;
             font-size: .86rem;
             font-weight: 500;
@@ -503,8 +503,8 @@
             min-height: 46px;
             border: 0;
             border-radius: 15px;
-            color: #fff;
-            background: #176fc5;
+            color: #111827;
+            background: var(--m-secondary);
             font: inherit;
             font-size: .84rem;
             font-weight: 500;

@@ -1,12 +1,15 @@
 :root {
-    --m-bg: #edf4f2;
+    --m-bg: #f8fafc;
+    --m-navbar: #ffcc00;
+    --m-primary: #d40511;
+    --m-secondary: #ffcc00;
     --m-card: #ffffff;
     --m-text: #152236;
     --m-muted: #71849b;
     --m-line: #dce7ef;
-    --m-blue: #1976d2;
+    --m-blue: var(--m-primary);
     --m-green: #59be43;
-    --m-cyan: #10a7c7;
+    --m-cyan: var(--m-primary);
     --m-purple: #7c4de8;
     --m-orange: #f59e0b;
     --m-rose: #e54865;
@@ -40,7 +43,7 @@ a {
     min-height: 100vh;
     max-width: 520px;
     margin: 0 auto;
-    background: linear-gradient(180deg, #f8fbfb 0%, var(--m-bg) 38%, #edf4f2 100%);
+    background: var(--m-bg);
     box-shadow: 0 0 0 1px rgba(21, 34, 54, 0.04);
 }
 
@@ -70,8 +73,8 @@ a {
     place-items: center;
     flex: 0 0 auto;
     border-radius: 12px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--m-blue), var(--m-cyan));
+    color: var(--m-primary);
+    background: var(--m-secondary);
     font-size: 0.75rem;
     font-weight: 600;
 }
@@ -163,9 +166,9 @@ a {
     gap: 14px;
     padding: 18px;
     border-radius: 24px;
-    color: #fff;
-    background: linear-gradient(135deg, #0f2b48, #1674d1);
-    box-shadow: 0 18px 40px rgba(20, 107, 215, 0.16);
+    color: #111827;
+    background: var(--m-secondary);
+    box-shadow: 0 12px 28px rgba(21, 34, 54, 0.08);
 }
 
 .m-hero p,
@@ -175,7 +178,7 @@ a {
 }
 
 .m-hero p {
-    color: rgba(255, 255, 255, 0.72);
+    color: #5f6672;
     font-size: 0.72rem;
 }
 
@@ -190,7 +193,7 @@ a {
 .m-hero span {
     display: block;
     margin-top: 9px;
-    color: rgba(255, 255, 255, 0.78);
+    color: #5f6672;
     font-size: 0.76rem;
 }
 
@@ -209,8 +212,8 @@ a {
     gap: 6px;
     padding: 10px 12px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(212, 5, 17, 0.22);
     font-size: 0.8rem;
     font-weight: 500;
 }
@@ -542,8 +545,8 @@ a {
     margin-top: 12px;
     padding: 12px 14px;
     border-radius: 16px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--m-blue), var(--m-cyan));
+    color: #111827;
+    background: var(--m-secondary);
     font-size: 0.82rem;
     font-weight: 500;
 }
@@ -636,18 +639,14 @@ a {
     place-items: center;
     align-content: center;
     gap: 7px;
-    border: 1px dashed #9ec9ff;
+    border: 1px dashed #e1b400;
     border-radius: 18px;
     color: #314761;
-    background:
-        linear-gradient(#eaf4ff 1px, transparent 1px),
-        linear-gradient(90deg, #eaf4ff 1px, transparent 1px),
-        #f5faff;
-    background-size: 26px 26px;
+    background: #fffdf2;
 }
 
 .m-scan-frame i {
-    color: #9fc5ed;
+    color: var(--m-primary);
     font-size: 2rem;
 }
 
@@ -688,8 +687,8 @@ a {
     padding: 0 13px;
     border: 0;
     border-radius: 14px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--m-blue), var(--m-cyan));
+    color: #111827;
+    background: var(--m-secondary);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 500;
@@ -1144,8 +1143,8 @@ a {
     gap: 7px;
     border: 0;
     border-radius: 14px;
-    color: #fff;
-    background: linear-gradient(135deg, var(--m-blue), var(--m-cyan));
+    color: #111827;
+    background: var(--m-secondary);
     font: inherit;
     font-size: 0.78rem;
     font-weight: 500;
@@ -1433,7 +1432,14 @@ a {
 
 .m-bottom-nav .active,
 .m-bottom-nav .scan {
-    color: var(--m-green);
+    color: var(--m-primary);
+}
+
+.m-save-btn i,
+.m-scan-form button i,
+.m-filter-form button i,
+.m-hero a i {
+    color: var(--m-primary);
 }
 
 .m-bottom-nav form {

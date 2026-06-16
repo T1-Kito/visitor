@@ -128,9 +128,9 @@
             gap: 14px;
             padding: 18px 16px 48px;
             border-radius: 24px;
-            color: #fff;
-            background: linear-gradient(135deg, #12375f 0%, #1976d2 100%);
-            box-shadow: 0 14px 30px rgba(25, 118, 210, 0.18);
+            color: #111827;
+            background: var(--m-secondary);
+            box-shadow: 0 14px 30px rgba(212, 5, 17, 0.1);
         }
 
         .profile-avatar {
@@ -138,9 +138,10 @@
             height: 66px;
             display: grid;
             place-items: center;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(212, 5, 17, 0.2);
             border-radius: 22px;
-            background: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--m-primary);
             font-size: 1.7rem;
             font-weight: 500;
         }
@@ -162,7 +163,7 @@
         .profile-main p {
             margin-top: 4px;
             overflow: hidden;
-            color: rgba(255, 255, 255, 0.76);
+            color: #5f5130;
             font-size: 0.76rem;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -177,9 +178,9 @@
 
         .profile-badges span {
             padding: 4px 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(212, 5, 17, 0.16);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.68);
             font-size: 0.66rem;
             font-weight: 500;
         }

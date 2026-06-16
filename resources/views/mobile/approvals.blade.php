@@ -10,7 +10,7 @@
             z-index: 12;
             margin: 0 -2px 10px;
             padding: 6px 0 8px;
-            background: linear-gradient(180deg, rgba(239, 247, 251, .98), rgba(239, 247, 251, .9));
+            background: rgba(255, 255, 255, .96);
             backdrop-filter: blur(10px);
         }
 
@@ -54,8 +54,8 @@
             place-items: center;
             padding: 0 6px;
             border-radius: 999px;
-            background: #eaf3ff;
-            color: #0f6eea;
+            background: #fff4bd;
+            color: var(--m-primary);
             font-size: .72rem;
         }
 
@@ -91,8 +91,8 @@
             gap: 5px;
             border-radius: 999px;
             padding: 5px 9px;
-            background: #eef8ff;
-            color: #0f6eea;
+            background: #fff8d6;
+            color: var(--m-primary);
             font-size: .78rem;
         }
 
@@ -102,10 +102,10 @@
 
         .m-more-btn {
             width: 100%;
-            border: 1px solid #cfe0f5;
+            border: 1px solid #f0cf43;
             border-radius: 14px;
             background: #fff;
-            color: #0f6eea;
+            color: #111827;
             padding: 10px 14px;
             font: inherit;
             font-size: .9rem;
