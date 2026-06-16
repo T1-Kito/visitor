@@ -167,7 +167,8 @@ a {
     padding: 18px;
     border-radius: 24px;
     color: #111827;
-    background: var(--m-secondary);
+    background: var(--m-navbar, #ffcc00);
+    border: 1px solid rgba(212, 5, 17, 0.14);
     box-shadow: 0 12px 28px rgba(21, 34, 54, 0.08);
 }
 
@@ -178,13 +179,14 @@ a {
 }
 
 .m-hero p {
-    color: #5f6672;
+    color: #334155;
     font-size: 0.72rem;
 }
 
 .m-hero h1 {
     max-width: 260px;
     margin-top: 5px;
+    color: #111827;
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.25;
@@ -193,7 +195,7 @@ a {
 .m-hero span {
     display: block;
     margin-top: 9px;
-    color: #5f6672;
+    color: #475569;
     font-size: 0.76rem;
 }
 
@@ -212,7 +214,8 @@ a {
     gap: 6px;
     padding: 10px 12px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.72);
+    color: #111827;
+    background: rgba(255, 255, 255, 0.82);
     border: 1px solid rgba(212, 5, 17, 0.22);
     font-size: 0.8rem;
     font-weight: 500;
