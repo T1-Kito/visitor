@@ -25,6 +25,7 @@ $secretsPath = Join-Path $InstallPath "data\installation-secrets.json"
 $siteName = "KhachMoiVMS"
 $appPoolName = "KhachMoiVMS"
 $databaseService = "KhachMoiVMS-DB"
+$appcmd = Join-Path $env:windir "System32\inetsrv\appcmd.exe"
 
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw "Can chay bo cai bang quyen Administrator."
@@ -51,10 +52,20 @@ Import-Module WebAdministration -ErrorAction Stop
 
 Write-Host "Dang dung ban cai cu neu co..."
 if (Test-Path "IIS:\Sites\$siteName") {
-    Stop-Website -Name $siteName -ErrorAction SilentlyContinue
+    try {
+        Stop-Website -Name $siteName -ErrorAction Stop
+    } catch {
+        Write-Warning "Khong dung duoc website bang WebAdministration. Thu lai bang appcmd..."
+        & $appcmd stop site "/site.name:$siteName" | Out-Null
+    }
 }
 if (Test-Path "IIS:\AppPools\$appPoolName") {
-    Stop-WebAppPool -Name $appPoolName -ErrorAction SilentlyContinue
+    try {
+        Stop-WebAppPool -Name $appPoolName -ErrorAction Stop
+    } catch {
+        Write-Warning "Khong dung duoc application pool bang WebAdministration. Thu lai bang appcmd..."
+        & $appcmd stop apppool "/apppool.name:$appPoolName" | Out-Null
+    }
 }
 if (Get-Service $databaseService -ErrorAction SilentlyContinue) {
     Stop-Service $databaseService -Force -ErrorAction SilentlyContinue
@@ -221,19 +232,29 @@ Write-Host "Dang cau hinh IIS FastCGI..."
 Import-Module WebAdministration
 
 if (Test-Path "IIS:\Sites\$siteName") {
-    Remove-Website -Name $siteName
+    try {
+        Remove-Website -Name $siteName -ErrorAction Stop
+    } catch {
+        Write-Warning "Khong xoa duoc website bang WebAdministration. Thu lai bang appcmd..."
+        & $appcmd delete site "/site.name:$siteName" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Khong xoa duoc website IIS cu. Hay chay bo cai bang Run as administrator." }
+    }
 }
 if (Test-Path "IIS:\AppPools\$appPoolName") {
-    Remove-WebAppPool -Name $appPoolName
+    try {
+        Remove-WebAppPool -Name $appPoolName -ErrorAction Stop
+    } catch {
+        Write-Warning "Khong xoa duoc application pool bang WebAdministration. Thu lai bang appcmd..."
+        & $appcmd delete apppool "/apppool.name:$appPoolName" | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Khong xoa duoc application pool IIS cu. Hay chay bo cai bang Run as administrator." }
+    }
 }
-
 New-WebAppPool -Name $appPoolName | Out-Null
 Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name managedRuntimeVersion -Value ""
 Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name processModel.identityType -Value ApplicationPoolIdentity
 Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name startMode -Value AlwaysRunning
 
 $phpCgi = Join-Path $phpPath "php-cgi.exe"
-$appcmd = "$env:windir\System32\inetsrv\appcmd.exe"
 & $appcmd set config /section:system.webServer/fastCgi "/+[fullPath='$phpCgi',maxInstances='8',instanceMaxRequests='10000',activityTimeout='120',requestTimeout='120']" /commit:apphost 2>$null
 & $appcmd set config /section:system.webServer/handlers "/+[name='PHP_via_FastCGI',path='*.php',verb='GET,HEAD,POST,PUT,DELETE,PATCH,OPTIONS',modules='FastCgiModule',scriptProcessor='$phpCgi',resourceType='Either',requireAccess='Script']" /commit:apphost 2>$null
 

@@ -70,4 +70,28 @@ class NotificationsTest extends TestCase
                 ->count()
         );
     }
+    public function test_public_notification_url_is_opened_on_the_current_internal_host(): void
+    {
+        $this->seed(VmsSeeder::class);
+        $user = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $notification = Notification::query()->create([
+            'user_id' => $user->id,
+            'type' => 'kiosk.walk_in_created',
+            'level' => 'warning',
+            'title' => 'Khach ngoai mang can duyet',
+            'message' => 'Thong bao duoc tao tu cong public.',
+            'action_url' => 'http://115.73.209.88:8443/approvals?tab=pending',
+            'read_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get('http://192.168.1.50:8080/notifications')
+            ->assertOk()
+            ->assertSee('href="/approvals?tab=pending"', false)
+            ->assertDontSee('115.73.209.88:8443', false);
+
+        $this->actingAs($user)
+            ->patch("http://192.168.1.50:8080/notifications/{$notification->id}/read")
+            ->assertRedirect('/approvals?tab=pending');
+    }
 }

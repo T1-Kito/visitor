@@ -272,7 +272,7 @@
                     </div>
 
                     <div class="notification-row-action">
-                        @if ($notification->action_url)
+                        @if ($notification->localActionUrl())
                             @if ($notification->read_at === null)
                                 <form method="post" action="{{ route('admin.notifications.read', $notification) }}">
                                     @csrf
@@ -283,7 +283,7 @@
                                     </button>
                                 </form>
                             @else
-                                <a class="btn btn-light" href="{{ $notification->action_url }}">
+                                <a class="btn btn-light" href="{{ $notification->localActionUrl() }}">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                     Mở chi tiết
                                 </a>

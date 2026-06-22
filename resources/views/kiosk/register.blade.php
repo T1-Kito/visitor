@@ -55,72 +55,6 @@
             padding: 18px 14px 28px;
         }
 
-        .mk-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-
-        .mk-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .mk-logo {
-            width: 92px;
-            height: 48px;
-            display: grid;
-            place-items: center;
-            flex: 0 0 auto;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--blue), var(--cyan));
-            color: #fff;
-            overflow: hidden;
-        }
-
-        .mk-logo img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .mk-brand-title {
-            min-width: 0;
-        }
-
-        .mk-brand-title strong {
-            display: block;
-            font-size: 15px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .mk-brand-title span {
-            display: block;
-            margin-top: 2px;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.25;
-        }
-
-        .mk-help {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            flex: 0 0 auto;
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            background: #fff;
-            color: var(--blue);
-            text-decoration: none;
-        }
-
         .mk-card {
             overflow: hidden;
             border: 1px solid var(--line);
@@ -344,12 +278,7 @@
     </style>
 </head>
 @php
-    $companyName = trim((string) ($settings['kiosk.company_name'] ?? 'Công ty ABC'));
-    $systemName = trim((string) ($settings['kiosk.system_name'] ?? 'VMS Kiosk'));
     $hotline = trim((string) ($settings['kiosk.hotline'] ?? '1900 0000'));
-    $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
-    $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
-    $logoUrl = $customerLogoUrl ?: $ownerLogoUrl;
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
     $secondaryColor = $settings['kiosk.secondary_color'] ?? '#0cb4d8';
@@ -363,24 +292,6 @@
 @endphp
 <body>
     <main class="mobile-kiosk">
-        <header class="mk-header">
-            <div class="mk-brand">
-                <div class="mk-logo">
-                    @if ($logoUrl)
-                        <img src="{{ $logoUrl }}" alt="{{ $companyName }}">
-                    @else
-                        <i class="bi bi-shield-check"></i>
-                    @endif
-                </div>
-                <div class="mk-brand-title">
-                    <strong>{{ $systemName }}</strong>
-                    <span>{{ $companyName }}</span>
-                </div>
-            </div>
-            <a class="mk-help" href="tel:{{ preg_replace('/\s+/', '', $hotline) }}" aria-label="Gọi hỗ trợ">
-                <i class="bi bi-telephone"></i>
-            </a>
-        </header>
 
         <section class="mk-card">
             <div class="mk-hero">

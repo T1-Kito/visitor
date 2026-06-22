@@ -27,4 +27,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 dist/*.zip
+/dist/*/
 dist/KhachMoi-VMS-IIS/

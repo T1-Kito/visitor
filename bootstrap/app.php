@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureLicensed;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\RedirectToCanonicalUrl;
 use App\Http\Middleware\ResolveTenant;
+use App\Http\Middleware\RestrictPublicRegistrationPort;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->append(RedirectToCanonicalUrl::class);
         $middleware->append(ResolveTenant::class);
+        $middleware->append(RestrictPublicRegistrationPort::class);
         $middleware->append(EnsureLicensed::class);
 
         $middleware->alias([

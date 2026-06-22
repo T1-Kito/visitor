@@ -92,6 +92,7 @@ trait HasAdminLayoutData
         return [
             ['label' => 'Tổng quan', 'route' => 'admin.dashboard', 'icon' => 'bi-grid-1x2-fill', 'permission' => 'dashboard.view', 'group' => null],
             ['label' => 'Lịch hẹn', 'route' => 'admin.visits.index', 'icon' => 'bi-calendar-check-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
+            ['label' => 'Đăng ký online', 'route' => 'admin.online-registration', 'icon' => 'bi-send-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách cần duyệt', 'route' => 'admin.approvals.index', 'icon' => 'bi-patch-check-fill', 'permission' => 'approvals.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách ra/vào', 'route' => 'admin.access.index', 'icon' => 'bi-arrow-left-right', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Danh sách ra/vào', 'route' => 'admin.access.lists', 'icon' => 'bi-list-check', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],

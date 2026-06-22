@@ -14,6 +14,7 @@ use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
 use App\Support\DynamicMailSettings;
+use App\Support\PublicRegistrationAccess;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -148,6 +149,14 @@ class KioskController extends Controller
 
         $request->session()->put('kiosk_checkin_visit_id', $visit->id);
         $request->session()->put('kiosk_last_visit_id', $visit->id);
+
+        if (PublicRegistrationAccess::isPublicPortRequest($request)) {
+            $request->session()->forget(['kiosk_checkin_visit_id', 'kiosk_last_visit_id']);
+
+            return redirect()
+                ->route('kiosk.register')
+                ->with('status', 'Đã gửi yêu cầu đăng ký. Vui lòng chờ nhân viên phụ trách phê duyệt.');
+        }
 
         return redirect()
             ->route('kiosk.checkin.status', $visit)
@@ -672,8 +681,8 @@ class KioskController extends Controller
             'entity_type' => 'visit',
             'entity_id' => (string) $visit->id,
             'action_url' => in_array($type, $approvalActionTypes, true)
-                ? route('admin.approvals.index')
-                : route('admin.visits.show', $visit),
+                ? route('admin.approvals.index', [], false)
+                : route('admin.visits.show', $visit, false),
             'data' => [
                 'visit_code' => $visit->code,
                 'status' => $visit->status,

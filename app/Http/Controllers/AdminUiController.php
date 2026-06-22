@@ -34,6 +34,81 @@ class AdminUiController extends Controller
 {
     use HasAdminLayoutData;
 
+    public function onlineRegistration(Request $request): View
+    {
+        $mailSettings = DynamicMailSettings::values();
+
+        return view('admin.online-registration', $this->withBase([
+            'registrationUrl' => $this->onlineRegistrationUrl($request),
+            'mailConfigured' => $this->onlineRegistrationMailConfigured($mailSettings),
+            'mailFromAddress' => $mailSettings['mail.from_address'] ?? null,
+        ]));
+    }
+
+    public function sendOnlineRegistrationEmail(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'recipient_email' => ['required', 'email:rfc', 'max:190'],
+        ], [
+            'recipient_email.required' => 'Vui lòng nhập Gmail/email của khách cần nhận link.',
+            'recipient_email.email' => 'Địa chỉ Gmail/email người nhận chưa hợp lệ.',
+        ]);
+
+        $mailSettings = DynamicMailSettings::values();
+        if (! $this->onlineRegistrationMailConfigured($mailSettings)) {
+            return back()
+                ->withInput()
+                ->withErrors(['recipient_email' => 'Chưa cấu hình tài khoản Gmail/SMTP. Vui lòng cấu hình Gmail trước khi gửi.']);
+        }
+
+        $recipient = strtolower(trim($validated['recipient_email']));
+        $registrationUrl = $this->onlineRegistrationUrl($request);
+
+        try {
+            $mailSettings = DynamicMailSettings::apply();
+            $html = view('emails.online-registration-link', [
+                'registrationUrl' => $registrationUrl,
+                'mailBrandName' => $mailSettings['mail.from_name'] ?: 'VMS Kiosk',
+            ])->render();
+
+            Mail::html($html, function ($message) use ($recipient, $mailSettings): void {
+                $message->to($recipient)->subject('Link đăng ký khách online');
+                if (! empty($mailSettings['mail.reply_to'])) {
+                    $message->replyTo($mailSettings['mail.reply_to']);
+                }
+            });
+
+            $this->logAudit('online_registration.link_emailed', 'system_setting', 'kiosk-registration', [
+                'email' => $recipient,
+                'registration_url' => $registrationUrl,
+            ]);
+
+            return back()->with('status', "Đã gửi link đăng ký online đến {$recipient}.");
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->logAudit('online_registration.link_email_failed', 'system_setting', 'kiosk-registration', [
+                'email' => $recipient,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return back()
+                ->withInput()
+                ->withErrors(['recipient_email' => 'Không gửi được email. Vui lòng kiểm tra lại cấu hình Gmail/SMTP rồi thử lại.']);
+        }
+    }
+
+    private function onlineRegistrationUrl(Request $request): string
+    {
+        return rtrim($request->getSchemeAndHttpHost(), '/').route('kiosk.register', [], false);
+    }
+
+    /** @param array<string, string|null> $settings */
+    private function onlineRegistrationMailConfigured(array $settings): bool
+    {
+        return filled($settings['mail.username'] ?? null)
+            && filled($settings['mail.password'] ?? null)
+            && filled($settings['mail.from_address'] ?? null);
+    }
     public function dashboard(Request $request): View|RedirectResponse
     {
         if ($this->isMobileRequest($request)) {
@@ -2220,7 +2295,7 @@ class AdminUiController extends Controller
         }
 
         return redirect()
-            ->to($notification->action_url ?: route('admin.notifications.index'))
+            ->to($notification->localActionUrl() ?: route('admin.notifications.index', [], false))
             ->with('status', 'Da danh dau thong bao la da doc.');
     }
 
@@ -4023,8 +4098,8 @@ XML;
             'entity_type' => 'visit',
             'entity_id' => (string) $visit->id,
             'action_url' => in_array($type, $approvalActionTypes, true)
-                ? route('admin.approvals.index')
-                : route('admin.visits.show', $visit),
+                ? route('admin.approvals.index', [], false)
+                : route('admin.visits.show', $visit, false),
             'data' => [
                 'visit_code' => $visit->code,
                 'status' => $visit->status,

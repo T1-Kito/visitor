@@ -37,4 +37,24 @@ class Notification extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function localActionUrl(): ?string
+    {
+        $value = trim((string) $this->action_url);
+        if ($value === '') {
+            return null;
+        }
+
+        $parts = parse_url($value);
+        if ($parts === false) {
+            return null;
+        }
+
+        $path = (string) ($parts['path'] ?? '/');
+        if (! str_starts_with($path, '/') || str_starts_with($path, '//')) {
+            return null;
+        }
+
+        return $path.(isset($parts['query']) ? '?'.$parts['query'] : '');
+    }
 }

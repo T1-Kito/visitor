@@ -48,6 +48,13 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:dashboard.view')
         ->name('admin.dashboard.events');
 
+    Route::get('/online-registration', [AdminUiController::class, 'onlineRegistration'])
+        ->middleware('permission:visits.manage')
+        ->name('admin.online-registration');
+    Route::post('/online-registration/send-email', [AdminUiController::class, 'sendOnlineRegistrationEmail'])
+        ->middleware('permission:visits.manage')
+        ->name('admin.online-registration.send-email');
+
     Route::get('/m', [AdminUiController::class, 'mobileHome'])
         ->middleware('permission:dashboard.view')
         ->name('mobile.home');
