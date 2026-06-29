@@ -1,16 +1,16 @@
 :root {
-    --gate-ink: #071421;
-    --gate-ink-2: #102235;
-    --gate-ink-3: #20364d;
-    --gate-muted: #718197;
+    --gate-ink: #000000;
+    --gate-ink-2: #000000;
+    --gate-ink-3: #000000;
+    --gate-muted: #000000;
     --gate-line: #dce6f2;
     --gate-line-strong: #c7d6e7;
-    --gate-bg: #eaf2fa;
-    --gate-bg-2: #f6f9fd;
+    --gate-bg: #ffffff;
+    --gate-bg-2: #ffffff;
     --gate-surface: #ffffff;
-    --gate-blue: #146bd7;
-    --gate-blue-2: #0a4ea3;
-    --gate-cyan: #0cb4d8;
+    --gate-blue: #d40511;
+    --gate-blue-2: #a60000;
+    --gate-cyan: #ffcc00;
     --gate-green: #1fb974;
     --gate-amber: #f0b343;
     --gate-red: #e05260;
@@ -48,7 +48,7 @@ a {
 .sidebar-panel {
     width: 240px;
     flex-shrink: 0;
-    color: #1f2f46;
+    color: #000000;
     padding: 0.85rem 0.75rem;
     display: flex;
     flex-direction: column;
@@ -75,8 +75,8 @@ a {
     font-weight: 800;
     letter-spacing: 0.06em;
     color: #fff;
-    background: linear-gradient(145deg, var(--gate-cyan), var(--gate-blue));
-    box-shadow: 0 14px 34px rgba(12, 180, 216, 0.28);
+    background: var(--gate-blue);
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--gate-blue) 28%, transparent);
 }
 
 .brand-badge.has-logo {
@@ -131,7 +131,7 @@ a {
     gap: 0.22rem;
     padding: 0.12rem 0.65rem;
     border-radius: 12px;
-    color: #4b6078;
+    color: #000000;
     text-decoration: none;
     font-size: 0.86rem;
     font-weight: 500;

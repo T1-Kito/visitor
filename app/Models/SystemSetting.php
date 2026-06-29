@@ -32,6 +32,11 @@ class SystemSetting extends Model
             ->all();
 
         $values = array_merge($defaults, $stored);
+
+        if (empty($values['admin.logo_url']) && ! empty($defaults['admin.logo_url'])) {
+            $values['admin.logo_url'] = $defaults['admin.logo_url'];
+        }
+
         $publicAssetKeys = [
             'admin.logo_url',
             'login.logo_url',
@@ -93,8 +98,8 @@ class SystemSetting extends Model
             'kiosk.logo_url' => config('services.kiosk.logo_url'),
             'kiosk.background_url' => config('services.kiosk.background_url'),
             'kiosk.primary_color' => config('services.kiosk.primary_color'),
-            'kiosk.secondary_color' => config('services.kiosk.secondary_color', '#0cb4d8'),
-            'kiosk.background_color' => config('services.kiosk.background_color', '#f4f8fd'),
+            'kiosk.secondary_color' => config('services.kiosk.secondary_color', '#ffcc00'),
+            'kiosk.background_color' => config('services.kiosk.background_color', '#ffffff'),
             'kiosk.surface_color' => config('services.kiosk.surface_color', '#ffffff'),
             'app.favicon_url' => config('services.kiosk.favicon_url'),
             'app.desktop_icon_url' => config('services.kiosk.desktop_icon_url'),
@@ -107,8 +112,8 @@ class SystemSetting extends Model
     public static function adminThemeDefaults(): array
     {
         return [
-            'admin.navbar_color' => '#ffffff',
-            'admin.content_background' => '#f8fafc',
+            'admin.navbar_color' => '#ffcc00',
+            'admin.content_background' => '#ffffff',
             'admin.primary_color' => '#d40511',
             'admin.secondary_color' => '#ffcc00',
         ];

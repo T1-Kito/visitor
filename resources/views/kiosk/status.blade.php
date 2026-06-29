@@ -42,7 +42,7 @@
         }
 
         .ks-shell {
-            width: min(1420px, calc(100vw - 88px));
+            width: min(1040px, calc(100vw - 48px));
             height: 100vh;
             min-height: 0;
             margin: 0 auto;
@@ -100,7 +100,7 @@
         .ks-logo img {
             width: auto;
             max-width: 128px;
-            height: 42px;
+            height: 38px;
             max-height: 42px;
             object-fit: contain;
             padding: 0;
@@ -132,7 +132,7 @@
         .ks-tools { gap: 1.05rem; }
 
         .ks-select {
-            height: 42px;
+            height: 38px;
             min-width: 124px;
             padding: 0 .85rem;
             border: 1px solid var(--line);
@@ -163,7 +163,7 @@
 
         .ks-main {
             display: grid;
-            grid-template-columns: minmax(0, 900px) minmax(340px, 390px);
+            grid-template-columns: minmax(0, 1040px);
             gap: 1rem;
             align-items: stretch;
             justify-content: center;
@@ -183,7 +183,7 @@
             padding: clamp(1rem, 1.55vw, 1.45rem);
             display: grid;
             align-content: center;
-            gap: .72rem;
+            gap: .62rem;
             text-align: center;
             overflow: hidden;
         }
@@ -196,14 +196,14 @@
         }
 
         .ks-mark {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             display: grid;
             place-items: center;
             border-radius: 999px;
             background: linear-gradient(135deg, #35d074, #20c767);
             color: #fff;
-            font-size: 1.4rem;
+            font-size: 1.18rem;
             box-shadow: 0 10px 22px rgba(34, 197, 94, .14);
         }
 
@@ -229,7 +229,7 @@
             margin: 0;
             color: var(--ink);
             font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: clamp(1.65rem, 2.18vw, 2rem);
+            font-size: clamp(1.35rem, 1.8vw, 1.65rem);
             font-weight: 600;
             letter-spacing: 0;
         }
@@ -238,12 +238,12 @@
             margin: -.35rem auto 0;
             max-width: 500px;
             color: #526b87;
-            font-size: 1rem;
+            font-size: .88rem;
             line-height: 1.45;
         }
 
         .ks-code-box {
-            width: min(600px, 100%);
+            width: min(560px, 100%);
             margin: 0 auto;
             padding: .8rem .9rem;
             border: 1px solid var(--line);
@@ -276,7 +276,7 @@
             display: block;
             color: #0b6fe8;
             font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: clamp(3rem, 3.9vw, 3.45rem);
+            font-size: clamp(2rem, 3vw, 2.65rem);
             font-weight: 700;
             letter-spacing: 0;
             overflow-wrap: anywhere;
@@ -285,8 +285,8 @@
         .ks-code-box p {
             margin: .45rem 0 0;
             color: #526b87;
-            font-size: 1rem;
-            line-height: 1.35;
+            font-size: .86rem;
+            line-height: 1.4;
         }
 
         .ks-guest-qr {
@@ -550,7 +550,7 @@
             .ks-header, .ks-tools { align-items: flex-start; flex-direction: column; }
             .ks-main, .ks-side, .ks-info-strip, .ks-actions { grid-template-columns: 1fr; }
             .ks-success { min-height: 0; padding: 1.35rem; }
-            .ks-code-box strong { font-size: 2.35rem; }
+            .ks-code-box strong { font-size: 1.9rem; }
             .ks-code-content { grid-template-columns: 1fr; text-align: center; }
             .ks-guest-qr { justify-self: center; }
         }
@@ -604,10 +604,6 @@
                             <i class="bi bi-shield-check"></i>
                         </div>
                     @endif
-                </div>
-                <div>
-                    <strong>{{ $systemName }}</strong>
-                    <span>{{ $subtitle }}</span>
                 </div>
             </div>
 
@@ -705,50 +701,6 @@
                     @endif
                 </div>
             </section>
-
-            <aside class="ks-side">
-                <section class="ks-card ks-side-card">
-                    <div class="ks-side-title">
-                        <h2>Tra cứu / Check-in</h2>
-                        <p>Quét QR hoặc nhập mã lịch hẹn để check-in.</p>
-                    </div>
-
-                    <div class="ks-qr-box">
-                        <div>
-                            <i class="bi bi-qr-code"></i>
-                            <span>Đưa mã QR vào khung</span>
-                        </div>
-                    </div>
-
-                    <div class="ks-divider">Hoặc nhập mã lịch hẹn</div>
-
-                    <form method="post" action="{{ route('kiosk.checkin.scan-qr') }}">
-                        @csrf
-                        <div class="ks-input-wrap">
-                            <i class="bi bi-calendar2-check"></i>
-                            <input class="ks-input" name="qr_token" placeholder="Nhập mã lịch hẹn hoặc mã QR">
-                        </div>
-                        <button class="ks-btn ks-btn-primary" type="submit" style="width: 100%;">
-                            <i class="bi bi-search"></i>Kiểm tra mã
-                        </button>
-                    </form>
-                </section>
-
-                <section class="ks-card ks-side-card ks-last">
-                    <h3><i class="bi bi-card-checklist"></i>Thông tin yêu cầu vừa gửi</h3>
-                    <div class="ks-last-lines">
-                        <div><span>Mã lịch hẹn</span><strong>{{ $visit->code }}</strong></div>
-                        <div><span>Họ và tên</span><strong>{{ $visit->visitor?->full_name ?? '-' }}</strong></div>
-                        <div><span>Số điện thoại</span><strong>{{ $visit->visitor?->phone ?? '-' }}</strong></div>
-                        <div><span>Công ty / Tổ chức</span><strong>{{ $visit->visitor?->company ?? '-' }}</strong></div>
-                        <div><span>Mục đích đến</span><strong>{{ $visit->purpose ?? '-' }}</strong></div>
-                        <div><span>Thời gian gửi</span><strong>{{ $visit->created_at?->format('H:i - d/m/Y') ?? '-' }}</strong></div>
-                    </div>
-                    <a class="ks-btn" style="width: 100%; margin-top: .9rem;" href="{{ route('kiosk.checkin.status', $visit) }}">
-                        Xem lịch sử yêu cầu <i class="bi bi-chevron-right"></i>
-                    </a>
-                </section>
-            </aside>
         </section>
 
         <footer class="ks-footer">

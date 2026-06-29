@@ -49,6 +49,13 @@ class KioskController extends Controller
         ]);
     }
 
+    public function privacyNotice(): View
+    {
+        return view('kiosk.privacy-notice', [
+            'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
+        ]);
+    }
+
     public function searchEmployees(Request $request): JsonResponse
     {
         $term = trim((string) $request->query('q', ''));

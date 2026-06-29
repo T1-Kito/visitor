@@ -14,6 +14,11 @@ class PublicRegistrationPortTest extends TestCase
     public function test_public_port_only_allows_registration_endpoints(): void
     {
         $this->get('http://115.73.209.88:8443/kiosk/register')->assertOk();
+        $this->get('http://115.73.209.88:8443/kiosk/privacy-notice')
+            ->assertOk()
+            ->assertSee('Privacy Notice - DHL - Global')
+            ->assertSee('https://www.dhl.com/global-en/home/footer/privacy-notice.html', false)
+            ->assertSee('Back to registration');
         $this->get('http://115.73.209.88:8443/login')->assertNotFound();
         $this->get('http://115.73.209.88:8443/kiosk')->assertNotFound();
         $this->get('http://115.73.209.88:8443/dashboard')->assertNotFound();

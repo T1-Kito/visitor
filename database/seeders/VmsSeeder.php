@@ -875,9 +875,9 @@ class VmsSeeder extends Seeder
             'kiosk.working_hours' => '07:30 - 18:00',
             'kiosk.logo_url' => null,
             'kiosk.background_url' => null,
-            'kiosk.primary_color' => '#0f6eea',
-            'kiosk.secondary_color' => '#0cb4d8',
-            'kiosk.background_color' => '#f4f8fd',
+            'kiosk.primary_color' => '#d40511',
+            'kiosk.secondary_color' => '#ffcc00',
+            'kiosk.background_color' => '#ffffff',
             'kiosk.surface_color' => '#ffffff',
         ]);
     }

@@ -222,7 +222,7 @@
 
         .kiosk-main {
             display: grid;
-            grid-template-columns: minmax(0, 920px) minmax(360px, 410px);
+            grid-template-columns: minmax(0, 1120px);
             gap: 1.25rem;
             align-items: stretch;
             justify-content: center;
@@ -941,7 +941,7 @@
             }
 
             .kiosk-main {
-                grid-template-columns: minmax(0, 920px) minmax(360px, 410px);
+                grid-template-columns: minmax(0, 1120px);
                 gap: 1.55rem;
             }
 
@@ -1191,7 +1191,84 @@
                 padding-left: 0;
             }
         }
-    </style>
+
+        /* Kiosk layout refinement after removing the side panel */
+        .kiosk-header {
+            width: min(1040px, 100%);
+            margin-inline: auto;
+        }
+
+        .kiosk-main {
+            grid-template-columns: minmax(0, 1040px);
+        }
+
+        .kiosk-form-card {
+            padding: 1.35rem 1.5rem 1.45rem;
+        }
+
+        .kiosk-form-section:last-of-type > :not(.kiosk-section-title) {
+            grid-column: 1 / -1;
+        }
+
+        .kiosk-policy .form-check-input {
+            float: none;
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .kiosk-header,
+            .kiosk-main {
+                width: 100%;
+            }
+
+            .kiosk-main {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+        .kiosk-last-inline {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-top: .8rem;
+            padding: .72rem .85rem;
+            border: 1px solid var(--kiosk-line);
+            border-radius: 14px;
+            background: #f8fbff;
+        }
+
+        .kiosk-last-inline > i {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            place-items: center;
+            border-radius: 11px;
+            color: var(--kiosk-blue);
+            background: #fff;
+        }
+
+        .kiosk-last-inline div {
+            min-width: 0;
+            display: grid;
+            gap: .08rem;
+        }
+
+        .kiosk-last-inline strong { font-size: .78rem; }
+        .kiosk-last-inline span { color: var(--kiosk-muted); font-size: .73rem; }
+        .kiosk-last-inline a {
+            margin-left: auto;
+            color: var(--kiosk-blue);
+            font-size: .76rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 560px) {
+            .kiosk-last-inline { align-items: flex-start; flex-wrap: wrap; }
+            .kiosk-last-inline a { width: 100%; margin-left: 46px; }
+        }    </style>
 </head>
 @php
     $formatDisplayName = static fn (?string $value, string $fallback): string => trim(preg_replace('/(?<=[a-z])(?=[A-Z])/', ' ', $value ?: $fallback));
@@ -1292,20 +1369,6 @@
                     <div>
                         <h1>Đăng ký khách</h1>
                         <p>Vui lòng nhập thông tin để được hỗ trợ nhanh chóng.</p>
-                    </div>
-                    <div class="kiosk-mode-actions" aria-label="Tác vụ kiosk">
-                        <button class="kiosk-mode-button is-active" type="button" data-kiosk-mode-action="register">
-                            <i class="bi bi-pencil-square"></i>
-                            Đăng ký
-                        </button>
-                        <button class="kiosk-mode-button" type="button" data-kiosk-mode-action="checkin">
-                            <i class="bi bi-box-arrow-in-right"></i>
-                            Check-in
-                        </button>
-                        <button class="kiosk-mode-button" type="button" data-kiosk-mode-action="checkout">
-                            <i class="bi bi-box-arrow-left"></i>
-                            Check-out
-                        </button>
                     </div>
                 </div>
 
@@ -1428,75 +1491,17 @@
                         Gửi yêu cầu tiếp khách
                     </button>
                 </form>
-            </section>
-
-            <aside class="kiosk-side">
-                <section class="kiosk-card kiosk-side-card">
-                    <div class="kiosk-side-title">
-                        <h2>Đăng ký nhanh</h2>
-                        <p>Quét QR bằng điện thoại để mở form kiosk và nhập thông tin trước.</p>
-                    </div>
-
-                    <div class="kiosk-qr-box kiosk-registration-qr">
-                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(108)->margin(1)->errorCorrection('M')->generate($selfRegistrationUrl) !!}
-                        <strong>Quét để đăng ký</strong>
-                        <span>{{ parse_url($selfRegistrationUrl, PHP_URL_HOST) }}</span>
-                    </div>
-
-                    <div class="kiosk-camera-note">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Khách có thể dùng điện thoại cá nhân để nhập thông tin nhanh hơn, hoặc lễ tân gửi link này trước cho khách.</span>
-                    </div>
-
-                    <div class="kiosk-side-divider" id="kioskLookupDivider">Hoặc nhập mã check-in</div>
-
-                    <div class="kiosk-side-title kiosk-lookup-title">
-                        <h2 id="kioskLookupHeading">Check-in trực tiếp</h2>
-                        <p id="kioskLookupHelp">Nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.</p>
-                    </div>
-
-                    <form
-                        id="kioskLookupForm"
-                        method="post"
-                        action="{{ route('kiosk.checkin.scan-qr') }}"
-                        data-checkin-url="{{ route('kiosk.checkin.scan-qr') }}"
-                        data-checkout-url="{{ route('kiosk.checkout.scan-qr') }}"
-                    >
-                        @csrf
-                        <input type="hidden" id="kioskLookupMode" name="mode" value="checkin">
-                        <div class="kiosk-input-wrap mb-3">
-                            <i class="bi bi-calendar2-check"></i>
-                            <input class="form-control" id="kioskQrInput" name="qr_token" placeholder="Nhập mã lịch hẹn hoặc mã QR">
-                        </div>
-                        <button class="btn kiosk-submit w-100" type="submit" id="kioskLookupSubmit">
-                            <i class="bi bi-search me-1"></i>
-                            Check-in ngay
-                        </button>
-                    </form>
-                </section>
-
                 @if ($lastVisit)
-                    <section class="kiosk-card kiosk-last-card">
-                        <h3><i class="bi bi-card-checklist"></i>Trạng thái yêu cầu gần nhất</h3>
-                        <div class="kiosk-last-status">
-                            <i class="bi bi-hourglass-split"></i>
-                            <div>
-                                <strong>{{ $lastStatusLabels[$lastVisit->status] ?? 'Chưa có dữ liệu' }}</strong>
-                                <span>{{ $lastVisit->code }}</span>
-                            </div>
+                    <div class="kiosk-last-inline">
+                        <i class="bi bi-card-checklist"></i>
+                        <div>
+                            <strong>Trạng thái yêu cầu gần nhất</strong>
+                            <span>{{ $lastStatusLabels[$lastVisit->status] ?? 'Đang chờ xử lý' }} · {{ $lastVisit->code }}</span>
                         </div>
-                        <div class="kiosk-last-lines">
-                            <div><span>Mã lịch</span><strong>{{ $lastVisit->code }}</strong></div>
-                            <div><span>Người tiếp</span><strong>{{ $lastVisit->hostEmployee?->name ?? '-' }}</strong></div>
-                            <div><span>Cập nhật lúc</span><strong>{{ $lastVisit->updated_at?->format('H:i - d/m/Y') ?? '-' }}</strong></div>
-                        </div>
-                        <a class="btn btn-outline-primary w-100 mt-3" href="{{ route('kiosk.checkin.status', $lastVisit) }}">
-                            Xem lịch sử yêu cầu
-                            <i class="bi bi-chevron-right ms-1"></i>
-                        </a>
-                    </section>
+                        <a href="{{ route('kiosk.checkin.status', $lastVisit) }}">Xem chi tiết <i class="bi bi-chevron-right"></i></a>
+                    </div>
                 @endif
-            </aside>
+            </section>
         </section>
 
         <footer class="kiosk-footer">

@@ -16,16 +16,16 @@
     <link href="{{ \App\Support\AssetVersion::url('css/admin-ui.css') }}" rel="stylesheet">
     <link href="{{ \App\Support\AssetVersion::url('css/admin-fixed-shell.css') }}" rel="stylesheet">
     @php
-        $adminThemeNavbar = $adminTheme['admin.navbar_color'] ?? '#ffffff';
-        $adminThemeContent = $adminTheme['admin.content_background'] ?? '#f8fafc';
+        $adminThemeNavbar = $adminTheme['admin.navbar_color'] ?? '#ffcc00';
+        $adminThemeContent = $adminTheme['admin.content_background'] ?? '#ffffff';
         $adminThemePrimary = $adminTheme['admin.primary_color'] ?? '#d40511';
         $adminThemeSecondary = $adminTheme['admin.secondary_color'] ?? '#ffcc00';
-        $adminKioskBackground = $adminKioskTheme['background_color'] ?? '#f4f8fd';
+        $adminKioskBackground = $adminKioskTheme['background_color'] ?? '#ffffff';
     @endphp
     <style>
         :root {
-            --admin-navbar-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeNavbar) ? $adminThemeNavbar : '#ffffff' }};
-            --admin-content-background: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeContent) ? $adminThemeContent : '#f8fafc' }};
+            --admin-navbar-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeNavbar) ? $adminThemeNavbar : '#ffcc00' }};
+            --admin-content-background: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeContent) ? $adminThemeContent : '#ffffff' }};
             --admin-primary-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemePrimary) ? $adminThemePrimary : '#d40511' }};
             --admin-secondary-color: {{ preg_match('/^#[0-9a-fA-F]{6}$/', $adminThemeSecondary) ? $adminThemeSecondary : '#ffcc00' }};
             --gate-blue: var(--admin-primary-color);

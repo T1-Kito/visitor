@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f7ec7">
+    <meta name="theme-color" content="#ffcc00">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $loginBrand['title'] ?? 'Đăng nhập' }}</title>
     @if (! empty($loginBrand['favicon_url']))
@@ -204,6 +204,37 @@
         .btn-brand:hover, .btn-brand:focus, .btn-brand:active {
             color: #fff;
         }
+
+        /* DHL login theme */
+        :root { --dhl-yellow: #ffcc00; --dhl-red: #d40511; }
+        body { position: relative; overflow-x: hidden; padding: 42px 18px; color: #000; background: linear-gradient(135deg, rgba(255,204,0,.18), transparent 38%), linear-gradient(315deg, rgba(212,5,17,.045), transparent 30%), #f7f7f7; }
+        body::before { position: fixed; inset: 0 0 auto; height: 8px; background: var(--dhl-yellow); content: ""; }
+        .login-wrap { width: min(470px, 100%); }
+        .login-card { position: relative; overflow: hidden; border: 1px solid #e3e3e3; border-radius: 22px; background: #fff; box-shadow: 0 24px 65px rgba(0,0,0,.11); }
+        .login-card::before { display: block; width: 100%; height: 7px; background: var(--dhl-yellow); content: ""; }
+        .login-card .card-body { padding: 34px 38px 30px !important; }
+        .login-brand { gap: 15px !important; margin-bottom: 28px !important; }
+        .brand-pill.has-logo, .brand-pill.has-logo img { height: 62px; }
+        .brand-pill.has-logo img { max-width: 220px; }
+        .login-brand-copy h1 { margin-bottom: 5px !important; color: #000; font-size: 1.35rem; font-weight: 800 !important; letter-spacing: -.025em; }
+        .login-brand-copy p { color: #737373 !important; font-size: .86rem; }
+        .login-card form { gap: 14px !important; }
+        .login-card .form-label { margin-bottom: 7px; color: #242424; font-size: .82rem; font-weight: 700; }
+        .login-card .form-control { min-height: 52px; padding: .72rem .9rem; border: 1px solid #d5d5d5; border-radius: 12px; background: #fff; box-shadow: none; }
+        .login-card .form-control:focus { border-color: var(--dhl-red); box-shadow: 0 0 0 4px rgba(212,5,17,.09); }
+        .login-card .form-check-input:checked { border-color: var(--dhl-red); background-color: var(--dhl-red); }
+        .login-card .btn-brand { min-height: 52px; border-radius: 12px; background: var(--dhl-red); box-shadow: 0 10px 22px rgba(212,5,17,.16); font-size: .95rem; font-weight: 800; transition: transform .18s ease, background .18s ease, box-shadow .18s ease; }
+        .login-card .btn-brand:hover, .login-card .btn-brand:focus, .login-card .btn-brand:active { background: #b8040e; box-shadow: 0 13px 26px rgba(212,5,17,.22); transform: translateY(-1px); }
+        .login-privacy { margin: 23px 0 0; color: #858585; font-size: .72rem; line-height: 1.5; text-align: center; }
+        .login-privacy a { color: #555; font-weight: 700; text-decoration: none; }
+        .login-privacy a:hover { color: var(--dhl-red); }
+        @media (max-width: 480px) {
+            body { padding: max(26px, env(safe-area-inset-top)) 12px 18px; }
+            .login-card .card-body { padding: 25px 20px 22px !important; }
+            .login-brand { margin-bottom: 22px !important; }
+            .brand-pill.has-logo, .brand-pill.has-logo img { height: 52px; }
+            .login-brand-copy h1 { font-size: 1.15rem; }
+        }
     </style>
 </head>
 <body>
@@ -259,6 +290,10 @@
                     </div>
                     <button class="btn btn-brand py-2 mt-2" type="submit" data-login-submit>Đăng nhập</button>
                 </form>
+                <p class="login-privacy">
+                    Thông tin được bảo vệ theo
+                    <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener">Privacy Notice của DHL</a>.
+                </p>
 
             </div>
         </div>

@@ -17,6 +17,7 @@ class RestrictPublicRegistrationPort
 
         $allowedRequests = [
             'GET kiosk/register',
+            'GET kiosk/privacy-notice',
             'GET kiosk/employees/search',
             'POST kiosk/checkin/manual',
         ];

@@ -1,12 +1,12 @@
 <!doctype html>
 @php
     $pageSettings = $kioskSettings ?? [];
-    $pagePrimaryColor = $pageSettings['kiosk.primary_color'] ?? '#146bd7';
-    $pagePrimaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pagePrimaryColor) ? $pagePrimaryColor : '#146bd7';
-    $pageSecondaryColor = $pageSettings['kiosk.secondary_color'] ?? '#0cb4d8';
-    $pageSecondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageSecondaryColor) ? $pageSecondaryColor : '#0cb4d8';
-    $pageBackgroundColor = $pageSettings['kiosk.background_color'] ?? '#f3f8fd';
-    $pageBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageBackgroundColor) ? $pageBackgroundColor : '#f3f8fd';
+    $pagePrimaryColor = $pageSettings['kiosk.primary_color'] ?? '#d40511';
+    $pagePrimaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pagePrimaryColor) ? $pagePrimaryColor : '#d40511';
+    $pageSecondaryColor = $pageSettings['kiosk.secondary_color'] ?? '#ffcc00';
+    $pageSecondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageSecondaryColor) ? $pageSecondaryColor : '#ffcc00';
+    $pageBackgroundColor = $pageSettings['kiosk.background_color'] ?? '#ffffff';
+    $pageBackgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageBackgroundColor) ? $pageBackgroundColor : '#ffffff';
     $pageSurfaceColor = $pageSettings['kiosk.surface_color'] ?? '#ffffff';
     $pageSurfaceColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $pageSurfaceColor) ? $pageSurfaceColor : '#ffffff';
 @endphp
@@ -29,8 +29,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
         :root {
-            --ink: #0f2238;
-            --muted: #6d829d;
+            --ink: #000000;
+            --muted: #000000;
             --line: #dce8f5;
             --soft: #f5f9fe;
             --blue: {{ $pagePrimaryColor }};
@@ -129,7 +129,7 @@
         }
 
         .mk-field label {
-            color: #203956;
+            color: #000000;
             font-size: 13px;
             font-weight: 600;
         }
@@ -179,7 +179,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 13px 14px;
-            color: #28506f;
+            color: #000000;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -239,8 +239,8 @@
             align-items: flex-start;
             padding: 12px;
             border-radius: 15px;
-            background: #f6faff;
-            color: #395979;
+            background: #ffffff;
+            color: #000000;
             font-size: 13px;
             line-height: 1.45;
         }
@@ -250,6 +250,11 @@
             height: 18px;
             margin-top: 1px;
             flex: 0 0 auto;
+        }
+
+        .mk-policy a {
+            color: var(--blue);
+            font-weight: 700;
         }
 
         .mk-submit {
@@ -279,12 +284,12 @@
 </head>
 @php
     $hotline = trim((string) ($settings['kiosk.hotline'] ?? '1900 0000'));
-    $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
-    $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
-    $secondaryColor = $settings['kiosk.secondary_color'] ?? '#0cb4d8';
-    $secondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $secondaryColor) ? $secondaryColor : '#0cb4d8';
-    $backgroundColor = $settings['kiosk.background_color'] ?? '#f3f8fd';
-    $backgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $backgroundColor) ? $backgroundColor : '#f3f8fd';
+    $primaryColor = $settings['kiosk.primary_color'] ?? '#d40511';
+    $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#d40511';
+    $secondaryColor = $settings['kiosk.secondary_color'] ?? '#ffcc00';
+    $secondaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $secondaryColor) ? $secondaryColor : '#ffcc00';
+    $backgroundColor = $settings['kiosk.background_color'] ?? '#ffffff';
+    $backgroundColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $backgroundColor) ? $backgroundColor : '#ffffff';
     $surfaceColor = $settings['kiosk.surface_color'] ?? '#ffffff';
     $surfaceColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $surfaceColor) ? $surfaceColor : '#ffffff';
     $noticeType = session('error') || $errors->any() ? 'danger' : (session('status') ? 'success' : null);
@@ -423,9 +428,12 @@
 
                 <label class="mk-policy">
                     <input type="checkbox" name="policy_accepted" value="1" required>
-                    <span>Tôi đồng ý tuân thủ quy định ra/vào và hướng dẫn của lễ tân/bảo vệ.</span>
+                    <span>
+                        By submitting this form, you consent to the collection and processing of your personal data
+                        for visitor access, safety, and security purposes. Please refer to our
+                        <a href="{{ route('kiosk.privacy-notice') }}">Privacy Notice - DHL - Global</a>.
+                    </span>
                 </label>
-
                 <button class="mk-submit" type="submit" data-loading-text="Đang gửi yêu cầu...">
                     <i class="bi bi-send-check"></i>
                     Gửi yêu cầu tiếp khách
