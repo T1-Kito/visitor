@@ -59,12 +59,8 @@
                 <strong>{{ $visitor->identity_no ?? '-' }}</strong>
             </div>
             <div class="entity-detail-field">
-                <span>Nơi cấp</span>
-                <strong title="{{ $visitor->identity_issued_place ?? '-' }}">{{ $visitor->identity_issued_place ?? '-' }}</strong>
-            </div>
-            <div class="entity-detail-field">
-                <span>Ngày cấp</span>
-                <strong>{{ $visitor->identity_issued_date?->format('d/m/Y') ?? '-' }}</strong>
+                <span>Số thẻ khách</span>
+                <strong>{{ $visitor->visitor_id_card_number ?? '-' }}</strong>
             </div>
             <div class="entity-detail-field">
                 <span>Tổng lượt đến</span>
@@ -165,14 +161,9 @@
                             @error('identity_no')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                         </div>
                         <div>
-                            <label class="form-label">Nơi cấp</label>
-                            <input class="form-control" name="identity_issued_place" value="{{ old('identity_issued_place', $visitor->identity_issued_place) }}">
-                            @error('identity_issued_place')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                        </div>
-                        <div>
-                            <label class="form-label">Ngày cấp</label>
-                            <input class="form-control" type="date" name="identity_issued_date" value="{{ old('identity_issued_date', $visitor->identity_issued_date?->format('Y-m-d')) }}">
-                            @error('identity_issued_date')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            <label class="form-label">Số thẻ khách</label>
+                            <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number', $visitor->visitor_id_card_number) }}">
+                            @error('visitor_id_card_number')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                         </div>
                         <div class="entity-form-wide">
                             <label class="form-label">Ghi chú</label>

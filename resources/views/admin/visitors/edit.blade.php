@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Sua khach | Visitor Management')
 @section('page_title', 'Sua ho so khach')
@@ -18,6 +18,7 @@
                     <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email', $visitor->email) }}"></div>
                     <div class="col-md-6"><label class="form-label">Cong ty</label><input class="form-control" name="company" value="{{ old('company', $visitor->company) }}"></div>
                     <div class="col-md-6"><label class="form-label">So giay to</label><input class="form-control" name="identity_no" value="{{ old('identity_no', $visitor->identity_no) }}"></div>
+                    <div class="col-md-6"><label class="form-label">Số thẻ khách</label><input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number', $visitor->visitor_id_card_number) }}" placeholder="Nhập số thẻ khách"></div>
                     <div class="col-12"><label class="form-label">Ghi chu</label><textarea class="form-control" name="note" rows="3">{{ old('note', $visitor->note) }}</textarea></div>
                 </div>
             </section>

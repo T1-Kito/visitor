@@ -485,7 +485,7 @@
                                             @if ($requestMethodLabel)
                                                 <span>
                                                     <i class="bi bi-arrow-right-circle"></i>
-                                                    {{ $requestMethodLabel }}
+                                                    {{ $requestMethodLabel }} ({{ strtoupper((string) $log->request_method) }})
                                                 </span>
                                             @endif
                                         </div>

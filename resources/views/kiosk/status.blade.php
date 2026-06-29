@@ -554,7 +554,24 @@
             .ks-code-content { grid-template-columns: 1fr; text-align: center; }
             .ks-guest-qr { justify-self: center; }
         }
-    </style>
+
+        /* Portrait touch kiosk mode */
+        @media (orientation: portrait) and (min-width: 761px) {
+            .ks-shell { width: min(900px, calc(100vw - 36px)); gap: 1.15rem; padding: 1.25rem 0; }
+            .ks-select { height: 52px; border-radius: 14px; }
+            .ks-success { padding: 2rem; gap: .85rem; }
+            .ks-mark-wrap { height: 50px; }
+            .ks-mark { width: 42px; height: 42px; font-size: 1.2rem; }
+            .ks-success h1 { font-size: 1.55rem; }
+            .ks-lead { max-width: 620px; font-size: .92rem; }
+            .ks-code-box { width: min(620px, 100%); padding: .9rem 1rem; }
+            .ks-code-box strong { font-size: 2.25rem; }
+            .ks-code-box p { font-size: .88rem; }
+            .ks-info-strip { padding: .85rem; }
+            .ks-info-item span { font-size: .76rem; }
+            .ks-info-item strong, .ks-note { font-size: .86rem; }
+            .ks-btn { min-height: 54px; font-size: .95rem; }
+        }    </style>
 </head>
 @php
     $formatDisplayName = static fn (?string $value, string $fallback): string => trim(preg_replace('/(?<=[a-z])(?=[A-Z])/', ' ', $value ?: $fallback));

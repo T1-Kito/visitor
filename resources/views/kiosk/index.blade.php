@@ -1268,6 +1268,38 @@
         @media (max-width: 560px) {
             .kiosk-last-inline { align-items: flex-start; flex-wrap: wrap; }
             .kiosk-last-inline a { width: 100%; margin-left: 46px; }
+        }
+        /* Portrait touch kiosk mode */
+        @media (orientation: portrait) and (min-width: 761px) {
+            .kiosk-shell {
+                width: min(900px, calc(100vw - 36px));
+                gap: 1.15rem;
+                padding: 1.25rem 0;
+            }
+            .kiosk-header, .kiosk-main { width: 100%; }
+            .kiosk-logo { height: 58px; }
+            .kiosk-tools .form-select { height: 52px; border-radius: 14px; }
+            .kiosk-form-card { padding: 1.6rem 1.7rem 1.7rem; }
+            .kiosk-title { margin-bottom: 1rem; }
+            .kiosk-title h1 { font-size: 1.8rem; }
+            .kiosk-title p { font-size: .95rem; }
+            .kiosk-flat-form, .kiosk-form-section { gap: .9rem 1.2rem; }
+            .kiosk-section-title { margin-top: .2rem; font-size: .82rem; }
+            .kiosk-section-title i { width: 28px; height: 28px; }
+            .kiosk-flat-form .form-label { margin-bottom: .42rem; font-size: .82rem; }
+            .kiosk-flat-form .form-control, .kiosk-flat-form .form-select { min-height: 54px; border-radius: 14px; font-size: 1rem; }
+            .kiosk-input-wrap .form-control, .kiosk-input-wrap .form-select { padding-left: 2.7rem; }
+            .kiosk-input-wrap i { left: 1rem; font-size: 1rem; }
+            .kiosk-extra-toggle { min-height: 50px; font-size: .9rem; }
+            .kiosk-policy { min-height: 52px; padding: .7rem .8rem; font-size: .9rem; }
+            .kiosk-policy .form-check-input { width: 1.3rem; height: 1.3rem; }
+            .kiosk-submit { min-height: 56px; font-size: 1rem; }
+        }
+        .kiosk-policy-copy a {
+            color: var(--kiosk-blue);
+            font-weight: 800;
+            text-decoration: underline;
+            text-underline-offset: 2px;
         }    </style>
 </head>
 @php
@@ -1372,123 +1404,129 @@
                     </div>
                 </div>
 
+                @php
+                    $defaultCheckin = now();
+                    $defaultCheckout = now()->addHours(2);
+                @endphp
                 <form class="kiosk-flat-form" id="kioskRegisterForm" method="post" action="{{ route('kiosk.checkin.manual') }}">
                     @csrf
+                    <input type="hidden" name="registration_form" value="kiosk_v2">
+
                     <div class="kiosk-form-section">
-                    <div class="kiosk-section-title"><i class="bi bi-person-fill"></i>1. Thông tin khách</div>
+                        <div class="kiosk-section-title"><i class="bi bi-person-fill"></i>1. Visitor Information</div>
 
-                    <div>
-                        <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-person"></i>
-                            <input class="form-control" id="kioskVisitorName" name="visitor_name" value="{{ old('visitor_name') }}" placeholder="Nhập họ và tên" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-telephone"></i>
-                            <input class="form-control" name="visitor_phone" value="{{ old('visitor_phone') }}" placeholder="Nhập số điện thoại" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-envelope"></i>
-                            <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">Công ty / Tổ chức <span class="text-danger">*</span></label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-building"></i>
-                            <input class="form-control" name="visitor_company" value="{{ old('visitor_company') }}" placeholder="Nhập tên công ty" required>
-                        </div>
-                    </div>
-
-                    </div>
-
-                    <div class="kiosk-extra-panel {{ old('visitor_identity_no') || old('visitor_identity_issued_place') || old('visitor_identity_issued_date') || old('expected_checkout_time') ? 'is-open' : '' }}" data-kiosk-extra-panel>
-                        <button class="kiosk-extra-toggle" type="button" data-kiosk-extra-toggle aria-expanded="{{ old('visitor_identity_no') || old('visitor_identity_issued_place') || old('visitor_identity_issued_date') || old('expected_checkout_time') ? 'true' : 'false' }}">
-                            <span><i class="bi bi-plus-circle"></i>Thông tin xác thực</span>
-                            <i class="bi bi-chevron-down"></i>
-                        </button>
-                        <div class="kiosk-extra-content">
-                            <div>
-                                <label class="form-label">Căn cước công dân</label>
-                                <div class="kiosk-input-wrap">
-                                    <i class="bi bi-card-text"></i>
-                                    <input class="form-control" name="visitor_identity_no" value="{{ old('visitor_identity_no') }}" placeholder="Nhập số CCCD">
-                                </div>
+                        <div>
+                            <label class="form-label">Full name <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-person"></i>
+                                <input class="form-control" id="kioskVisitorName" name="visitor_name" value="{{ old('visitor_name') }}" placeholder="Enter full name" required>
                             </div>
-                            <div>
-                                <label class="form-label">Nơi cấp</label>
-                                <div class="kiosk-input-wrap">
-                                    <i class="bi bi-geo-alt"></i>
-                                    <input class="form-control" name="visitor_identity_issued_place" value="{{ old('visitor_identity_issued_place') }}" placeholder="Nhập nơi cấp">
-                                </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Phone number <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-telephone"></i>
+                                <input class="form-control" name="visitor_phone" value="{{ old('visitor_phone') }}" placeholder="Enter phone number" required>
                             </div>
-                            <div>
-                                <label class="form-label">Ngày cấp</label>
-                                <div class="kiosk-input-wrap">
-                                    <i class="bi bi-calendar3"></i>
-                                    <input class="form-control" type="date" name="visitor_identity_issued_date" value="{{ old('visitor_identity_issued_date') }}">
-                                </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-envelope"></i>
+                                <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com" required>
                             </div>
-                            <div>
-                                <label class="form-label">Dự kiến rời đi</label>
-                                <div class="kiosk-input-wrap">
-                                    <i class="bi bi-clock"></i>
-                                    <input class="form-control" type="time" name="expected_checkout_time" value="{{ old('expected_checkout_time', now()->addHours(2)->format('H:i')) }}">
-                                </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Company/Organization <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-building"></i>
+                                <input class="form-control" name="visitor_company" value="{{ old('visitor_company') }}" placeholder="Enter company/organization name" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Citizen Identification Card/Passport <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-passport"></i>
+                                <input class="form-control" name="visitor_identity_no" value="{{ old('visitor_identity_no') }}" placeholder="Enter Citizen ID Number/Passport" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Visitor ID card number <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-person-vcard"></i>
+                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number" required>
                             </div>
                         </div>
                     </div>
 
                     <div class="kiosk-form-section">
-                    <div class="kiosk-section-title"><i class="bi bi-diagram-3-fill"></i>2. Thông tin gặp</div>
+                        <div class="kiosk-section-title"><i class="bi bi-calendar2-check-fill"></i>2. Check-in/out Information</div>
 
-                    <div>
-                        <label class="form-label">Người cần gặp <span class="text-danger">*</span></label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-search"></i>
-                            <input class="form-control" id="employeeSearch" autocomplete="off" placeholder="Tìm tên nhân viên" data-search-url="{{ route('kiosk.employees.search') }}">
+                        <div>
+                            <label class="form-label">Check-in date <span class="text-danger">*</span></label>
+                            <input class="form-control" type="date" name="checkin_date" value="{{ old('checkin_date', $defaultCheckin->toDateString()) }}" required>
                         </div>
-                        <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}" required>
-                        <div class="small text-secondary mt-2" id="selectedHost">Chưa chọn nhân viên.</div>
-                        <div class="list-group premium-result-list mt-2" id="employeeResults"></div>
-                    </div>
-                    <div>
-                        <label class="form-label">Phòng ban</label>
-                        <div class="kiosk-input-wrap">
-                            <i class="bi bi-hospital"></i>
-                            <input class="form-control" id="selectedDepartment" placeholder="Tự động sau khi chọn" readonly>
+                        <div>
+                            <label class="form-label">Check-in time <span class="text-danger">*</span></label>
+                            <input class="form-control" type="time" name="checkin_time" value="{{ old('checkin_time', $defaultCheckin->format('H:i')) }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Check-out date <span class="text-danger">*</span></label>
+                            <input class="form-control" type="date" name="checkout_date" value="{{ old('checkout_date', $defaultCheckout->toDateString()) }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label">Check-out time <span class="text-danger">*</span></label>
+                            <input class="form-control" type="time" name="checkout_time" value="{{ old('checkout_time', $defaultCheckout->format('H:i')) }}" required>
                         </div>
                     </div>
 
-                    </div>
                     <div class="kiosk-form-section">
-                    <div class="kiosk-section-title"><i class="bi bi-briefcase-fill"></i>3. Thông tin chuyến thăm</div>
+                        <div class="kiosk-section-title"><i class="bi bi-diagram-3-fill"></i>3. Meeting Information</div>
 
-                    <div>
-                        <label class="form-label">Mục đích đến <span class="text-danger">*</span></label>
-                        <select class="form-select" name="purpose" required>
-                            <option value="" disabled {{ old('purpose') ? '' : 'selected' }}>Chọn mục đích</option>
-                            @foreach (['Họp', 'Giao hàng', 'Phỏng vấn', 'Tham quan', 'Khác'] as $purpose)
-                                <option value="{{ $purpose }}" @selected(old('purpose') === $purpose)>{{ $purpose }}</option>
-                            @endforeach
-                        </select>
+                        <div>
+                            <label class="form-label">Meeting person <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-search"></i>
+                                <input class="form-control" id="employeeSearch" autocomplete="off" placeholder="Find staff" data-search-url="{{ route('kiosk.employees.search') }}">
+                            </div>
+                            <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}" required>
+                            <div class="small text-secondary mt-2" id="selectedHost">No employee selected.</div>
+                            <div class="list-group premium-result-list mt-2" id="employeeResults"></div>
+                        </div>
+                        <div>
+                            <label class="form-label">Department <span class="text-danger">*</span></label>
+                            <div class="kiosk-input-wrap">
+                                <i class="bi bi-buildings"></i>
+                                <input class="form-control" id="selectedDepartment" placeholder="Automatically after selecting person" readonly required>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="kiosk-form-section">
+                        <div class="kiosk-section-title"><i class="bi bi-briefcase-fill"></i>4. Visiting Information</div>
+
+                        <div>
+                            <label class="form-label">Visiting purpose <span class="text-danger">*</span></label>
+                            <select class="form-select" name="purpose" required>
+                                <option value="" disabled {{ old('purpose') ? '' : 'selected' }}>Select purpose</option>
+                                @foreach (['Họp' => 'Meeting', 'Giao hàng' => 'Delivery', 'Phỏng vấn' => 'Interview', 'Tham quan' => 'Site visit', 'Khác' => 'Other'] as $purposeValue => $purposeLabel)
+                                    <option value="{{ $purposeValue }}" @selected(old('purpose') === $purposeValue)>{{ $purposeLabel }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <label class="form-check kiosk-policy">
                         <input class="form-check-input" type="checkbox" name="policy_accepted" value="1" required>
-                        <span class="form-check-label">Tôi đồng ý tuân thủ quy định ra/vào và hướng dẫn của lễ tân/bảo vệ.</span>
+                        <span class="form-check-label kiosk-policy-copy">
+                            By submitting this form, you consent to the collection and processing of your personal data for visitor access, safety, and security purposes. Please refer to our
+                            <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener noreferrer">Privacy Notice - DHL - Global</a>.
+                        </span>
                     </label>
 
                     <button class="btn kiosk-submit" type="submit">
                         <i class="bi bi-send-check me-2"></i>
-                        Gửi yêu cầu tiếp khách
+                        Submit visit request
                     </button>
                 </form>
                 @if ($lastVisit)
@@ -1606,6 +1644,27 @@
             'Xin cảm ơn!': 'Thank you!',
             'Chúc bạn một ngày tốt lành': 'Have a great day',
             'Không tìm thấy nhân viên phù hợp.': 'No matching employee found.',
+
+            // DHL kiosk form v2 translations
+            '1. Thông tin khách': '1. Visitor Information',
+            'Họ và tên': 'Full name',
+            'Số điện thoại': 'Phone number',
+            'Công ty/Tổ chức': 'Company/Organization',
+            'CCCD/Hộ chiếu': 'Citizen Identification Card/Passport',
+            'Số thẻ khách': 'Visitor ID card number',
+            '2. Thông tin check-in/out': '2. Check-in/out Information',
+            'Ngày check-in': 'Check-in date',
+            'Giờ check-in': 'Check-in time',
+            'Ngày check-out': 'Check-out date',
+            'Giờ check-out': 'Check-out time',
+            '3. Thông tin gặp': '3. Meeting Information',
+            'Người cần gặp': 'Meeting person',
+            'Phòng ban': 'Department',
+            'Chưa chọn nhân viên.': 'No employee selected.',
+            '4. Thông tin chuyến thăm': '4. Visiting Information',
+            'Mục đích đến': 'Visiting purpose',
+            'Chọn mục đích': 'Select purpose',
+            'Bằng việc gửi biểu mẫu này, bạn đồng ý cho phép thu thập và xử lý dữ liệu cá nhân nhằm phục vụ việc ra/vào, an toàn và an ninh cho khách. Vui lòng tham khảo': 'By submitting this form, you consent to the collection and processing of your personal data for visitor access, safety, and security purposes. Please refer to our',
         };
         const kioskPlaceholders = {
             'Nhập họ và tên': 'Enter full name',
@@ -1617,10 +1676,17 @@
             'Tự động sau khi chọn': 'Filled automatically after selection',
             'Nhập mã lịch hẹn hoặc mã QR': 'Enter visit code or QR code',
             'Nhập mã lịch hẹn để check-out': 'Enter visit code to check out',
+            'Nhập họ và tên': 'Enter full name',
+            'Nhập số điện thoại': 'Enter phone number',
+            'Nhập tên công ty/tổ chức': 'Enter company/organization name',
+            'Nhập số CCCD/Hộ chiếu': 'Enter Citizen ID Number/Passport',
+            'Nhập số thẻ': 'Enter ID number',
+            'Tìm nhân viên': 'Find staff',
+            'Tự động sau khi chọn người cần gặp': 'Automatically after selecting person',
         };
         const reverseKioskTranslations = Object.fromEntries(Object.entries(kioskTranslations).map(([vi, en]) => [en, vi]));
         const reverseKioskPlaceholders = Object.fromEntries(Object.entries(kioskPlaceholders).map(([vi, en]) => [en, vi]));
-        let kioskLanguage = localStorage.getItem('kiosk-language') === 'en' ? 'en' : 'vi';
+        let kioskLanguage = localStorage.getItem('kiosk-language-v2') === 'vi' ? 'vi' : 'en';
 
         function kioskText(viText) {
             return kioskLanguage === 'en' ? (kioskTranslations[viText] ?? viText) : viText;
@@ -1650,7 +1716,7 @@
             kioskLanguageSelect.value = kioskLanguage;
             kioskLanguageSelect.addEventListener('change', () => {
                 kioskLanguage = kioskLanguageSelect.value === 'en' ? 'en' : 'vi';
-                localStorage.setItem('kiosk-language', kioskLanguage);
+                localStorage.setItem('kiosk-language-v2', kioskLanguage);
                 translateKiosk();
                 setLookupMode(document.getElementById('kioskLookupMode')?.value);
                 updateClock();

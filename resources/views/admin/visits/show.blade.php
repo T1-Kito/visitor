@@ -107,7 +107,7 @@
         </div>
         <div class="va-summary">
             <div><span>Người tiếp</span><strong>{{ $visit->hostEmployee?->name ?? '-' }}</strong></div>
-            <div><span>Giờ hẹn</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+            <div><span>Check-in dự kiến</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
             <div><span>Phòng ban</span><strong>{{ $visit->hostEmployee?->department?->name ?? '-' }}</strong></div>
         </div>
     </section>
@@ -129,9 +129,8 @@
                             <div class="va-info"><i class="bi bi-building"></i><div><span class="va-label">Công ty</span><span class="va-value">{{ $visit->visitor?->company ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-telephone"></i><div><span class="va-label">Số điện thoại</span><span class="va-value">{{ $visit->visitor?->phone ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-envelope"></i><div><span class="va-label">Email</span><span class="va-value">{{ $visit->visitor?->email ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-card-text"></i><div><span class="va-label">CMND/CCCD</span><span class="va-value">{{ $visit->visitor?->identity_no ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-geo-alt"></i><div><span class="va-label">Nơi cấp</span><span class="va-value">{{ $visit->visitor?->identity_issued_place ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-calendar3"></i><div><span class="va-label">Ngày cấp</span><span class="va-value">{{ $visit->visitor?->identity_issued_date?->format('d/m/Y') ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-card-text"></i><div><span class="va-label">CCCD / Hộ chiếu</span><span class="va-value">{{ $visit->visitor?->identity_no ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-person-vcard"></i><div><span class="va-label">Số thẻ khách</span><span class="va-value">{{ $visit->visitor?->visitor_id_card_number ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-chat-text"></i><div><span class="va-label">Ghi chú</span><span class="va-value">{{ $visit->visitor?->note ?? '-' }}</span></div></div>
                         </div>
                     </div>
@@ -140,8 +139,8 @@
                         <div class="va-info-grid">
                             <div class="va-info"><i class="bi bi-upc-scan"></i><div><span class="va-label">Mã lịch hẹn</span><span class="va-value">{{ $visit->code }}</span></div></div>
                             <div class="va-info"><i class="bi bi-card-checklist"></i><div><span class="va-label">Loại lịch hẹn</span><span class="va-value">{{ $visit->visitor?->company ? 'Đặt trước' : 'Khách vãng lai' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-calendar-check"></i><div><span class="va-label">Ngày giờ vào</span><span class="va-value">{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-clock-history"></i><div><span class="va-label">Dự kiến ra</span><span class="va-value">{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-calendar-check"></i><div><span class="va-label">Ngày giờ check-in</span><span class="va-value">{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-clock-history"></i><div><span class="va-label">Ngày giờ check-out dự kiến</span><span class="va-value">{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-geo-alt"></i><div><span class="va-label">Khu vực</span><span class="va-value">{{ $visit->access_zone ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-qr-code-scan"></i><div><span class="va-label">Hình thức vào</span><span class="va-value">{{ $methodText }}</span></div></div>
                             <div class="va-info"><i class="bi bi-bullseye"></i><div><span class="va-label">Mục đích đến</span><span class="va-value">{{ $visit->purpose ?? '-' }}</span></div></div>

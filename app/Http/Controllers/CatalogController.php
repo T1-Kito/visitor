@@ -578,7 +578,9 @@ class CatalogController extends Controller
                     ->orWhere('full_name', 'like', '%'.$keyword.'%')
                     ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhere('email', 'like', '%'.$keyword.'%')
-                    ->orWhere('company', 'like', '%'.$keyword.'%');
+                    ->orWhere('company', 'like', '%'.$keyword.'%')
+                    ->orWhere('identity_no', 'like', '%'.$keyword.'%')
+                    ->orWhere('visitor_id_card_number', 'like', '%'.$keyword.'%');
             });
         }
 
@@ -596,6 +598,7 @@ class CatalogController extends Controller
             'email' => ['nullable', 'email', 'max:160'],
             'company' => ['nullable', 'string', 'max:160'],
             'identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_id_card_number' => ['nullable', 'string', 'max:80'],
             'identity_issued_place' => ['nullable', 'string', 'max:160'],
             'identity_issued_date' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
@@ -640,6 +643,7 @@ class CatalogController extends Controller
             'email' => ['nullable', 'email', 'max:160'],
             'company' => ['nullable', 'string', 'max:160'],
             'identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_id_card_number' => ['nullable', 'string', 'max:80'],
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 

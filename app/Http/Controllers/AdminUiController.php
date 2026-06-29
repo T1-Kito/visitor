@@ -934,6 +934,7 @@ class AdminUiController extends Controller
             'email',
             'company',
             'identity_no',
+            'visitor_id_card_number',
             'identity_issued_place',
             'identity_issued_date',
             'note',
@@ -948,7 +949,8 @@ class AdminUiController extends Controller
                     ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhere('email', 'like', '%'.$keyword.'%')
                     ->orWhere('company', 'like', '%'.$keyword.'%')
-                    ->orWhere('identity_no', 'like', '%'.$keyword.'%');
+                    ->orWhere('identity_no', 'like', '%'.$keyword.'%')
+                    ->orWhere('visitor_id_card_number', 'like', '%'.$keyword.'%');
             })
             ->orderByDesc('visits_count')
             ->orderBy('full_name')
@@ -974,6 +976,7 @@ class AdminUiController extends Controller
                         $visitor->email,
                         $visitor->company,
                         $visitor->identity_no,
+                        $visitor->visitor_id_card_number,
                     ]));
 
                     return str_contains(Str::lower(Str::ascii($searchableText)), $normalizedKeyword);
@@ -991,6 +994,7 @@ class AdminUiController extends Controller
                 'email' => $visitor->email,
                 'company' => $visitor->company,
                 'identity_no' => $visitor->identity_no,
+                'visitor_id_card_number' => $visitor->visitor_id_card_number,
                 'identity_issued_place' => $visitor->identity_issued_place,
                 'identity_issued_date' => $visitor->identity_issued_date?->format('Y-m-d'),
                 'note' => $visitor->note,
@@ -3277,6 +3281,7 @@ XML;
             'visitor_email' => ['nullable', 'email', 'max:160'],
             'visitor_company' => ['nullable', 'string', 'max:160'],
             'visitor_identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_id_card_number' => ['nullable', 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'visitor_note' => ['nullable', 'string', 'max:1000'],
@@ -3435,6 +3440,7 @@ XML;
             'email' => $validated['visitor_email'] ?? null,
             'company' => $validated['visitor_company'] ?? null,
             'identity_no' => $validated['visitor_identity_no'] ?? null,
+            'visitor_id_card_number' => $validated['visitor_id_card_number'] ?? null,
             'identity_issued_place' => $validated['visitor_identity_issued_place'] ?? null,
             'identity_issued_date' => $validated['visitor_identity_issued_date'] ?? null,
             'note' => $validated['visitor_note'] ?? null,

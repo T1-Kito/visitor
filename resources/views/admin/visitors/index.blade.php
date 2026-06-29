@@ -145,6 +145,10 @@
                         <input class="form-control" name="identity_no" value="{{ old('identity_no') }}" placeholder="CCCD / hộ chiếu nếu cần">
                     </div>
                     <div class="resource-field-wide">
+                        <label class="form-label">Số thẻ khách</label>
+                        <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Nhập số thẻ khách">
+                    </div>
+                    <div class="resource-field-wide">
                         <label class="form-label">Ghi chú</label>
                         <textarea class="form-control" name="note" rows="3" placeholder="Ghi chú thêm cho lễ tân / bảo vệ">{{ old('note') }}</textarea>
                     </div>

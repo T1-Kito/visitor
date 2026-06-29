@@ -29,6 +29,7 @@ class Visitor extends Model
         'email',
         'company',
         'identity_no',
+        'visitor_id_card_number',
         'identity_issued_place',
         'identity_issued_date',
         'note',

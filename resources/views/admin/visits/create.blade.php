@@ -94,20 +94,12 @@
                             @error('visitor_identity_no')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="vc-field">
-                            <label>Nơi cấp</label>
+                            <label>Số thẻ khách</label>
                             <div class="vc-control">
-                                <i class="bi bi-geo-alt"></i>
-                                <input id="visitorIdentityIssuedPlace" class="form-control" name="visitor_identity_issued_place" value="{{ old('visitor_identity_issued_place') }}" placeholder="Nhập nơi cấp">
+                                <i class="bi bi-person-vcard"></i>
+                                <input id="visitorIdCardNumber" class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Nhập số thẻ khách">
                             </div>
-                            @error('visitor_identity_issued_place')<span class="vc-error">{{ $message }}</span>@enderror
-                        </div>
-                        <div class="vc-field">
-                            <label>Ngày cấp</label>
-                            <div class="vc-control">
-                                <i class="bi bi-calendar3"></i>
-                                <input id="visitorIdentityIssuedDate" class="form-control" type="date" name="visitor_identity_issued_date" value="{{ old('visitor_identity_issued_date') }}">
-                            </div>
-                            @error('visitor_identity_issued_date')<span class="vc-error">{{ $message }}</span>@enderror
+                            @error('visitor_id_card_number')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>
                     </div>
                 </div>
@@ -253,8 +245,7 @@
         email: document.getElementById('visitorEmail'),
         company: document.getElementById('visitorCompany'),
         identityNo: document.getElementById('visitorIdentityNo'),
-        identityIssuedPlace: document.getElementById('visitorIdentityIssuedPlace'),
-        identityIssuedDate: document.getElementById('visitorIdentityIssuedDate'),
+        visitorIdCardNumber: document.getElementById('visitorIdCardNumber'),
         note: document.getElementById('visitorNote'),
     };
     let searchTimer = null;
@@ -276,8 +267,7 @@
         fields.email.value = visitor.email || '';
         fields.company.value = visitor.company || '';
         fields.identityNo.value = visitor.identity_no || '';
-        fields.identityIssuedPlace.value = visitor.identity_issued_place || '';
-        fields.identityIssuedDate.value = visitor.identity_issued_date || '';
+        fields.visitorIdCardNumber.value = visitor.visitor_id_card_number || '';
         fields.note.value = visitor.note || fields.note.value || '';
         lookupInput.value = visitor.full_name || '';
         selectedVisitorText.textContent = `Đã chọn khách cũ: ${visitor.visitor_code ? visitor.visitor_code + ' - ' : ''}${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
@@ -313,7 +303,7 @@
             const name = document.createElement('strong');
             name.textContent = visitor.full_name || 'Khách chưa có tên';
             const meta = document.createElement('span');
-            meta.textContent = [visitor.visitor_code, visitor.identity_no, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
+            meta.textContent = [visitor.visitor_code, visitor.identity_no, visitor.visitor_id_card_number, visitor.phone, visitor.email, visitor.company].filter(Boolean).join(' - ') || 'Chưa có thông tin liên hệ';
             info.appendChild(name);
             info.appendChild(meta);
 

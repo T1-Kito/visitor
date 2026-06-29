@@ -15,20 +15,50 @@ class KioskFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_kiosk_form_matches_dhl_visitor_requirements(): void
+    {
+        $response = $this->get('/kiosk');
+
+        $response
+            ->assertOk()
+            ->assertSee('1. Visitor Information')
+            ->assertSee('2. Check-in/out Information')
+            ->assertSee('3. Meeting Information')
+            ->assertSee('4. Visiting Information')
+            ->assertSee('name="visitor_identity_no"', false)
+            ->assertSee('name="visitor_id_card_number"', false)
+            ->assertSee('name="checkin_date"', false)
+            ->assertSee('name="checkin_time"', false)
+            ->assertSee('name="checkout_date"', false)
+            ->assertSee('name="checkout_time"', false)
+            ->assertSee('Privacy Notice - DHL - Global')
+            ->assertDontSee('name="visitor_identity_issued_place"', false)
+            ->assertDontSee('name="visitor_identity_issued_date"', false)
+            ->assertDontSee('name="expected_checkout_time"', false);
+    }
+
     public function test_guest_can_create_walk_in_request_from_kiosk(): void
     {
         $this->seed(VmsSeeder::class);
 
         $host = Employee::query()->where('is_active', true)->firstOrFail();
+        $checkinAt = now()->addMinutes(30)->startOfMinute();
+        $checkoutAt = $checkinAt->copy()->addHours(2);
 
         $response = $this->post('/kiosk/checkin/manual', [
+            'registration_form' => 'kiosk_v2',
             'visitor_name' => 'Khach Kiosk Demo',
             'visitor_phone' => '0909000999',
             'visitor_email' => 'kiosk.demo@example.test',
             'visitor_company' => 'Demo Company',
+            'visitor_identity_no' => 'P12345678',
+            'visitor_id_card_number' => 'VID-0001',
             'host_employee_id' => $host->id,
             'purpose' => 'Họp',
-            'expected_checkout_time' => now()->addHours(2)->format('H:i'),
+            'checkin_date' => $checkinAt->toDateString(),
+            'checkin_time' => $checkinAt->format('H:i'),
+            'checkout_date' => $checkoutAt->toDateString(),
+            'checkout_time' => $checkoutAt->format('H:i'),
             'visitor_note' => 'Tạo từ kiosk',
             'policy_accepted' => '1',
         ]);
@@ -43,6 +73,9 @@ class KioskFlowTest extends TestCase
             ->assertSessionHas('kiosk_checkin_visit_id', $visit->id);
 
         $this->assertSame('pending', $visit->status);
+        $this->assertSame('VID-0001', $visit->visitor->visitor_id_card_number);
+        $this->assertSame($checkinAt->format('Y-m-d H:i'), $visit->scheduled_at->format('Y-m-d H:i'));
+        $this->assertSame($checkoutAt->format('Y-m-d H:i'), $visit->expected_checkout_at->format('Y-m-d H:i'));
         $this->assertNotNull($visit->qr_token);
         $this->assertTrue(Approval::query()
             ->where('visit_id', $visit->id)
@@ -56,6 +89,32 @@ class KioskFlowTest extends TestCase
             ->assertSee('Trạng thái yêu cầu gần nhất');
     }
 
+    public function test_kiosk_requires_checkout_after_checkin(): void
+    {
+        $this->seed(VmsSeeder::class);
+        $host = Employee::query()->where('is_active', true)->firstOrFail();
+        $checkinAt = now()->addHours(2)->startOfMinute();
+        $checkoutAt = $checkinAt->copy()->subHour();
+
+        $this->from('/kiosk')->post('/kiosk/checkin/manual', [
+            'registration_form' => 'kiosk_v2',
+            'visitor_name' => 'Invalid Schedule',
+            'visitor_phone' => '0909000111',
+            'visitor_email' => 'invalid.schedule@example.test',
+            'visitor_company' => 'Demo Company',
+            'visitor_identity_no' => 'P87654321',
+            'visitor_id_card_number' => 'VID-INVALID',
+            'host_employee_id' => $host->id,
+            'purpose' => 'Họp',
+            'checkin_date' => $checkinAt->toDateString(),
+            'checkin_time' => $checkinAt->format('H:i'),
+            'checkout_date' => $checkoutAt->toDateString(),
+            'checkout_time' => $checkoutAt->format('H:i'),
+            'policy_accepted' => '1',
+        ])
+            ->assertRedirect('/kiosk')
+            ->assertSessionHasErrors('checkout_time');
+    }
     public function test_guest_can_check_in_by_visit_code_after_approval_without_camera(): void
     {
         $this->seed(VmsSeeder::class);

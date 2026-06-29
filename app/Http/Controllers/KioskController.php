@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class KioskController extends Controller
@@ -49,11 +50,9 @@ class KioskController extends Controller
         ]);
     }
 
-    public function privacyNotice(): View
+    public function privacyNotice(): RedirectResponse
     {
-        return view('kiosk.privacy-notice', [
-            'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
-        ]);
+        return redirect()->away('https://www.dhl.com/global-en/home/footer/privacy-notice.html');
     }
 
     public function searchEmployees(Request $request): JsonResponse
@@ -91,16 +90,25 @@ class KioskController extends Controller
 
     public function storeWalkIn(Request $request): RedirectResponse
     {
+        $isKioskV2 = $request->input('registration_form') === 'kiosk_v2';
+        $requiredForKiosk = $isKioskV2 ? 'required' : 'nullable';
+
         $validated = $request->validate([
+            'registration_form' => ['nullable', 'in:kiosk_v2'],
             'visitor_name' => ['required', 'string', 'max:120'],
-            'visitor_phone' => ['nullable', 'string', 'max:30'],
+            'visitor_phone' => [$requiredForKiosk, 'string', 'max:30'],
             'visitor_email' => ['required', 'email', 'max:160'],
             'visitor_company' => ['required', 'string', 'max:160'],
-            'visitor_identity_no' => ['nullable', 'string', 'max:80'],
+            'visitor_identity_no' => [$requiredForKiosk, 'string', 'max:80'],
+            'visitor_id_card_number' => [$requiredForKiosk, 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'host_employee_id' => ['required', 'exists:employees,id'],
             'purpose' => ['required', 'string', 'max:255'],
+            'checkin_date' => [$requiredForKiosk, 'date'],
+            'checkin_time' => [$requiredForKiosk, 'date_format:H:i'],
+            'checkout_date' => [$requiredForKiosk, 'date'],
+            'checkout_time' => [$requiredForKiosk, 'date_format:H:i'],
             'expected_checkout_time' => ['nullable', 'date_format:H:i'],
             'policy_accepted' => ['accepted'],
         ]);
@@ -111,13 +119,24 @@ class KioskController extends Controller
             'email' => $validated['visitor_email'] ?? null,
             'company' => $validated['visitor_company'] ?? null,
             'identity_no' => $validated['visitor_identity_no'] ?? null,
+            'visitor_id_card_number' => $validated['visitor_id_card_number'] ?? null,
             'identity_issued_place' => $validated['visitor_identity_issued_place'] ?? null,
             'identity_issued_date' => $validated['visitor_identity_issued_date'] ?? null,
         ]);
 
         $scheduledAt = now();
         $expectedCheckoutAt = $scheduledAt->copy()->addHours(2);
-        if (! empty($validated['expected_checkout_time'])) {
+
+        if ($isKioskV2) {
+            $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', $validated['checkin_date'].' '.$validated['checkin_time']);
+            $expectedCheckoutAt = Carbon::createFromFormat('Y-m-d H:i', $validated['checkout_date'].' '.$validated['checkout_time']);
+
+            if ($expectedCheckoutAt->lessThanOrEqualTo($scheduledAt)) {
+                throw ValidationException::withMessages([
+                    'checkout_time' => 'Check-out date and time must be after check-in date and time.',
+                ]);
+            }
+        } elseif (! empty($validated['expected_checkout_time'])) {
             $candidate = Carbon::createFromFormat('Y-m-d H:i', $scheduledAt->toDateString().' '.$validated['expected_checkout_time']);
             if ($candidate->greaterThan($scheduledAt)) {
                 $expectedCheckoutAt = $candidate;
