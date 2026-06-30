@@ -873,6 +873,7 @@ class SystemAdminController extends Controller
             'secondary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'background_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'surface_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'lobby_mode_enabled' => ['nullable', 'boolean'],
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
@@ -902,6 +903,7 @@ class SystemAdminController extends Controller
             'kiosk.secondary_color' => strtolower($validated['secondary_color']),
             'kiosk.background_color' => strtolower($validated['background_color']),
             'kiosk.surface_color' => strtolower($validated['surface_color']),
+            'kiosk.lobby_mode_enabled' => $request->boolean('lobby_mode_enabled') ? '1' : '0',
         ]);
 
         $this->logAudit('settings.kiosk_updated', 'system_setting', 'kiosk', [
@@ -910,6 +912,7 @@ class SystemAdminController extends Controller
             'login_title' => $validated['login_title'],
             'primary_color' => strtolower($validated['primary_color']),
             'secondary_color' => strtolower($validated['secondary_color']),
+            'lobby_mode_enabled' => $request->boolean('lobby_mode_enabled'),
         ]);
 
         return redirect()

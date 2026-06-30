@@ -37,6 +37,8 @@
 .vs-icon-btn.checkout{border-color:#fed7aa;background:#fff7ed;color:#c2410c}
 .vs-icon-btn.done{cursor:default;border-color:#e2e8f0;background:#f8fafc;color:#94a3b8}
 .vs-filter-empty{padding:32px 16px;text-align:center;color:#8192a8;font-size:13px}
+.vs-card,.vs-row,.vs-btn,.vs-tab{transition:none!important}.vs-card:hover{transform:none!important;box-shadow:none!important}
+.vs-filter .form-control:focus,.vs-filter .form-select:focus{border-color:#dce8f6!important;box-shadow:none!important;outline:0!important}.vs-filter .form-control,.vs-filter .form-select{transition:none!important}
 </style>
 @endpush
 
@@ -53,7 +55,7 @@
     <section class="vs-main">
         <div class="vs-filter">
             <input id="visitSearch" class="form-control" placeholder="Tìm mã lịch, khách, người gặp, người tạo, mục đích...">
-            <input class="form-control" type="date" value="{{ now()->format('Y-m-d') }}">
+            <input id="visitDateFilter" class="form-control" type="date" value="{{ now()->format('Y-m-d') }}">
             <select id="departmentFilter" class="form-select">
                 <option value="all">Tất cả phòng ban</option>
                 @foreach (collect($visits)->pluck('department')->unique()->filter()->sort() as $department)
@@ -100,7 +102,7 @@
                         data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['approver'].' '.$visit['department'].' '.$visit['purpose']) }}"
                         data-status="{{ $visit['status'] }}"
                         data-department="{{ strtolower($visit['department']) }}"
-                        data-creator="{{ str_starts_with($visit['creator'], 'Kiosk') ? 'kiosk' : strtolower($visit['creator']) }}">
+                        data-creator="{{ str_starts_with($visit['creator'], 'Kiosk') ? 'kiosk' : strtolower($visit['creator']) }}" data-date="{{ $visit['date_iso'] ?? '' }}">
                         <td><a class="vs-table-code" href="{{ route('admin.visits.show', $visit['id']) }}">{{ $visit['code'] }}</a></td>
                         <td>
                             <span class="vs-table-primary">{{ $visit['visitor'] }}</span>
@@ -164,6 +166,7 @@
     const searchInput = document.getElementById('visitSearch');
     const departmentFilter = document.getElementById('departmentFilter');
     const creatorFilter = document.getElementById('creatorFilter');
+    const dateFilter = document.getElementById('visitDateFilter');
     const cards = Array.from(document.querySelectorAll('#visitsGrid .vs-row'));
     const tabs = Array.from(document.querySelectorAll('[data-status-tab]'));
     const pager = document.getElementById('visitPager');
@@ -180,13 +183,15 @@
         const keyword = (searchInput.value || '').trim().toLowerCase();
         const department = departmentFilter.value;
         const creator = creatorFilter.value;
+        const selectedDate = dateFilter.value;
 
         filteredCards = cards.filter((card) => {
             const matchKeyword = keyword === '' || (card.dataset.search || '').includes(keyword);
             const matchStatus = status === 'all' || card.dataset.status === status;
             const matchDepartment = department === 'all' || card.dataset.department === department;
             const matchCreator = creator === 'all' || card.dataset.creator === creator;
-            return matchKeyword && matchStatus && matchDepartment && matchCreator;
+            const matchDate = selectedDate === '' || card.dataset.date === selectedDate;
+            return matchKeyword && matchStatus && matchDepartment && matchCreator && matchDate;
         });
 
         currentPage = 1;
@@ -251,6 +256,7 @@
     searchInput.addEventListener('input', applyFilters);
     departmentFilter.addEventListener('change', applyFilters);
     creatorFilter.addEventListener('change', applyFilters);
+    dateFilter.addEventListener('change', applyFilters);
     prevPage.addEventListener('click', () => {
         currentPage -= 1;
         renderPage();
@@ -261,6 +267,54 @@
     });
 
     applyFilters();
+})();
+(() => {
+    const liveUrl = @json(route('admin.visits.live-state'));
+    let currentVersion = @json($visitLiveState['version'] ?? '');
+    let reloading = false;
+
+    const shouldPauseLiveRefresh = () => {
+        const active = document.activeElement;
+        return document.hidden
+            || document.querySelector('.modal.show')
+            || (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))
+            || document.querySelector('form[data-disable-on-submit] button[disabled]');
+    };
+
+    const checkLiveState = async () => {
+        if (reloading || shouldPauseLiveRefresh()) {
+            return;
+        }
+
+        try {
+            const response = await fetch(liveUrl, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                cache: 'no-store',
+            });
+
+            if (! response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            if (! currentVersion) {
+                currentVersion = payload.version || '';
+                return;
+            }
+
+            if (payload.version && payload.version !== currentVersion) {
+                reloading = true;
+                window.location.reload();
+            }
+        } catch (error) {
+            // Mat ket noi tam thoi thi bo qua lan nay, lan sau tu kiem tra lai.
+        }
+    };
+
+    window.setInterval(checkLiveState, 5000);
 })();
 </script>
 @endpush

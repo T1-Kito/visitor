@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SystemSetting;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Support\DynamicMailSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,9 +56,46 @@ class OnlineRegistrationEmailTest extends TestCase
 
     }
 
+    public function test_lobby_mode_hides_online_registration_menu_and_redirects_page(): void
+    {
+        $admin = $this->visitsAdmin();
+        SystemSetting::withoutGlobalScopes()->updateOrCreate(
+            ['tenant_id' => $admin->tenant_id, 'key' => 'kiosk.lobby_mode_enabled'],
+            ['value' => '1'],
+        );
+
+        $this->actingAs($admin)
+            ->get(route('admin.visits.index'))
+            ->assertOk()
+            ->assertDontSee('Đăng ký online');
+
+        $this->actingAs($admin)
+            ->get(route('admin.online-registration'))
+            ->assertRedirect(route('admin.visits.index'));
+    }
+    public function test_lobby_mode_blocks_sending_online_registration_email(): void
+    {
+        $admin = $this->visitsAdmin();
+        SystemSetting::withoutGlobalScopes()->updateOrCreate(
+            ['tenant_id' => $admin->tenant_id, 'key' => 'kiosk.lobby_mode_enabled'],
+            ['value' => '1'],
+        );
+
+        $this->actingAs($admin)
+            ->post(route('admin.online-registration.send-email'), [
+                'recipient_email' => 'visitor@example.com',
+            ])
+            ->assertRedirect(route('admin.visits.index'))
+            ->assertSessionHas('error');
+    }
     private function visitsAdmin(): User
     {
-        $admin = User::factory()->create();
+        $tenant = Tenant::query()->firstOrCreate(
+            ['slug' => config('saas.default_tenant_slug', 'default')],
+            ['name' => config('saas.default_tenant_name', 'Default Customer'), 'status' => 'active'],
+        );
+
+        $admin = User::factory()->create(['tenant_id' => $tenant->id]);
         $admin->roles()->create(['name' => 'Admin', 'slug' => 'admin'])
             ->permissions()->create(['name' => 'Manage visits', 'slug' => 'visits.manage']);
 

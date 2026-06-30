@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AccessControlLog;
 use App\Models\Approval;
 use App\Models\Employee;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Visit;
 use Database\Seeders\VmsSeeder;
@@ -37,6 +38,44 @@ class KioskFlowTest extends TestCase
             ->assertDontSee('name="expected_checkout_time"', false);
     }
 
+    public function test_kiosk_can_search_active_employee(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $employee = Employee::query()->where('is_active', true)->firstOrFail();
+        $term = substr((string) $employee->email, 0, 4);
+
+        $this->getJson(route('kiosk.employees.search', ['q' => $term]))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $employee->id,
+                'name' => $employee->name,
+            ]);
+    }
+    public function test_lobby_mode_hides_visit_code_and_uses_admin_support_number(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        foreach ([
+            'kiosk.lobby_mode_enabled' => '1',
+            'kiosk.hotline' => '0901 234 567',
+        ] as $key => $value) {
+            SystemSetting::withoutGlobalScopes()->updateOrCreate(
+                ['tenant_id' => $admin->tenant_id, 'key' => $key],
+                ['value' => $value],
+            );
+        }
+
+        $visit = Visit::query()->firstOrFail();
+
+        $this->get(route('kiosk.checkin.status', $visit))
+            ->assertOk()
+            ->assertSee('0901 234 567')
+            ->assertDontSee('Mã lịch hẹn của bạn')
+            ->assertDontSee($visit->code)
+            ->assertDontSee('mã QR/check-in sẽ được gửi qua Gmail');
+    }
     public function test_guest_can_create_walk_in_request_from_kiosk(): void
     {
         $this->seed(VmsSeeder::class);
@@ -52,7 +91,6 @@ class KioskFlowTest extends TestCase
             'visitor_email' => 'kiosk.demo@example.test',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P12345678',
-            'visitor_id_card_number' => 'VID-0001',
             'host_employee_id' => $host->id,
             'purpose' => 'Họp',
             'checkin_date' => $checkinAt->toDateString(),
@@ -73,7 +111,7 @@ class KioskFlowTest extends TestCase
             ->assertSessionHas('kiosk_checkin_visit_id', $visit->id);
 
         $this->assertSame('pending', $visit->status);
-        $this->assertSame('VID-0001', $visit->visitor->visitor_id_card_number);
+        $this->assertNull($visit->visitor->visitor_id_card_number);
         $this->assertSame($checkinAt->format('Y-m-d H:i'), $visit->scheduled_at->format('Y-m-d H:i'));
         $this->assertSame($checkoutAt->format('Y-m-d H:i'), $visit->expected_checkout_at->format('Y-m-d H:i'));
         $this->assertNotNull($visit->qr_token);

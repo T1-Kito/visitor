@@ -18,6 +18,7 @@
 
 /* Compact approval table: clearer hierarchy without changing the page shell. */
 .ap-table-scroll{overflow-x:auto;background:#fff}
+.ap-row,.ap-btn,.ap-tab{transition:none!important}.ap-row:hover{transform:none!important;box-shadow:none!important}
 .ap-main{border-right:0;border-left:0;border-radius:0;box-shadow:none}
 .ap-table-inner{min-width:980px}
 .ap-table-head,.ap-row{display:grid;grid-template-columns:145px minmax(160px,1.2fr) minmax(160px,1.1fr) minmax(125px,.8fr) 130px 110px 178px;column-gap:14px;align-items:center}
@@ -44,6 +45,7 @@
 .ap-pages{display:none}
 @media(max-width:1100px){.ap-table-inner{min-width:1040px}.ap-row,.ap-table-head{grid-template-columns:135px minmax(145px,1.15fr) minmax(145px,1.05fr) 115px 120px 100px 174px;column-gap:10px}}
 @media(max-width:900px){.ap-table-inner{min-width:900px}.ap-row{display:grid;align-items:center}.ap-actions{grid-column:auto}.ap-footer{flex-direction:row;align-items:center}}
+.ap-filter .form-control:focus,.ap-filter .form-select:focus{border-color:#dce8f6!important;box-shadow:none!important;outline:0!important}.ap-filter .form-control,.ap-filter .form-select{transition:none!important}
 </style>
 @endpush
 
@@ -51,7 +53,7 @@
 <section class="ap-main">
     <div class="ap-filter">
         <input id="approvalSearch" class="form-control" placeholder="Tìm theo mã lịch, tên khách, công ty, người tiếp...">
-        <input class="form-control" type="date" value="{{ now()->format('Y-m-d') }}">
+        <input id="approvalDateFilter" class="form-control" type="date" value="{{ now()->format('Y-m-d') }}">
         <select id="approvalDepartmentFilter" class="form-select">
             <option value="all">Tất cả phòng ban</option>
             @foreach (collect($approvalVisits)->pluck('department')->unique()->filter()->sort() as $department)
@@ -87,7 +89,7 @@
             </div>
             <div class="ap-list" id="approvalList">
             @forelse ($approvalVisits as $visit)
-                <article class="ap-row" data-status="{{ $visit['status'] }}" data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['company'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['department'].' '.$visit['purpose']) }}" data-department="{{ strtolower($visit['department']) }}">
+                <article class="ap-row" data-status="{{ $visit['status'] }}" data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['company'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['department'].' '.$visit['purpose']) }}" data-department="{{ strtolower($visit['department']) }}" data-date="{{ $visit['date_iso'] ?? '' }}">
                 <a class="ap-row-link" href="{{ route('admin.visits.show', $visit['id']) }}" aria-label="Xem chi tiết lịch {{ $visit['code'] }}"></a>
 
                 <div>
@@ -127,9 +129,13 @@
 
                 <div class="ap-actions">
                     @if ($visit['status'] === 'pending')
-                        <form action="{{ route('admin.approvals.approve', $visit['id']) }}" method="post" data-disable-on-submit>
+                        <form action="{{ $kioskLobbyModeEnabled ? route('admin.approvals.approve-checkin', $visit['id']) : route('admin.approvals.approve', $visit['id']) }}" method="post" data-disable-on-submit>
                             @csrf
-                            <button class="ap-btn ap-btn-approve" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check2"></i> Duyệt</button>
+                            @if ($kioskLobbyModeEnabled)
+                                <button class="ap-btn ap-btn-approve" type="submit" data-loading-text="Đang cho khách vào..."><i class="bi bi-door-open"></i> Duyệt & cho vào</button>
+                            @else
+                                <button class="ap-btn ap-btn-approve" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check2"></i> Duyệt</button>
+                            @endif
                         </form>
                         <form action="{{ route('admin.approvals.reject', $visit['id']) }}" method="post" data-disable-on-submit>
                             @csrf
@@ -160,6 +166,7 @@
     const searchInput = document.getElementById('approvalSearch');
     const departmentFilter = document.getElementById('approvalDepartmentFilter');
     const statusFilter = document.getElementById('approvalStatusFilter');
+    const dateFilter = document.getElementById('approvalDateFilter');
     const cards = Array.from(document.querySelectorAll('#approvalList .ap-row'));
     const tabs = Array.from(document.querySelectorAll('[data-approval-tab]'));
     let tabStatus = 'all';
@@ -168,13 +175,34 @@
         const keyword = (searchInput.value || '').trim().toLowerCase();
         const department = departmentFilter.value;
         const selectedStatus = statusFilter.value;
+        const selectedDate = dateFilter.value;
+
+        const counts = { all: 0, pending: 0, approved: 0, rejected: 0 };
 
         cards.forEach((card) => {
             const matchKeyword = keyword === '' || (card.dataset.search || '').includes(keyword);
             const matchDepartment = department === 'all' || card.dataset.department === department;
+            const matchDate = selectedDate === '' || card.dataset.date === selectedDate;
+            const matchBaseFilters = matchKeyword && matchDepartment && matchDate;
             const matchTab = tabStatus === 'all' || card.dataset.status === tabStatus;
             const matchSelect = selectedStatus === 'all' || card.dataset.status === selectedStatus;
-            card.classList.toggle('d-none', !(matchKeyword && matchDepartment && matchTab && matchSelect));
+
+            if (matchBaseFilters) {
+                counts.all += 1;
+                if (Object.hasOwn(counts, card.dataset.status)) {
+                    counts[card.dataset.status] += 1;
+                }
+            }
+
+            card.classList.toggle('d-none', !(matchBaseFilters && matchTab && matchSelect));
+        });
+
+        tabs.forEach((tab) => {
+            const count = counts[tab.dataset.approvalTab] ?? 0;
+            const badge = tab.querySelector('em');
+            if (badge) {
+                badge.textContent = count;
+            }
         });
     };
 
@@ -190,6 +218,7 @@
 
     searchInput.addEventListener('input', applyFilters);
     departmentFilter.addEventListener('change', applyFilters);
+    dateFilter.addEventListener('change', applyFilters);
     statusFilter.addEventListener('change', () => {
         tabStatus = statusFilter.value;
         tabs.forEach((item) => item.classList.toggle('active', item.dataset.approvalTab === tabStatus));
@@ -198,6 +227,56 @@
         }
         applyFilters();
     });
+
+    applyFilters();
+})();
+(() => {
+    const liveUrl = @json(route('admin.visits.live-state'));
+    let currentVersion = @json($visitLiveState['version'] ?? '');
+    let reloading = false;
+
+    const shouldPauseLiveRefresh = () => {
+        const active = document.activeElement;
+        return document.hidden
+            || document.querySelector('.modal.show')
+            || (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))
+            || document.querySelector('form[data-disable-on-submit] button[disabled]');
+    };
+
+    const checkLiveState = async () => {
+        if (reloading || shouldPauseLiveRefresh()) {
+            return;
+        }
+
+        try {
+            const response = await fetch(liveUrl, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                cache: 'no-store',
+            });
+
+            if (! response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            if (! currentVersion) {
+                currentVersion = payload.version || '';
+                return;
+            }
+
+            if (payload.version && payload.version !== currentVersion) {
+                reloading = true;
+                window.location.reload();
+            }
+        } catch (error) {
+            // Mat ket noi tam thoi thi bo qua lan nay, lan sau tu kiem tra lai.
+        }
+    };
+
+    window.setInterval(checkLiveState, 5000);
 })();
 </script>
 @endpush

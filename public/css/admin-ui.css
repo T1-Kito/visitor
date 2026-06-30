@@ -794,11 +794,8 @@ a {
 }
 
 .btn-brand {
-    border: 1px solid #e0b400;
     color: #111827;
-    background: #ffcc00;
-    box-shadow: 0 6px 14px rgba(212, 5, 17, .1);
-    font-weight: 700;
+ ;
 }
 
 .btn-brand > i {
@@ -3763,12 +3760,11 @@ a {
 }
 
 .resource-summary-dhl .resource-stat {
-    min-height: 82px;
+    min-height: .5rem;
     gap: .75rem;
     padding: .72rem .9rem;
     border-color: #e0b400;
     border-radius: 16px;
-    background: #ffcc00;
     box-shadow: none;
 }
 
@@ -3806,9 +3802,8 @@ a {
 }
 
 .employee-resource-shell .resource-summary-dhl .resource-stat {
-    min-height: 68px;
+    min-height: .5rem;
     gap: .65rem;
-    padding: .5rem .75rem;
 }
 
 .employee-resource-shell .resource-summary-dhl .resource-stat-icon {

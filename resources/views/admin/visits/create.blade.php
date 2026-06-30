@@ -12,11 +12,44 @@
 .vc-btn-cancel{min-height:40px;padding:0 .9rem;border-radius:10px;color:#526b87;font-size:.82rem;font-weight:500}
 .vc-btn-main[disabled]{cursor:not-allowed;opacity:.72;box-shadow:none}
 @media(max-width:768px){.vc-footer{flex-direction:row;justify-content:flex-end;align-items:center}.vc-btn-main{width:auto;min-width:148px}.vc-btn-cancel{width:auto}}
-</style>
+.vc-no-focus .vc-control .form-control:focus,
+.vc-no-focus .vc-control .form-select:focus{
+    border-color:#d8e5f2!important;
+    box-shadow:none!important;
+    outline:0!important;
+}</style>
 @endpush
 
+
+@push('styles')
+<style>
+.vc-no-focus .form-control:focus,
+.vc-no-focus .form-select:focus,
+.vc-no-focus textarea:focus,
+.vc-no-focus input:focus,
+.vc-no-focus select:focus{
+    border-color:#dce8f6!important;
+    box-shadow:none!important;
+    outline:0!important;
+}
+.vc-no-focus .form-control,
+.vc-no-focus .form-select,
+.vc-no-focus textarea,
+.vc-no-focus input,
+.vc-no-focus select,
+.vc-no-focus button,
+.vc-no-focus .btn{
+    transition:none!important;
+}
+.vc-no-focus .vc-control .form-control:focus,
+.vc-no-focus .vc-control .form-select:focus{
+    border-color:#d8e5f2!important;
+    box-shadow:none!important;
+    outline:0!important;
+}</style>
+@endpush
 @section('content')
-<form id="visitCreateForm" action="{{ route('admin.visits.store') }}" method="post">
+<form id="visitCreateForm" class="vc-no-focus" action="{{ route('admin.visits.store') }}" method="post">
     @csrf
     <input type="hidden" name="visit_form_token" value="{{ $visitFormToken }}">
     <input id="existingVisitorId" type="hidden" name="existing_visitor_id" value="{{ old('existing_visitor_id') }}">

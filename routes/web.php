@@ -94,6 +94,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/visits', [AdminUiController::class, 'visitsIndex'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.index');
+    Route::get('/visits-live-state', [AdminUiController::class, 'visitsLiveState'])
+        ->name('admin.visits.live-state');
     Route::get('/visits/create', [AdminUiController::class, 'visitsCreate'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.create');
@@ -123,6 +125,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('admin.approvals.index');
     Route::post('/approvals/{visit}/approve', [AdminUiController::class, 'approveVisit'])
         ->name('admin.approvals.approve');
+    Route::post('/approvals/{visit}/approve-checkin', [AdminUiController::class, 'approveAndCheckin'])
+        ->name('admin.approvals.approve-checkin');
     Route::post('/approvals/{visit}/reject', [AdminUiController::class, 'rejectVisit'])
         ->name('admin.approvals.reject');
     Route::post('/approvals/{visit}/wait', [AdminUiController::class, 'waitVisit'])

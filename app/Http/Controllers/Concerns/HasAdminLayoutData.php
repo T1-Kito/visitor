@@ -51,6 +51,10 @@ trait HasAdminLayoutData
         }
 
         $kioskSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+        $kioskLobbyModeEnabled = ($kioskSettings['kiosk.lobby_mode_enabled'] ?? '0') === '1';
+        if ($kioskLobbyModeEnabled) {
+            $sidebarMenu = array_values(array_filter($sidebarMenu, fn (array $item): bool => $item['route'] !== 'admin.online-registration'));
+        }
         $adminTheme = SystemSetting::values(SystemSetting::adminThemeDefaults());
         $brandName = trim((string) ($kioskSettings['kiosk.system_name'] ?? 'Gatehouse Pro'));
         $brandSubtitle = trim((string) ($kioskSettings['kiosk.subtitle'] ?? 'Quản lý khách ra vào'));
@@ -61,6 +65,7 @@ trait HasAdminLayoutData
             ->implode('');
         $adminLogoUrl = $kioskSettings['admin.logo_url'] ?? null;
         $licenseNotice = $this->adminLayoutLicenseNotice(app(LicenseManager::class)->status());
+
 
         return array_merge([
             'currentUser' => [
@@ -80,6 +85,7 @@ trait HasAdminLayoutData
             'adminKioskTheme' => [
                 'background_color' => $kioskSettings['kiosk.background_color'] ?? '#f4f8fd',
             ],
+            'kioskLobbyModeEnabled' => $kioskLobbyModeEnabled,
             'licenseNotice' => $licenseNotice,
         ], $data);
     }

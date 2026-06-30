@@ -34,19 +34,34 @@ class AdminUiController extends Controller
 {
     use HasAdminLayoutData;
 
-    public function onlineRegistration(Request $request): View
+    public function onlineRegistration(Request $request): View|RedirectResponse
     {
+        $kioskSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+        if (($kioskSettings['kiosk.lobby_mode_enabled'] ?? '0') === '1') {
+            return redirect()
+                ->route('admin.visits.index')
+                ->with('status', 'Che do kiosk tai sanh dang bat nen muc Dang ky online da duoc an.');
+        }
+
         $mailSettings = DynamicMailSettings::values();
 
         return view('admin.online-registration', $this->withBase([
             'registrationUrl' => $this->onlineRegistrationUrl($request),
             'mailConfigured' => $this->onlineRegistrationMailConfigured($mailSettings),
             'mailFromAddress' => $mailSettings['mail.from_address'] ?? null,
+            'lobbyModeEnabled' => false,
         ]));
     }
 
     public function sendOnlineRegistrationEmail(Request $request): RedirectResponse
     {
+        $kioskSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+        if (($kioskSettings['kiosk.lobby_mode_enabled'] ?? '0') === '1') {
+            return redirect()
+                ->route('admin.visits.index')
+                ->with('error', 'Che do kiosk tai sanh dang bat nen chuc nang gui link dang ky online da duoc an.');
+        }
+
         $validated = $request->validate([
             'recipient_email' => ['required', 'email:rfc', 'max:190'],
         ], [
@@ -742,6 +757,7 @@ class AdminUiController extends Controller
                 'status' => $visit->status,
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+                'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
                 'checkin_at' => $visit->actual_checkin_at?->format('H:i - d/m/Y') ?? '-',
                 'checkout_at' => $visit->actual_checkout_at?->format('H:i - d/m/Y') ?? '-',
                 'url' => route('mobile.visits.show', $visit),
@@ -798,6 +814,7 @@ class AdminUiController extends Controller
             'status_label' => $this->visitStatusLabel($visit->status),
             'time' => $visit->scheduled_at?->format('H:i') ?? '-',
             'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+            'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
             'checkin_at' => $visit->actual_checkin_at?->format('H:i d/m/Y') ?? '-',
             'checkout_at' => $visit->actual_checkout_at?->format('H:i d/m/Y') ?? '-',
             'url' => route('mobile.visits.show', $visit),
@@ -898,6 +915,7 @@ class AdminUiController extends Controller
             'visitStats' => $stats,
             'statusCounts' => $statusCounts,
             'upcomingVisits' => $this->mapVisitRows($upcoming),
+            'visitLiveState' => $this->adminVisitLiveState(),
             'statusFilters' => [
                 'all' => 'Tất cả',
                 'pending' => 'Chờ duyệt',
@@ -907,6 +925,10 @@ class AdminUiController extends Controller
                 'rejected' => 'Từ chối',
             ],
         ]));
+    }
+    public function visitsLiveState(): JsonResponse
+    {
+        return response()->json($this->adminVisitLiveState());
     }
 
     public function visitsCreate(): View
@@ -1083,6 +1105,8 @@ class AdminUiController extends Controller
             'canEdit' => ! in_array($visit->status, ['checked_in', 'checked_out', 'cancelled'], true),
             'canCancel' => ! in_array($visit->status, ['checked_in', 'checked_out', 'cancelled'], true),
             'canGenerateQr' => $visit->status === 'approved',
+            'hosts' => $this->hostsForSelect(),
+            'accessZones' => $this->accessZones(),
             'activityLogs' => AuditLog::query()
                 ->where('entity_type', 'visit')
                 ->where('entity_id', (string) $visit->id)
@@ -1283,29 +1307,41 @@ class AdminUiController extends Controller
             ->get();
 
         $approvedVisits = $this->scopeVisitsForApproval(
-            $this->baseVisitQuery()->where('status', 'approved')
+            $this->baseVisitQuery()->whereHas(
+                'approval',
+                fn (Builder $query): Builder => $query->where('status', 'approved')
+            )
         )
             ->orderByDesc('updated_at')
             ->limit(30)
             ->get();
 
         $rejectedVisits = $this->scopeVisitsForApproval(
-            $this->baseVisitQuery()->where('status', 'rejected')
+            $this->baseVisitQuery()->whereHas(
+                'approval',
+                fn (Builder $query): Builder => $query->where('status', 'rejected')
+            )
         )
             ->orderByDesc('updated_at')
             ->limit(20)
             ->get();
 
         $approvedToday = $this->scopeVisitsForApproval(
-            $this->baseVisitQuery()
-                ->where('status', 'approved')
-                ->whereDate('updated_at', $today)
+            $this->baseVisitQuery()->whereHas(
+                'approval',
+                fn (Builder $query): Builder => $query
+                    ->where('status', 'approved')
+                    ->whereDate('acted_at', $today)
+            )
         )->count();
 
         $rejectedToday = $this->scopeVisitsForApproval(
-            $this->baseVisitQuery()
-                ->where('status', 'rejected')
-                ->whereDate('updated_at', $today)
+            $this->baseVisitQuery()->whereHas(
+                'approval',
+                fn (Builder $query): Builder => $query
+                    ->where('status', 'rejected')
+                    ->whereDate('acted_at', $today)
+            )
         )->count();
 
         $todayVisits = $this->scopeVisitsForApproval(
@@ -1316,6 +1352,14 @@ class AdminUiController extends Controller
             return $visits->map(function (Visit $visit): array {
             $createdAt = $visit->created_at instanceof Carbon ? $visit->created_at : null;
             $waitingMinutes = $createdAt ? max(0, (int) $createdAt->diffInMinutes(now())) : 0;
+            $approvalStatus = $visit->approval?->status;
+            if (! in_array($approvalStatus, ['pending', 'approved', 'rejected'], true)) {
+                $approvalStatus = match ($visit->status) {
+                    'rejected' => 'rejected',
+                    'approved', 'checked_in', 'checked_out' => 'approved',
+                    default => 'pending',
+                };
+            }
 
             return [
                 'id' => $visit->id,
@@ -1327,9 +1371,11 @@ class AdminUiController extends Controller
                 'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+                'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
                 'created_time' => $createdAt?->format('H:i - d/m/Y') ?? '-',
                 'waiting_minutes' => $waitingMinutes,
-                'status' => $visit->status,
+                'status' => $approvalStatus,
+                'visit_status' => $visit->status,
                 'purpose' => $visit->purpose,
                 'note' => $visit->visitor?->note ?? '-',
             ];
@@ -1357,6 +1403,7 @@ class AdminUiController extends Controller
                 'today' => $todayVisits,
                 'urgent' => $pendingRows->where('waiting_minutes', '>=', 15)->count(),
             ],
+            'visitLiveState' => $this->adminVisitLiveState(),
             'urgentApprovals' => $pendingRows
                 ->sortByDesc('waiting_minutes')
                 ->take(4)
@@ -1367,6 +1414,10 @@ class AdminUiController extends Controller
 
     public function approveVisit(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
+        if ($this->kioskLobbyModeEnabled()) {
+            return $this->approveAndCheckin($request, $visit);
+        }
+
         if (! $this->canActOnVisit($visit)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => "Bạn không có quyền xử lý lịch {$visit->code}."], 403);
@@ -1456,6 +1507,79 @@ class AdminUiController extends Controller
         return $redirect;
     }
 
+    public function approveAndCheckin(Request $request, Visit $visit): RedirectResponse|JsonResponse
+    {
+        if (! $this->canActOnVisit($visit)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Bạn không có quyền xử lý lịch {$visit->code}."], 403);
+            }
+
+            return redirect()->back()->with('error', "Bạn không có quyền xử lý lịch {$visit->code}.");
+        }
+
+        if ($visit->status !== 'pending') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Lịch {$visit->code} không ở trạng thái chờ duyệt."], 422);
+            }
+
+            return redirect()->back()->with('error', "Lịch {$visit->code} không ở trạng thái chờ duyệt.");
+        }
+
+        $approved = Visit::query()
+            ->whereKey($visit->id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'approved',
+                'rejection_reason' => null,
+            ]);
+
+        if ($approved !== 1) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => "Lịch {$visit->code} đã được xử lý trước đó."], 409);
+            }
+
+            return redirect()->back()->with('error', "Lịch {$visit->code} đã được xử lý trước đó.");
+        }
+
+        $visit->refresh();
+
+        Approval::query()->updateOrCreate(
+            ['visit_id' => $visit->id],
+            [
+                'approver_user_id' => $this->actingUserId(),
+                'status' => 'approved',
+                'note' => 'Lễ tân đã kiểm tra, duyệt và cho khách vào tại sảnh.',
+                'acted_at' => now(),
+            ]
+        );
+
+        $this->logAudit('approval.approved_and_checked_in', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+        ]);
+        $this->scanWatchlistForVisit($visit, 'approval.approved_and_checked_in');
+
+        $error = $this->performCheckin($visit, true);
+        if ($error !== null) {
+            return redirect()->back()->with('error', $error);
+        }
+
+        $this->logAudit('visit.checked_in', 'visit', (string) $visit->id, [
+            'code' => $visit->code,
+            'source' => 'approve_and_checkin',
+        ]);
+        $this->notifyHost($visit, 'visit.checked_in', 'Khách đã check-in', "Khách của lịch {$visit->code} đã vào công ty.", 'success');
+        $this->notifyUsersWithPermission('alerts.view', 'visit.checked_in', 'Khách đang trong công ty', "Lịch {$visit->code} đã check-in.", 'info', $visit);
+        $this->scanWatchlistForVisit($visit, 'visit.checked_in');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => "Đã duyệt và xác nhận khách vào cho lịch {$visit->code}.",
+                'visit' => $this->mapMobileVisitCards(collect([$visit->refresh()]))[0],
+            ]);
+        }
+
+        return redirect()->back()->with('status', "Đã duyệt và xác nhận khách vào cho lịch {$visit->code}.");
+    }
     public function rejectVisit(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
         if (! $this->canActOnVisit($visit)) {
@@ -1860,7 +1984,7 @@ class AdminUiController extends Controller
 
     public function confirmCheckin(Visit $visit): RedirectResponse
     {
-        $error = $this->performCheckin($visit);
+        $error = $this->performCheckin($visit, $this->kioskLobbyModeEnabled());
         if ($error !== null) {
             return redirect()->back()->with('error', $error);
         }
@@ -1924,7 +2048,7 @@ class AdminUiController extends Controller
             'code' => $visit->code,
         ]);
 
-        $error = $this->performCheckin($visit);
+        $error = $this->performCheckin($visit, $this->kioskLobbyModeEnabled());
         if ($error !== null) {
             return $redirect
                 ->with('checkin_scanned_visit_id', $visit->id)
@@ -3057,6 +3181,7 @@ XML;
                 'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
                 'time' => $visit->scheduled_at?->format('H:i') ?? '-',
                 'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+                'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
                 'status' => $visit->status,
                 'approver' => $visit->approval?->approver?->name
                     ?? ($visit->status === 'pending' ? 'Chưa duyệt' : 'Chưa có thông tin'),
@@ -3222,7 +3347,6 @@ XML;
         }
 
         return $query
-            ->orderByRaw('COALESCE(actual_checkout_at, actual_checkin_at, updated_at, scheduled_at) desc')
             ->orderByDesc('scheduled_at')
             ->orderByDesc('id');
     }
@@ -3236,6 +3360,34 @@ XML;
             'approval.approver',
             'activeBadge',
         ]);
+    }
+    /**
+     * @return array<string, mixed>
+     */
+    private function adminVisitLiveState(): array
+    {
+        $totalVisits = Visit::query()->count();
+        $latestVisitId = (int) (Visit::query()->max('id') ?? 0);
+        $latestVisitUpdate = (string) (Visit::query()->max('updated_at') ?? '');
+        $pendingApprovals = $this->scopeVisitsForApproval(
+            $this->baseVisitQuery()->where('visits.status', 'pending')
+        )->count();
+
+        $version = sha1(implode('|', [
+            $totalVisits,
+            $latestVisitId,
+            $latestVisitUpdate,
+            $pendingApprovals,
+        ]));
+
+        return [
+            'version' => $version,
+            'total_visits' => $totalVisits,
+            'latest_visit_id' => $latestVisitId,
+            'latest_visit_update' => $latestVisitUpdate,
+            'pending_approvals' => $pendingApprovals,
+            'server_time' => now()->toIso8601String(),
+        ];
     }
 
     /**
@@ -3544,7 +3696,7 @@ XML;
         return $hours.' giờ '.$remainingMinutes.' phút';
     }
 
-    private function performCheckin(Visit $visit): ?string
+    private function performCheckin(Visit $visit, bool $ignoreWindow = false): ?string
     {
         if ($visit->status === 'checked_in') {
             return "Lịch {$visit->code} đã được check-in trước đó.";
@@ -3560,7 +3712,7 @@ XML;
             };
         }
 
-        $windowError = $this->checkinWindowError($visit);
+        $windowError = $ignoreWindow ? null : $this->checkinWindowError($visit);
         if ($windowError !== null) {
             return $windowError;
         }
@@ -3598,6 +3750,13 @@ XML;
         $this->sendHostCheckinEmail($visit);
 
         return null;
+    }
+
+    private function kioskLobbyModeEnabled(): bool
+    {
+        $settings = SystemSetting::values(SystemSetting::kioskDefaults());
+
+        return ($settings['kiosk.lobby_mode_enabled'] ?? '0') === '1';
     }
 
     private function checkinWindowError(Visit $visit): ?string

@@ -579,6 +579,7 @@
     $systemName = $settings['kiosk.system_name'] ?? 'VMS Kiosk';
     $subtitle = $settings['kiosk.subtitle'] ?? 'Giao diện tự động cho khách đến công ty';
     $hotline = $settings['kiosk.hotline'] ?? '1900 0000';
+    $lobbyModeEnabled = ($settings['kiosk.lobby_mode_enabled'] ?? '0') === '1';
     $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
     $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
@@ -596,8 +597,8 @@
     $title = $isJustSubmitted ? 'Gửi yêu cầu thành công!' : ($statusLabels[$visit->status] ?? 'Trạng thái yêu cầu');
     $lead = $isJustSubmitted
         ? 'Cảm ơn bạn đã cung cấp thông tin. Yêu cầu đã được gửi đến lễ tân và đang chờ duyệt.'
-        : 'Vui lòng lưu lại mã lịch hẹn để tra cứu trạng thái khi cần.';
-    $canShowQr = ! $isJustSubmitted && in_array($visit->status, ['approved', 'checked_in', 'checked_out'], true);
+        : ($lobbyModeEnabled ? 'Lễ tân sẽ hướng dẫn bạn thực hiện bước tiếp theo.' : 'Vui lòng lưu lại mã lịch hẹn để tra cứu trạng thái khi cần.');
+    $canShowQr = ! $lobbyModeEnabled && ! $isJustSubmitted && in_array($visit->status, ['approved', 'checked_in', 'checked_out'], true);
 @endphp
 <body style="--kiosk-primary: {{ $primaryColor }};">
     <main class="ks-shell">
@@ -625,14 +626,14 @@
             </div>
 
             <div class="ks-tools">
-                <select class="ks-select" aria-label="Ngôn ngữ"><option>Tiếng Việt</option></select>
+                <select class="ks-select" id="ksLanguage" aria-label="Ngôn ngữ"><option value="vi">Tiếng Việt</option><option value="en">English</option></select>
                 <div class="ks-clock">
                     <strong id="ksClock">--:--</strong>
                     <span id="ksDate">--/--/----</span>
                 </div>
                 <div class="ks-help">
                     <i class="bi bi-telephone"></i>
-                    <div><small>Hỗ trợ</small><strong>{{ $hotline }}</strong></div>
+                    <div><small data-ks-support>Hỗ trợ</small><strong>{{ $hotline }}</strong></div>
                 </div>
             </div>
         </header>
@@ -655,6 +656,7 @@
                     <p class="ks-lead">{{ $lead }}</p>
                 </div>
 
+                @unless ($lobbyModeEnabled)
                 <div class="ks-code-box">
                     <div class="ks-code-content {{ $canShowQr && $visit->qr_token ? '' : 'is-plain' }}">
                         <div>
@@ -676,6 +678,7 @@
                         @endif
                     </div>
                 </div>
+                @endunless
 
                 <div class="ks-info-strip">
                     <div class="ks-info-item">
@@ -698,7 +701,9 @@
                 <div class="ks-note">
                     <i class="bi bi-bell-fill"></i>
                     <span>
-                        @if($isJustSubmitted)
+                        @if($lobbyModeEnabled)
+                            Lễ tân sẽ kiểm tra thông tin và hướng dẫn bạn vào công ty. Vui lòng chờ tại khu vực tiếp khách.
+                        @elseif($isJustSubmitted)
                             Lễ tân sẽ kiểm tra yêu cầu. Nếu lịch được duyệt, mã QR/check-in sẽ được gửi qua Gmail của bạn trong vài phút tới.
                         @else
                             Khi lễ tân xác nhận, bạn sẽ được hướng dẫn tiếp theo.<br>Vui lòng ngồi chờ tại khu vực tiếp khách.
@@ -720,22 +725,96 @@
             </section>
         </section>
 
-        <footer class="ks-footer">
+        <footer class="ks-footer" data-ks-footer>
             <i class="bi bi-info-circle"></i>
             Nếu cần hỗ trợ, vui lòng liên hệ lễ tân hoặc gọi {{ $hotline }}
         </footer>
     </main>
 
     <script>
+        const statusTranslations = {
+            'Tiếng Việt': 'Vietnamese',
+            'Hỗ trợ': 'Support',
+            'Đang chờ phê duyệt': 'Pending approval',
+            'Đã được duyệt': 'Approved',
+            'Đã check-in': 'Checked in',
+            'Đã rời công ty': 'Checked out',
+            'Bị từ chối': 'Rejected',
+            'Đã hủy': 'Cancelled',
+            'Trạng thái yêu cầu': 'Request status',
+            'Gửi yêu cầu thành công!': 'Request submitted successfully!',
+            'Cảm ơn bạn đã cung cấp thông tin. Yêu cầu đã được gửi đến lễ tân và đang chờ duyệt.': 'Thank you for providing your information. Your request has been sent to reception and is awaiting approval.',
+            'Lễ tân sẽ hướng dẫn bạn thực hiện bước tiếp theo.': 'Reception will guide you through the next step.',
+        @unless ($lobbyModeEnabled)
+            'Vui lòng lưu lại mã lịch hẹn để tra cứu trạng thái khi cần.': 'Please keep your appointment code for future status lookup.',
+            'Mã lịch hẹn của bạn': 'Your appointment code',
+            'Sau khi lễ tân duyệt, mã QR/check-in sẽ được gửi qua Gmail của bạn. Vui lòng kiểm tra hộp thư trong vài phút tới.': 'After reception approves your request, the QR/check-in code will be sent to your email. Please check your inbox in a few minutes.',
+            'Vui lòng lưu lại mã này để tra cứu trạng thái khi cần.': 'Please keep this code for future status lookup.',
+            'Dự kiến tới': 'Expected arrival',
+            'Người tiếp': 'Meeting person',
+            'Phòng ban': 'Department',
+            'Lễ tân sẽ kiểm tra thông tin và hướng dẫn bạn vào công ty. Vui lòng chờ tại khu vực tiếp khách.': 'Reception will verify your information and guide you into the company. Please wait in the reception area.',
+            'Lễ tân sẽ kiểm tra yêu cầu. Nếu lịch được duyệt, mã QR/check-in sẽ được gửi qua Gmail của bạn trong vài phút tới.': 'Reception will review your request. Once approved, the QR/check-in code will be sent to your email in a few minutes.',
+        @endunless
+            'Khi lễ tân xác nhận, bạn sẽ được hướng dẫn tiếp theo.': 'Reception will provide further guidance after confirmation.',
+            'Vui lòng ngồi chờ tại khu vực tiếp khách.': 'Please wait in the reception area.',
+            'Về trang chủ': 'Back to home',
+            'Xác nhận check-in': 'Confirm check-in',
+        };
+        const reverseStatusTranslations = Object.fromEntries(
+            Object.entries(statusTranslations).map(([vi, en]) => [en, vi])
+        );
+        let statusLanguage = localStorage.getItem('kiosk-language-v2') === 'vi' ? 'vi' : 'en';
+
+        function translateStatusPage() {
+            const translations = statusLanguage === 'en' ? statusTranslations : reverseStatusTranslations;
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+
+            while (walker.nextNode()) {
+                const node = walker.currentNode;
+                if (['SCRIPT', 'STYLE'].includes(node.parentElement?.tagName)) continue;
+                const value = node.nodeValue;
+                const trimmed = value.trim();
+                if (trimmed && translations[trimmed]) {
+                    node.nodeValue = value.replace(trimmed, translations[trimmed]);
+                }
+            }
+
+            const support = document.querySelector('[data-ks-support]');
+            if (support) support.textContent = statusLanguage === 'en' ? 'Support' : 'Hỗ trợ';
+
+            const footer = document.querySelector('[data-ks-footer]');
+            if (footer) {
+                footer.innerHTML = '<i class="bi bi-info-circle"></i> ' + (
+                    statusLanguage === 'en'
+                        ? @json('For assistance, please contact reception or call '.$hotline)
+                        : @json('Nếu cần hỗ trợ, vui lòng liên hệ lễ tân hoặc gọi '.$hotline)
+                );
+            }
+
+            document.documentElement.lang = statusLanguage;
+            document.title = statusLanguage === 'en' ? 'Request status | VMS Kiosk' : 'Trạng thái yêu cầu | VMS Kiosk';
+        }
+
+        const languageSelect = document.getElementById('ksLanguage');
+        languageSelect.value = statusLanguage;
+        languageSelect.addEventListener('change', function() {
+            statusLanguage = languageSelect.value === 'en' ? 'en' : 'vi';
+            localStorage.setItem('kiosk-language-v2', statusLanguage);
+            translateStatusPage();
+            updateClock();
+        });
         const clockNode = document.getElementById('ksClock');
         const dateNode = document.getElementById('ksDate');
 
         function updateClock() {
             const now = new Date();
-            clockNode.textContent = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit' }).format(now);
-            dateNode.textContent = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
+            const locale = statusLanguage === 'en' ? 'en-GB' : 'vi-VN';
+            clockNode.textContent = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(now);
+            dateNode.textContent = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
         }
 
+        translateStatusPage();
         updateClock();
         setInterval(updateClock, 30000);
     </script>

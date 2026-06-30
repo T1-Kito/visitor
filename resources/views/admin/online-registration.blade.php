@@ -33,12 +33,22 @@
     .online-side h4 { margin: 0; font-size: 18px; font-weight: 800; }
     .online-side p { margin: 7px auto 17px; color: #64748b; font-size: 13px; line-height: 1.5; }
     .online-open { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 9px 13px; border: 1px solid #dbe4ef; border-radius: 12px; color: #1e293b; font-weight: 700; text-decoration: none; }
+    .online-disabled { display: grid; gap: 12px; padding: 22px; border: 1px solid #fee2e2; border-radius: 22px; background: #fff7f7; color: #7f1d1d; }
+    .online-disabled h3 { margin: 0; color: #991b1b; font-size: 18px; font-weight: 800; }
+    .online-disabled p { margin: 0; color: #7f1d1d; line-height: 1.55; }
     @media (max-width: 991.98px) { .online-share { grid-template-columns: 1fr; } }
     @media (max-width: 575.98px) { .online-main { padding: 18px; } .online-mail-row { grid-template-columns: 1fr; } .online-copy span { display: none; } }
 </style>
 @endpush
 
 @section('content')
+@if ($lobbyModeEnabled)
+    <section class="online-disabled">
+        <h3><i class="bi bi-door-open"></i> Chế độ kiosk tại sảnh đang bật</h3>
+        <p>Gửi Gmail/link đăng ký và mã QR đăng ký online đã được ẩn. Khách nhập thông tin trực tiếp trên màn hình kiosk đặt tại sảnh, sau đó lễ tân kiểm tra và bấm “Duyệt & cho khách vào”.</p>
+        <a class="online-open" href="{{ route('admin.settings.kiosk') }}"><i class="bi bi-gear"></i> Mở cài đặt kiosk</a>
+    </section>
+@else
 <div class="online-share">
     <section class="online-card online-main">
         <span class="online-kicker"><i class="bi bi-broadcast-pin"></i> Link đăng ký công khai</span>
@@ -75,6 +85,7 @@
         <a class="online-open" href="{{ $registrationUrl }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Mở thử trang đăng ký</a>
     </aside>
 </div>
+@endif
 @endsection
 
 @push('scripts')

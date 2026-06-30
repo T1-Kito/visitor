@@ -57,7 +57,6 @@
             height: 100vh;
             display: grid;
             grid-template-rows: auto minmax(0, 1fr);
-            gap: .75rem;
             width: min(1420px, calc(100vw - 48px));
             margin: 0 auto;
             padding: .65rem 0;
@@ -494,10 +493,31 @@
         }
 
         .premium-result-list {
-            position: absolute;
+            position: relative;
             z-index: 20;
-            width: min(520px, 100%);
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 14px;
             box-shadow: 0 18px 36px rgba(17, 39, 68, .14);
+        }
+
+        .premium-result-list:empty {
+            display: none;
+        }
+
+        .premium-result-list .list-group-item {
+            padding: .5rem .7rem;
+            font-size: .76rem;
+            line-height: 1.25;
+        }
+
+        .premium-result-list .list-group-item strong {
+            font-size: .8rem;
+        }
+
+        .premium-result-list .list-group-item .text-secondary {
+            font-size: .7rem;
         }
 
         .kiosk-flat-form > .kiosk-submit {
@@ -932,13 +952,7 @@
             .kiosk-mode-actions { width: 100%; min-width: 0; }
         }
 
-        @media (max-width: 1700px) {
-            .kiosk-shell {
-                width: min(1420px, calc(100vw - 72px));
-                gap: 1.15rem;
-                padding-top: 1.15rem;
-                padding-bottom: 1.15rem;
-            }
+       
 
             .kiosk-main {
                 grid-template-columns: minmax(0, 1120px);
@@ -1451,10 +1465,10 @@
                             </div>
                         </div>
                         <div>
-                            <label class="form-label">Visitor ID card number <span class="text-danger">*</span></label>
+                            <label class="form-label">Visitor ID card number</label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-vcard"></i>
-                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number" required>
+                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number">
                             </div>
                         </div>
                     </div>
@@ -1797,9 +1811,21 @@
 
             searchTimer = setTimeout(async () => {
                 const url = `${searchInput.dataset.searchUrl}?q=${encodeURIComponent(keyword)}`;
-                const response = await fetch(url, { headers: { Accept: 'application/json' } });
-                const payload = await response.json();
-                renderEmployees(payload.data ?? []);
+
+                try {
+                    const response = await fetch(url, {
+                        headers: { Accept: 'application/json' },
+                        cache: 'no-store',
+                    });
+                    if (! response.ok) {
+                        throw new Error(`Employee search failed: ${response.status}`);
+                    }
+
+                    const payload = await response.json();
+                    renderEmployees(payload.data ?? []);
+                } catch (error) {
+                    resultsBox.innerHTML = `<div class="list-group-item text-danger">${kioskLanguage === 'en' ? 'Unable to search employees. Please try again.' : 'Không thể tìm nhân viên. Vui lòng thử lại.'}</div>`;
+                }
             }, 250);
         });
 

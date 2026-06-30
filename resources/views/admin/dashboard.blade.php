@@ -1,8 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Tổng quan vận hành | Visitor Management')
-@section('page_title', 'Tổng quan vận hành')
-@section('page_subtitle', 'Theo dõi khách ra/vào, phê duyệt, check-in/check-out và cảnh báo trong thời gian thực')
+
 
 @section('topbar_meta')
     <div class="db-topbar-time d-none d-xl-inline-flex">
@@ -400,36 +399,14 @@
 }
 
 /* table cells */
-.db-visitor-cell { display:flex; align-items:center; gap:0.65rem; }
+.db-visitor-cell { display:block; }
 
-.db-avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e8f0fe, #c7d7fc);
-    display: grid;
-    place-items: center;
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: #1d4ed8;
-    flex-shrink: 0;
-}
 
 .db-visitor-name { font-weight:700; font-size:0.85rem; color:#0b1f3a; line-height:1.2; }
 .db-visitor-company { font-size:0.72rem; color:#7a93b0; }
 
-.db-host-cell { display:flex; align-items:center; gap:0.55rem; }
+.db-host-cell { display:block; }
 
-.db-host-avatar {
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #fce4ec, #f8bbd9);
-    display: grid;
-    place-items: center;
-    font-size: 0.7rem;
-    font-weight: 800;
-    color: #ad1457;
-    flex-shrink: 0;
-}
 
 .db-code {
     font-family: "Plus Jakarta Sans", sans-serif;
@@ -681,31 +658,31 @@
     <div class="db-metric db-metric-blue">
         <div class="db-metric-icon"><i class="bi bi-people"></i></div>
         <p class="db-metric-label">Khách hôm nay</p>
-        <p class="db-metric-value">{{ $stats['today'] }}</p>
+        <p class="db-metric-value" data-dashboard-stat="today">{{ $stats['today'] }}</p>
         <span class="db-metric-note">Tổng lịch trong ngày</span>
     </div>
     <div class="db-metric db-metric-cyan">
         <div class="db-metric-icon"><i class="bi bi-person-walking"></i></div>
         <p class="db-metric-label">Đang trong công ty</p>
-        <p class="db-metric-value">{{ $stats['in_company'] }}</p>
+        <p class="db-metric-value" data-dashboard-stat="in_company">{{ $stats['in_company'] }}</p>
         <span class="db-metric-note">Khách đang hiện diện</span>
     </div>
     <div class="db-metric db-metric-amber">
         <div class="db-metric-icon"><i class="bi bi-hourglass-split"></i></div>
         <p class="db-metric-label">Chờ phê duyệt</p>
-        <p class="db-metric-value">{{ $stats['pending'] }}</p>
+        <p class="db-metric-value" data-dashboard-stat="pending">{{ $stats['pending'] }}</p>
         <span class="db-metric-note">Cần người tiếp xử lý</span>
     </div>
     <div class="db-metric db-metric-red">
         <div class="db-metric-icon"><i class="bi bi-alarm"></i></div>
         <p class="db-metric-label">Khách quá giờ</p>
-        <p class="db-metric-value">{{ $stats['overstay'] }}</p>
+        <p class="db-metric-value" data-dashboard-stat="overstay">{{ $stats['overstay'] }}</p>
         <span class="db-metric-note">Quá 15 phút</span>
     </div>
     <div class="db-metric db-metric-slate">
         <div class="db-metric-icon"><i class="bi bi-box-arrow-left"></i></div>
         <p class="db-metric-label">Đã check-out</p>
-        <p class="db-metric-value">{{ $stats['checked_out'] }}</p>
+        <p class="db-metric-value" data-dashboard-stat="checked_out">{{ $stats['checked_out'] }}</p>
         <span class="db-metric-note">Hôm nay</span>
     </div>
 </div>
@@ -759,10 +736,10 @@
                 ];
             @endphp
 
-            <form class="db-toolbar" method="get" action="{{ route('admin.dashboard') }}">
+            <form class="db-toolbar" id="dashboardRecentFilter" method="get" action="{{ route('admin.dashboard') }}">
                 <div class="db-search">
                     <i class="bi bi-search"></i>
-                    <input class="form-control" name="recent_q" value="{{ $recentFilters['q'] ?? '' }}" placeholder="Tìm mã lịch, khách, người tiếp...">
+                    <input class="form-control" id="dashboardRecentSearch" name="recent_q" value="{{ $recentFilters['q'] ?? '' }}" placeholder="Tìm mã lịch, khách, người tiếp..." autocomplete="off">
                 </div>
                 <input class="form-control db-filter" name="recent_date" type="date" value="{{ $recentFilters['date'] ?? now()->toDateString() }}" style="width:160px;">
                 <select class="form-select db-filter" name="recent_status" style="width:180px;">
@@ -786,7 +763,7 @@
                             <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="dashboardRecentRows">
                     @forelse ($visits as $visit)
                         <tr>
                             <td>
@@ -797,7 +774,7 @@
                             </td>
                             <td>
                                 <div class="db-visitor-cell">
-                                    <div class="db-avatar">{{ strtoupper(mb_substr($visit['visitor'], 0, 1)) }}</div>
+
                                     <div>
                                         <div class="db-visitor-name">{{ $visit['visitor'] }}</div>
                                         <div class="db-visitor-company">{{ $visit['department'] }}</div>
@@ -806,7 +783,7 @@
                             </td>
                             <td>
                                 <div class="db-host-cell">
-                                    <div class="db-host-avatar">{{ strtoupper(mb_substr($visit['host'], 0, 1)) }}</div>
+
                                     <span style="font-size:.83rem;font-weight:600;color:#2c4a6e">{{ $visit['host'] }}</span>
                                 </div>
                             </td>
@@ -834,7 +811,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="db-pagination">
+            <div class="db-pagination" id="dashboardRecentPagination">
                 <span>
                     Hiển thị {{ $recentVisits->firstItem() ?? 0 }} - {{ $recentVisits->lastItem() ?? 0 }} / {{ $recentVisits->total() }} lịch
                 </span>
@@ -857,6 +834,74 @@
             el.textContent = n.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
         });
     }, 1000);
+})();
+
+(function() {
+    const form = document.getElementById('dashboardRecentFilter');
+    const search = document.getElementById('dashboardRecentSearch');
+    if (!form || !search) return;
+
+    let searchTimer = null;
+    search.addEventListener('input', function() {
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(function() {
+            form.requestSubmit();
+        }, 450);
+    });
+
+    form.querySelectorAll('input[type="date"], select').forEach(function(field) {
+        field.addEventListener('change', function() {
+            form.requestSubmit();
+        });
+    });
+})();
+
+(function() {
+    const rows = document.getElementById('dashboardRecentRows');
+    const pagination = document.getElementById('dashboardRecentPagination');
+    if (!rows || !pagination) return;
+
+    let syncing = false;
+
+    async function syncDashboard() {
+        if (syncing || document.hidden) return;
+        if (document.activeElement?.matches('#dashboardRecentFilter input, #dashboardRecentFilter select')) return;
+
+        syncing = true;
+
+        try {
+            const response = await fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store',
+            });
+
+            if (!response.ok) return;
+
+            const html = await response.text();
+            const nextDocument = new DOMParser().parseFromString(html, 'text/html');
+            const nextRows = nextDocument.getElementById('dashboardRecentRows');
+            const nextPagination = nextDocument.getElementById('dashboardRecentPagination');
+
+            if (nextRows && nextPagination) {
+                rows.innerHTML = nextRows.innerHTML;
+                pagination.innerHTML = nextPagination.innerHTML;
+            }
+
+            document.querySelectorAll('[data-dashboard-stat]').forEach(function(stat) {
+                const key = stat.dataset.dashboardStat;
+                const nextStat = nextDocument.querySelector('[data-dashboard-stat="' + key + '"]');
+                if (nextStat && stat.textContent !== nextStat.textContent) {
+                    stat.textContent = nextStat.textContent;
+                }
+            });
+        } catch (error) {
+            // Giữ nguyên dữ liệu đang hiển thị nếu kết nối tạm thời bị gián đoạn.
+        } finally {
+            syncing = false;
+        }
+    }
+
+    window.setInterval(syncDashboard, 5000);
 })();
 </script>
 @endsection

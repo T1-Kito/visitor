@@ -8,7 +8,7 @@
 <style>
 .dept-shell{display:grid;gap:1rem}
 .dept-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
-.dept-stat{display:flex;align-items:center;gap:.85rem;background:#ffcc00;border:1px solid #e0b400;border-radius:16px;padding:.9rem 1rem;box-shadow:none}
+.dept-stat{display:flex;align-items:center;gap:.85rem;border:1px solid #e0b400;border-radius:16px;padding:.5rem 1rem;box-shadow:none}
 .dept-stat-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.48);border:1px solid rgba(212,5,17,.18);color:#d40511;font-size:1.05rem}
 .dept-stat span{display:block;color:#111827;font-size:.78rem}
 .dept-stat strong{display:block;color:#111827;font-size:1.45rem;font-weight:700;line-height:1.1}

@@ -100,7 +100,7 @@ class KioskController extends Controller
             'visitor_email' => ['required', 'email', 'max:160'],
             'visitor_company' => ['required', 'string', 'max:160'],
             'visitor_identity_no' => [$requiredForKiosk, 'string', 'max:80'],
-            'visitor_id_card_number' => [$requiredForKiosk, 'string', 'max:80'],
+            'visitor_id_card_number' => ['nullable', 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'host_employee_id' => ['required', 'exists:employees,id'],

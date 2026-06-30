@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Approval;
 use App\Models\Department;
 use App\Models\Notification;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
@@ -245,6 +246,65 @@ class OnpremAuditHotfixTest extends TestCase
         $this->assertSame('HQ', $childDepartment->parent?->code);
     }
 
+    public function test_lobby_mode_approves_and_checks_in_pending_visit_in_one_action(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        SystemSetting::withoutGlobalScopes()->updateOrCreate(
+            ['tenant_id' => $admin->tenant_id, 'key' => 'kiosk.lobby_mode_enabled'],
+            ['value' => '1'],
+        );
+
+        $hostVisit = Visit::query()->firstOrFail();
+        $visitor = Visitor::query()->create([
+            'full_name' => 'Lobby Mode Visitor',
+            'phone' => '0900000001',
+            'email' => 'lobby@example.test',
+            'company' => 'Lobby Co',
+        ]);
+        $visit = Visit::query()->create([
+            'code' => 'LB-TEST-001',
+            'visitor_id' => $visitor->id,
+            'host_employee_id' => $hostVisit->host_employee_id,
+            'scheduled_at' => now()->addDay(),
+            'expected_checkout_at' => now()->addDay()->addHours(2),
+            'status' => 'pending',
+            'purpose' => 'Lobby mode test',
+            'access_zone' => 'Lobby',
+            'checkin_method' => 'qr',
+        ]);
+        Approval::query()->create([
+            'visit_id' => $visit->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.approvals.approve', $visit))
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $visit->refresh();
+        $this->assertSame('checked_in', $visit->status);
+        $this->assertNotNull($visit->actual_checkin_at);
+        $this->assertSame('approved', $visit->approval?->status);
+
+        $approvalPage = $this->actingAs($admin)
+            ->get(route('admin.approvals.index'))
+            ->assertOk();
+        $approvalRow = collect($approvalPage->viewData('approvalVisits'))->firstWhere('id', $visit->id);
+
+        $this->assertNotNull($approvalRow);
+        $this->assertSame('approved', $approvalRow['status']);
+        $this->assertSame('checked_in', $approvalRow['visit_status']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.visits.show', $visit))
+            ->assertOk()
+            ->assertSee('Đã duyệt và cho khách vào')
+            ->assertSee('Đã xác nhận khách vào')
+            ->assertSee('Lịch hẹn LB-TEST-001');
+    }
     public function test_audit_log_keeps_actor_and_request_context_snapshot(): void
     {
         $this->seed(VmsSeeder::class);

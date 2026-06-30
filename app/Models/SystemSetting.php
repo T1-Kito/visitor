@@ -101,6 +101,7 @@ class SystemSetting extends Model
             'kiosk.secondary_color' => config('services.kiosk.secondary_color', '#ffcc00'),
             'kiosk.background_color' => config('services.kiosk.background_color', '#ffffff'),
             'kiosk.surface_color' => config('services.kiosk.surface_color', '#ffffff'),
+            'kiosk.lobby_mode_enabled' => config('services.kiosk.lobby_mode_enabled', '0'),
             'app.favicon_url' => config('services.kiosk.favicon_url'),
             'app.desktop_icon_url' => config('services.kiosk.desktop_icon_url'),
         ];
