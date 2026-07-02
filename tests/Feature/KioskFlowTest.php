@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AccessControlLog;
 use App\Models\Approval;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -82,16 +83,19 @@ class KioskFlowTest extends TestCase
 
         $host = Employee::query()->where('is_active', true)->firstOrFail();
         $checkinAt = now()->addMinutes(30)->startOfMinute();
-        $checkoutAt = $checkinAt->copy()->addHours(2);
+        $checkoutAt = $checkinAt->copy()->addHours(4);
 
         $response = $this->post('/kiosk/checkin/manual', [
             'registration_form' => 'kiosk_v2',
             'visitor_name' => 'Khach Kiosk Demo',
             'visitor_phone' => '0909000999',
-            'visitor_email' => 'kiosk.demo@example.test',
+            'visitor_email' => '',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P12345678',
+            'visitor_id_card_number' => 'VID-001',
             'host_employee_id' => $host->id,
+            'host_name' => $host->name,
+            'department_id' => $host->department_id ?? Department::query()->value('id'),
             'purpose' => 'Họp',
             'checkin_date' => $checkinAt->toDateString(),
             'checkin_time' => $checkinAt->format('H:i'),
@@ -102,7 +106,7 @@ class KioskFlowTest extends TestCase
         ]);
 
         $visit = Visit::query()->whereHas('visitor', function ($query): void {
-            $query->where('email', 'kiosk.demo@example.test');
+            $query->where('full_name', 'Khach Kiosk Demo');
         })->firstOrFail();
 
         $response
@@ -111,7 +115,8 @@ class KioskFlowTest extends TestCase
             ->assertSessionHas('kiosk_checkin_visit_id', $visit->id);
 
         $this->assertSame('pending', $visit->status);
-        $this->assertNull($visit->visitor->visitor_id_card_number);
+        $this->assertNull($visit->visitor->email);
+        $this->assertSame('VID-001', $visit->visitor->visitor_id_card_number);
         $this->assertSame($checkinAt->format('Y-m-d H:i'), $visit->scheduled_at->format('Y-m-d H:i'));
         $this->assertSame($checkoutAt->format('Y-m-d H:i'), $visit->expected_checkout_at->format('Y-m-d H:i'));
         $this->assertNotNull($visit->qr_token);
@@ -142,6 +147,8 @@ class KioskFlowTest extends TestCase
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P87654321',
             'visitor_id_card_number' => 'VID-INVALID',
+            'host_name' => $host->name,
+            'department_id' => $host->department_id ?? Department::query()->value('id'),
             'host_employee_id' => $host->id,
             'purpose' => 'Họp',
             'checkin_date' => $checkinAt->toDateString(),
@@ -228,5 +235,52 @@ class KioskFlowTest extends TestCase
 
         $this->assertSame('pending', $visit->status);
         $this->assertNull($visit->actual_checkin_at);
+    }
+    public function test_kiosk_accepts_manual_meeting_person_and_requires_visitor_card(): void
+    {
+        $this->seed(VmsSeeder::class);
+        $department = Department::query()->firstOrFail();
+        $checkinAt = now()->startOfMinute();
+        $checkoutAt = $checkinAt->copy()->addHours(4);
+
+        $this->post('/kiosk/checkin/manual', [
+            'registration_form' => 'kiosk_v2',
+            'visitor_name' => 'Manual Host Visitor',
+            'visitor_phone' => '0909000222',
+            'visitor_email' => '',
+            'visitor_company' => 'Manual Company',
+            'visitor_identity_no' => 'P-MANUAL-01',
+            'visitor_id_card_number' => 'VISITOR-009',
+            'host_name' => 'Nguyen Van Ngoai',
+            'department_id' => $department->id,
+            'purpose' => 'Họp',
+            'checkin_date' => $checkinAt->toDateString(),
+            'checkin_time' => $checkinAt->format('H:i'),
+            'checkout_date' => $checkoutAt->toDateString(),
+            'checkout_time' => $checkoutAt->format('H:i'),
+            'policy_accepted' => '1',
+        ])->assertRedirect();
+
+        $visit = Visit::query()->where('host_name', 'Nguyen Van Ngoai')->firstOrFail();
+        $this->assertNull($visit->host_employee_id);
+        $this->assertSame($department->id, $visit->department_id);
+        $this->assertSame('VISITOR-009', $visit->visitor->visitor_id_card_number);
+        $this->assertNull($visit->visitor->email);
+
+        $this->from('/kiosk')->post('/kiosk/checkin/manual', [
+            'registration_form' => 'kiosk_v2',
+            'visitor_name' => 'Missing Card',
+            'visitor_phone' => '0909000333',
+            'visitor_company' => 'Manual Company',
+            'visitor_identity_no' => 'P-MANUAL-02',
+            'host_name' => 'Nguyen Van Ngoai',
+            'department_id' => $department->id,
+            'purpose' => 'Họp',
+            'checkin_date' => $checkinAt->toDateString(),
+            'checkin_time' => $checkinAt->format('H:i'),
+            'checkout_date' => $checkoutAt->toDateString(),
+            'checkout_time' => $checkoutAt->format('H:i'),
+            'policy_accepted' => '1',
+        ])->assertSessionHasErrors('visitor_id_card_number');
     }
 }

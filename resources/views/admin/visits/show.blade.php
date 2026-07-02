@@ -73,7 +73,7 @@
         'qrSvg' => $printQrSvg,
         'visitorName' => $visit->visitor?->full_name ?? '-',
         'visitorCompany' => $visit->visitor?->company ?? '-',
-        'hostName' => $visit->hostEmployee?->name ?? '-',
+        'hostName' => $visit->host_display_name,
         'scheduledAt' => $visit->scheduled_at?->format('d/m/Y H:i') ?? '-',
         'status' => $statusText,
     ];
@@ -87,7 +87,7 @@
         $visit->qr_token ? 'Mã QR/check-in: '.$visit->qr_token : null,
         'Khách: '.($visit->visitor?->full_name ?? '-'),
         'Công ty: '.($visit->visitor?->company ?? '-'),
-        'Người tiếp: '.($visit->hostEmployee?->name ?? '-'),
+        'Người tiếp: '.($visit->host_display_name),
         'Giờ hẹn: '.($visit->scheduled_at?->format('d/m/Y H:i') ?? '-'),
         'Link tra cứu/check-in: '.$shareStatusUrl,
         'Vui lòng xuất trình mã này tại quầy lễ tân.',
@@ -115,9 +115,9 @@
             </div>
         </div>
         <div class="va-summary">
-            <div><span>Người tiếp</span><strong>{{ $visit->hostEmployee?->name ?? '-' }}</strong></div>
+            <div><span>Người tiếp</span><strong>{{ $visit->host_display_name }}</strong></div>
             <div><span>Check-in dự kiến</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
-            <div><span>Phòng ban</span><strong>{{ $visit->hostEmployee?->department?->name ?? '-' }}</strong></div>
+            <div><span>Phòng ban</span><strong>{{ $visit->department_display_name }}</strong></div>
         </div>
     </section>
 
@@ -156,7 +156,7 @@
 
                             @endunless
                             <div class="va-info"><i class="bi bi-bullseye"></i><div><span class="va-label">Mục đích đến</span><span class="va-value">{{ $visit->purpose ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-person-workspace"></i><div><span class="va-label">Người tiếp</span><span class="va-value">{{ $visit->hostEmployee?->name ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-person-workspace"></i><div><span class="va-label">Người tiếp</span><span class="va-value">{{ $visit->host_display_name }}</span></div></div>
                         </div>
                     </div>
                 </div>

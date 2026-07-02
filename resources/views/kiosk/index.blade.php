@@ -1420,7 +1420,7 @@
 
                 @php
                     $defaultCheckin = now();
-                    $defaultCheckout = now()->addHours(2);
+                    $defaultCheckout = now()->addHours(4);
                 @endphp
                 <form class="kiosk-flat-form" id="kioskRegisterForm" method="post" action="{{ route('kiosk.checkin.manual') }}">
                     @csrf
@@ -1444,10 +1444,10 @@
                             </div>
                         </div>
                         <div>
-                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <label class="form-label">Email <span class="text-secondary">(Optional)</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-envelope"></i>
-                                <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com" required>
+                                <input class="form-control" type="email" name="visitor_email" value="{{ old('visitor_email') }}" placeholder="example@email.com">
                             </div>
                         </div>
                         <div>
@@ -1465,10 +1465,10 @@
                             </div>
                         </div>
                         <div>
-                            <label class="form-label">Visitor ID card number</label>
+                            <label class="form-label">Visitor ID card number <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-vcard"></i>
-                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number">
+                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number" required>
                             </div>
                         </div>
                     </div>
@@ -1478,19 +1478,19 @@
 
                         <div>
                             <label class="form-label">Check-in date <span class="text-danger">*</span></label>
-                            <input class="form-control" type="date" name="checkin_date" value="{{ old('checkin_date', $defaultCheckin->toDateString()) }}" required>
+                            <input class="form-control" id="kioskCheckinDate" type="date" name="checkin_date" value="{{ old('checkin_date', $defaultCheckin->toDateString()) }}" required>
                         </div>
                         <div>
                             <label class="form-label">Check-in time <span class="text-danger">*</span></label>
-                            <input class="form-control" type="time" name="checkin_time" value="{{ old('checkin_time', $defaultCheckin->format('H:i')) }}" required>
+                            <input class="form-control" id="kioskCheckinTime" type="time" name="checkin_time" value="{{ old('checkin_time', $defaultCheckin->format('H:i')) }}" required>
                         </div>
                         <div>
                             <label class="form-label">Check-out date <span class="text-danger">*</span></label>
-                            <input class="form-control" type="date" name="checkout_date" value="{{ old('checkout_date', $defaultCheckout->toDateString()) }}" required>
+                            <input class="form-control" id="kioskCheckoutDate" type="date" name="checkout_date" value="{{ old('checkout_date', $defaultCheckout->toDateString()) }}" required>
                         </div>
                         <div>
                             <label class="form-label">Check-out time <span class="text-danger">*</span></label>
-                            <input class="form-control" type="time" name="checkout_time" value="{{ old('checkout_time', $defaultCheckout->format('H:i')) }}" required>
+                            <input class="form-control" id="kioskCheckoutTime" type="time" name="checkout_time" value="{{ old('checkout_time', $defaultCheckout->format('H:i')) }}" required>
                         </div>
                     </div>
 
@@ -1501,18 +1501,20 @@
                             <label class="form-label">Meeting person <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-search"></i>
-                                <input class="form-control" id="employeeSearch" autocomplete="off" placeholder="Find staff" data-search-url="{{ route('kiosk.employees.search') }}">
+                                <input class="form-control" id="employeeSearch" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Find or enter meeting person" data-search-url="{{ route('kiosk.employees.search') }}" required>
                             </div>
-                            <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}" required>
-                            <div class="small text-secondary mt-2" id="selectedHost">No employee selected.</div>
+                            <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}">
+                            <div class="small text-secondary mt-2" id="selectedHost">Select a suggestion or keep the entered name.</div>
                             <div class="list-group premium-result-list mt-2" id="employeeResults"></div>
                         </div>
                         <div>
                             <label class="form-label">Department <span class="text-danger">*</span></label>
-                            <div class="kiosk-input-wrap">
-                                <i class="bi bi-buildings"></i>
-                                <input class="form-control" id="selectedDepartment" placeholder="Automatically after selecting person" readonly required>
-                            </div>
+                            <select class="form-select" id="selectedDepartment" name="department_id" required>
+                                <option value="" disabled @selected(! old('department_id'))>Select department</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}" @selected((string) old('department_id') === (string) $department->id)>{{ $department->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
@@ -1675,6 +1677,9 @@
             'Người cần gặp': 'Meeting person',
             'Phòng ban': 'Department',
             'Chưa chọn nhân viên.': 'No employee selected.',
+            '(Tùy chọn)': '(Optional)',
+            'Chọn gợi ý hoặc giữ tên đã nhập.': 'Select a suggestion or keep the entered name.',
+            'Chọn phòng ban': 'Select department',
             '4. Thông tin chuyến thăm': '4. Visiting Information',
             'Mục đích đến': 'Visiting purpose',
             'Chọn mục đích': 'Select purpose',
@@ -1696,7 +1701,7 @@
             'Nhập số CCCD/Hộ chiếu': 'Enter Citizen ID Number/Passport',
             'Nhập số thẻ': 'Enter ID number',
             'Tìm nhân viên': 'Find staff',
-            'Tự động sau khi chọn người cần gặp': 'Automatically after selecting person',
+            'Tìm hoặc nhập người cần gặp': 'Find or enter meeting person',
         };
         const reverseKioskTranslations = Object.fromEntries(Object.entries(kioskTranslations).map(([vi, en]) => [en, vi]));
         const reverseKioskPlaceholders = Object.fromEntries(Object.entries(kioskPlaceholders).map(([vi, en]) => [en, vi]));
@@ -1750,6 +1755,41 @@
         updateClock();
         setInterval(updateClock, 30000);
 
+
+        const visitTimeFields = [
+            document.getElementById('kioskCheckinDate'),
+            document.getElementById('kioskCheckinTime'),
+            document.getElementById('kioskCheckoutDate'),
+            document.getElementById('kioskCheckoutTime'),
+        ].filter(Boolean);
+        let visitTimesEdited = @json($errors->has('checkin_date') || $errors->has('checkin_time') || $errors->has('checkout_date') || $errors->has('checkout_time'));
+
+        function localDateValue(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function localTimeValue(date) {
+            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function fillRealtimeVisitSchedule() {
+            if (visitTimesEdited || visitTimeFields.length !== 4) return;
+            const checkin = new Date();
+            const checkout = new Date(checkin.getTime() + (4 * 60 * 60 * 1000));
+            visitTimeFields[0].value = localDateValue(checkin);
+            visitTimeFields[1].value = localTimeValue(checkin);
+            visitTimeFields[2].value = localDateValue(checkout);
+            visitTimeFields[3].value = localTimeValue(checkout);
+        }
+
+        fillRealtimeVisitSchedule();
+        visitTimeFields.forEach((field) => {
+            field.addEventListener('focus', fillRealtimeVisitSchedule);
+            field.addEventListener('input', () => { visitTimesEdited = true; });
+        });
         const extraPanel = document.querySelector('[data-kiosk-extra-panel]');
         const extraToggle = document.querySelector('[data-kiosk-extra-toggle]');
         extraToggle?.addEventListener('click', () => {
@@ -1768,7 +1808,7 @@
             resultsBox.innerHTML = '';
 
             if (items.length === 0) {
-                resultsBox.innerHTML = `<div class="list-group-item text-secondary">${kioskText('Không tìm thấy nhân viên phù hợp.')}</div>`;
+                resultsBox.innerHTML = `<div class="list-group-item text-secondary">${kioskLanguage === 'en' ? 'No matching employee. You can keep the entered name.' : 'Không tìm thấy nhân viên. Bạn vẫn có thể giữ tên đã nhập.'}</div>`;
                 return;
             }
 
@@ -1789,7 +1829,6 @@
                 item.addEventListener('click', () => {
                     hostEmployeeId.value = employee.id;
                     selectedHost.textContent = `${kioskLanguage === 'en' ? 'Selected' : 'Đã chọn'}: ${employee.name}`;
-                    selectedDepartment.value = employee.department ?? '';
                     resultsBox.innerHTML = '';
                     searchInput.value = employee.name;
                 });
@@ -1800,8 +1839,7 @@
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimer);
             hostEmployeeId.value = '';
-            selectedDepartment.value = '';
-            selectedHost.textContent = kioskText('Chưa chọn nhân viên.');
+            selectedHost.textContent = kioskLanguage === 'en' ? 'Using entered name (select a suggestion if available).' : 'Đang dùng tên nhập tay (có thể chọn gợi ý nếu phù hợp).';
 
             const keyword = searchInput.value.trim();
             if (keyword.length < 2) {

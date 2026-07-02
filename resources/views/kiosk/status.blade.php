@@ -689,12 +689,12 @@
                     <div class="ks-info-item">
                         <i class="bi bi-person-circle"></i>
                         <span>Người tiếp</span>
-                        <strong>{{ $visit->hostEmployee?->name ?? '-' }}</strong>
+                        <strong>{{ $visit->host_display_name }}</strong>
                     </div>
                     <div class="ks-info-item">
                         <i class="bi bi-building"></i>
                         <span>Phòng ban</span>
-                        <strong>{{ $visit->hostEmployee?->department?->name ?? '-' }}</strong>
+                        <strong>{{ $visit->department_display_name }}</strong>
                     </div>
                 </div>
 

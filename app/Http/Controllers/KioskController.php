@@ -6,6 +6,7 @@ use App\Models\AccessControlLog;
 use App\Models\Approval;
 use App\Models\AuditLog;
 use App\Models\Badge;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Notification;
 use App\Models\SystemSetting;
@@ -33,13 +34,14 @@ class KioskController extends Controller
 
         if (is_numeric($lastVisitId)) {
             $lastVisit = Visit::query()
-                ->with(['visitor', 'hostEmployee.department'])
+                ->with(['visitor', 'hostEmployee.department', 'department'])
                 ->find((int) $lastVisitId);
         }
 
         return view('kiosk.index', [
             'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
             'lastKioskVisit' => $lastVisit,
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -97,13 +99,15 @@ class KioskController extends Controller
             'registration_form' => ['nullable', 'in:kiosk_v2'],
             'visitor_name' => ['required', 'string', 'max:120'],
             'visitor_phone' => [$requiredForKiosk, 'string', 'max:30'],
-            'visitor_email' => ['required', 'email', 'max:160'],
+            'visitor_email' => ['nullable', 'email', 'max:160'],
             'visitor_company' => ['required', 'string', 'max:160'],
             'visitor_identity_no' => [$requiredForKiosk, 'string', 'max:80'],
-            'visitor_id_card_number' => ['nullable', 'string', 'max:80'],
+            'visitor_id_card_number' => [$requiredForKiosk, 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
-            'host_employee_id' => ['required', 'exists:employees,id'],
+            'host_employee_id' => ['nullable', 'exists:employees,id'],
+            'host_name' => ['required', 'string', 'max:120'],
+            'department_id' => ['required', 'exists:departments,id'],
             'purpose' => ['required', 'string', 'max:255'],
             'checkin_date' => [$requiredForKiosk, 'date'],
             'checkin_time' => [$requiredForKiosk, 'date_format:H:i'],
@@ -125,7 +129,7 @@ class KioskController extends Controller
         ]);
 
         $scheduledAt = now();
-        $expectedCheckoutAt = $scheduledAt->copy()->addHours(2);
+        $expectedCheckoutAt = $scheduledAt->copy()->addHours(4);
 
         if ($isKioskV2) {
             $scheduledAt = Carbon::createFromFormat('Y-m-d H:i', $validated['checkin_date'].' '.$validated['checkin_time']);
@@ -146,7 +150,9 @@ class KioskController extends Controller
         $visit = Visit::query()->create([
             'code' => $this->generateVisitCode(),
             'visitor_id' => $visitor->id,
-            'host_employee_id' => (int) $validated['host_employee_id'],
+            'host_employee_id' => filled($validated['host_employee_id'] ?? null) ? (int) $validated['host_employee_id'] : null,
+            'host_name' => $validated['host_name'],
+            'department_id' => (int) $validated['department_id'],
             'scheduled_at' => $scheduledAt,
             'expected_checkout_at' => $expectedCheckoutAt,
             'status' => 'pending',
@@ -358,7 +364,7 @@ class KioskController extends Controller
         $request->session()->forget(['kiosk_checkin_visit_id', 'kiosk_scanned_by_qr']);
 
         if ($request->expectsJson()) {
-            $visit->refresh()->load(['visitor', 'hostEmployee.department']);
+            $visit->refresh()->load(['visitor', 'hostEmployee.department', 'department']);
 
             return response()->json([
                 'ok' => true,
@@ -486,7 +492,7 @@ class KioskController extends Controller
 
     public function status(Request $request, Visit $visit): View
     {
-        $visit->load(['visitor', 'hostEmployee.department', 'activeBadge']);
+        $visit->load(['visitor', 'hostEmployee.department', 'department', 'activeBadge']);
 
         return view('kiosk.status', [
             'visit' => $visit,
@@ -555,7 +561,7 @@ class KioskController extends Controller
 
     private function kioskVisitPayload(Visit $visit, bool $canConfirm): array
     {
-        $visit->loadMissing(['visitor', 'hostEmployee.department']);
+        $visit->loadMissing(['visitor', 'hostEmployee.department', 'department']);
 
         $statusLabels = [
             'pending' => 'Đang chờ phê duyệt',
@@ -580,8 +586,8 @@ class KioskController extends Controller
             'code' => $visit->code,
             'visitor_name' => $visit->visitor?->full_name ?? '-',
             'visitor_company' => $visit->visitor?->company ?? '-',
-            'host_name' => $visit->hostEmployee?->name ?? '-',
-            'department' => $visit->hostEmployee?->department?->name ?? '-',
+            'host_name' => $visit->host_display_name,
+            'department' => $visit->department_display_name,
             'scheduled_at' => $visit->scheduled_at?->format('H:i - d/m/Y') ?? '-',
             'status' => $visit->status,
             'status_label' => $statusLabels[$visit->status] ?? $visit->status,
@@ -610,7 +616,7 @@ class KioskController extends Controller
             return;
         }
 
-        $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department']);
+        $visit->refresh()->loadMissing(['visitor', 'hostEmployee.user', 'hostEmployee.department', 'department']);
 
         $email = trim((string) ($visit->hostEmployee?->email ?: $visit->hostEmployee?->user?->email ?: ''));
         if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {

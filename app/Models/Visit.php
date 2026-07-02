@@ -18,6 +18,8 @@ class Visit extends Model
         'tenant_id',
         'visitor_id',
         'host_employee_id',
+        'host_name',
+        'department_id',
         'created_by_user_id',
         'scheduled_at',
         'expected_checkout_at',
@@ -51,6 +53,21 @@ class Visit extends Model
     public function hostEmployee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'host_employee_id');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function getHostDisplayNameAttribute(): string
+    {
+        return $this->host_name ?: $this->hostEmployee?->name ?: '-';
+    }
+
+    public function getDepartmentDisplayNameAttribute(): string
+    {
+        return $this->department?->name ?: $this->hostEmployee?->department?->name ?: '-';
     }
 
     public function creator(): BelongsTo
