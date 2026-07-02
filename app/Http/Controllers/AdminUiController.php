@@ -475,6 +475,7 @@ class AdminUiController extends Controller
     {
         return view('mobile.visits-create', $this->withBase([
             'hosts' => $this->hostsForSelect(),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
             'accessZones' => $this->accessZones(),
             'visitFormToken' => $this->createVisitFormToken(),
         ]));
@@ -935,6 +936,7 @@ class AdminUiController extends Controller
     {
         return view('admin.visits.create', $this->withBase([
             'hosts' => $this->hostsForSelect(),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
             'accessZones' => $this->accessZones(),
             'visitFormToken' => $this->createVisitFormToken(),
         ]));
@@ -1051,7 +1053,9 @@ class AdminUiController extends Controller
         $visit = Visit::query()->create([
             'code' => $this->generateVisitCode(),
             'visitor_id' => $visitor->id,
-            'host_employee_id' => (int) $validated['host_employee_id'],
+            'host_employee_id' => filled($validated['host_employee_id'] ?? null) ? (int) $validated['host_employee_id'] : null,
+            'host_name' => $validated['host_name'],
+            'department_id' => (int) $validated['department_id'],
             'created_by_user_id' => $this->actingUserId(),
             'scheduled_at' => $scheduledAt,
             'expected_checkout_at' => $expectedCheckoutAt,
@@ -1106,6 +1110,7 @@ class AdminUiController extends Controller
             'canCancel' => ! in_array($visit->status, ['checked_in', 'checked_out', 'cancelled'], true),
             'canGenerateQr' => $visit->status === 'approved',
             'hosts' => $this->hostsForSelect(),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
             'accessZones' => $this->accessZones(),
             'activityLogs' => AuditLog::query()
                 ->where('entity_type', 'visit')
@@ -1129,6 +1134,7 @@ class AdminUiController extends Controller
         return view('admin.visits.edit', $this->withBase([
             'visit' => $visit,
             'hosts' => $this->hostsForSelect(),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
             'accessZones' => $this->accessZones(),
         ]));
     }
@@ -1158,7 +1164,9 @@ class AdminUiController extends Controller
 
         $visit->update([
             'visitor_id' => $visitor->id,
-            'host_employee_id' => (int) $validated['host_employee_id'],
+            'host_employee_id' => filled($validated['host_employee_id'] ?? null) ? (int) $validated['host_employee_id'] : null,
+            'host_name' => $validated['host_name'],
+            'department_id' => (int) $validated['department_id'],
             'scheduled_at' => $scheduledAt,
             'expected_checkout_at' => $expectedCheckoutAt,
             'status' => 'pending',
@@ -3427,7 +3435,7 @@ XML;
      */
     private function validateVisitPayload(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'existing_visitor_id' => ['nullable', 'exists:visitors,id'],
             'visitor_name' => ['required', 'string', 'max:120'],
             'visitor_phone' => ['nullable', 'string', 'max:30'],
@@ -3438,7 +3446,9 @@ XML;
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'visitor_note' => ['nullable', 'string', 'max:1000'],
-            'host_employee_id' => ['required', 'exists:employees,id'],
+            'host_employee_id' => ['nullable', 'exists:employees,id'],
+            'host_name' => ['nullable', 'string', 'max:120'],
+            'department_id' => ['nullable', 'exists:departments,id'],
             'visit_date' => ['required', 'date'],
             'visit_time' => ['required', 'date_format:H:i'],
             'expected_checkout_time' => ['required', 'date_format:H:i'],
@@ -3446,6 +3456,33 @@ XML;
             'access_zone' => ['nullable', 'string', 'max:120'],
             'checkin_method' => ['required', 'in:qr,badge,manual'],
         ]);
+
+        $hostEmployee = null;
+        if (filled($validated['host_employee_id'] ?? null)) {
+            $hostEmployee = Employee::query()->with('department')->find((int) $validated['host_employee_id']);
+        }
+
+        if (blank($validated['host_name'] ?? null) && $hostEmployee !== null) {
+            $validated['host_name'] = $hostEmployee->name;
+        }
+
+        if (blank($validated['department_id'] ?? null) && $hostEmployee?->department_id) {
+            $validated['department_id'] = $hostEmployee->department_id;
+        }
+
+        if (blank($validated['host_name'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'host_name' => 'Vui long nhap nguoi tiep khach.',
+            ]);
+        }
+
+        if (blank($validated['department_id'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'department_id' => 'Vui long chon phong ban.',
+            ]);
+        }
+
+        return $validated;
     }
 
     /**
@@ -3987,7 +4024,7 @@ XML;
      */
     private function validateWatchlistPayload(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'visitor_id' => ['nullable', 'exists:visitors,id'],
             'keyword' => ['required', 'string', 'max:160'],
             'match_type' => ['required', 'in:any,name,phone,email,company,identity_no'],

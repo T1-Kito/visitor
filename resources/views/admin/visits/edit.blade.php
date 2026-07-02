@@ -48,12 +48,20 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Nguoi tiep khach</label>
-                        <select name="host_employee_id" class="form-select" required>
-                            <option value="">Chon nguoi tiep khach</option>
+                        <input id="editPageHostNameInput" type="text" name="host_name" value="{{ old('host_name', $visit->host_display_name) }}" class="form-control" list="editPageHostSuggestions" required>
+                        <input id="editPageHostEmployeeId" type="hidden" name="host_employee_id" value="{{ old('host_employee_id', $visit->host_employee_id) }}">
+                        <datalist id="editPageHostSuggestions">
                             @foreach ($hosts as $host)
-                                <option value="{{ $host['id'] }}" @selected((string) old('host_employee_id', $visit->host_employee_id) === (string) $host['id'])>
-                                    {{ $host['name'] }} - {{ $host['department'] }}
-                                </option>
+                                <option value="{{ $host['name'] }}" data-id="{{ $host['id'] }}">{{ $host['department'] }}</option>
+                            @endforeach
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Phong ban</label>
+                        <select name="department_id" class="form-select" required>
+                            <option value="">Chon phong ban</option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->id }}" @selected((string) old('department_id', $visit->department_id ?: $visit->hostEmployee?->department_id) === (string) $department->id)>{{ $department->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -133,3 +141,20 @@
         </div>
     </form>
 @endsection
+
+@push('scripts')
+<script>
+(() => {
+    const input = document.getElementById('editPageHostNameInput');
+    const hidden = document.getElementById('editPageHostEmployeeId');
+    if (!input || !hidden) return;
+    const options = Array.from(document.querySelectorAll('#editPageHostSuggestions option'));
+    const sync = () => {
+        const selected = options.find((option) => option.value.trim().toLowerCase() === input.value.trim().toLowerCase());
+        hidden.value = selected?.dataset?.id || '';
+    };
+    input.addEventListener('input', sync);
+    input.addEventListener('change', sync);
+})();
+</script>
+@endpush

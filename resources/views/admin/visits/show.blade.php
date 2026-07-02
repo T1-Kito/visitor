@@ -358,10 +358,20 @@
                     <div class="col-12 pt-2"><div class="fw-semibold text-danger small text-uppercase">Th&#244;ng tin g&#7863;p</div></div>
                     <div class="col-md-6">
                         <label class="form-label">Ng&#432;&#7901;i c&#7847;n g&#7863;p *</label>
-                        <select name="host_employee_id" class="form-select" required>
-                            <option value="">Ch&#7885;n ng&#432;&#7901;i c&#7847;n g&#7863;p</option>
+                        <input type="text" id="editHostNameInput" name="host_name" value="{{ old('host_name', $visit->host_display_name) }}" class="form-control" list="editHostSuggestions" required>
+                        <input id="editHostEmployeeId" type="hidden" name="host_employee_id" value="{{ old('host_employee_id', $visit->host_employee_id) }}">
+                        <datalist id="editHostSuggestions">
                             @foreach ($hosts as $host)
-                                <option value="{{ $host['id'] }}" @selected((string) old('host_employee_id', $visit->host_employee_id) === (string) $host['id'])>{{ $host['name'] }} - {{ $host['department'] }}</option>
+                                <option value="{{ $host['name'] }}" data-id="{{ $host['id'] }}">{{ $host['department'] }}</option>
+                            @endforeach
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Ph&#242;ng ban *</label>
+                        <select name="department_id" class="form-select" required>
+                            <option value="">Ch&#7885;n ph&#242;ng ban</option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->id }}" @selected((string) old('department_id', $visit->department_id ?: $visit->hostEmployee?->department_id) === (string) $department->id)>{{ $department->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -390,6 +400,22 @@
 </div>
 @endif
 @endsection
+@push('scripts')
+<script>
+(() => {
+    const editHostNameInput = document.getElementById('editHostNameInput');
+    const editHostEmployeeId = document.getElementById('editHostEmployeeId');
+    if (!editHostNameInput || !editHostEmployeeId) return;
+    const options = Array.from(document.querySelectorAll('#editHostSuggestions option'));
+    const sync = () => {
+        const selected = options.find((option) => option.value.trim().toLowerCase() === editHostNameInput.value.trim().toLowerCase());
+        editHostEmployeeId.value = selected?.dataset?.id || '';
+    };
+    editHostNameInput.addEventListener('input', sync);
+    editHostNameInput.addEventListener('change', sync);
+})();
+</script>
+@endpush
 @unless ($hideQrWorkflow)
 @push('scripts')
 <script>

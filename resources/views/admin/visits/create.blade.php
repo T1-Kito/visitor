@@ -149,26 +149,32 @@
                 <div class="vc-section-body">
                     <div class="vc-grid">
                         <div class="vc-field">
-                            <label>Người tiếp khách <em>*</em></label>
+                            <label>Ng&#432;&#7901;i ti&#7871;p kh&#225;ch <em>*</em></label>
                             <div class="vc-control">
                                 <i class="bi bi-person-workspace"></i>
-                                <select id="hostSelect" class="form-select" name="host_employee_id" required>
-                                    <option value="">Chọn người tiếp khách</option>
+                                <input id="hostNameInput" class="form-control" name="host_name" value="{{ old('host_name') }}" placeholder="Nh&#7853;p ho&#7863;c ch&#7885;n ng&#432;&#7901;i ti&#7871;p kh&#225;ch" list="hostSuggestions" autocomplete="off" required>
+                                <input id="hostEmployeeId" type="hidden" name="host_employee_id" value="{{ old('host_employee_id') }}">
+                                <datalist id="hostSuggestions">
                                     @foreach ($hosts as $host)
-                                        <option value="{{ $host['id'] }}" data-department="{{ $host['department'] }}" @selected((string) old('host_employee_id') === (string) $host['id'])>
-                                            {{ $host['name'] }} - {{ $host['department'] }}
-                                        </option>
+                                        <option value="{{ $host['name'] }}" data-id="{{ $host['id'] }}" data-department="{{ $host['department'] }}">{{ $host['department'] }}</option>
                                     @endforeach
-                                </select>
+                                </datalist>
                             </div>
+                            @error('host_name')<span class="vc-error">{{ $message }}</span>@enderror
                             @error('host_employee_id')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="vc-field">
-                            <label>Phòng ban</label>
+                            <label>Ph&#242;ng ban <em>*</em></label>
                             <div class="vc-control">
                                 <i class="bi bi-diagram-3"></i>
-                                <input id="departmentPreview" class="form-control" value="Tự động sau khi chọn" readonly>
+                                <select id="departmentSelect" class="form-select" name="department_id" required>
+                                    <option value="">Ch&#7885;n ph&#242;ng ban</option>
+                                    @foreach ($departments as $department)
+                                        <option value="{{ $department->id }}" @selected((string) old('department_id') === (string) $department->id)>{{ $department->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+                            @error('department_id')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>
                         <div class="vc-field">
                             <label>Ngày hẹn <em>*</em></label>
@@ -262,8 +268,9 @@
 @push('scripts')
 <script>
 (() => {
-    const hostSelect = document.getElementById('hostSelect');
-    const departmentPreview = document.getElementById('departmentPreview');
+    const hostNameInput = document.getElementById('hostNameInput');
+    const hostEmployeeId = document.getElementById('hostEmployeeId');
+    const hostOptions = Array.from(document.querySelectorAll('#hostSuggestions option'));
     const lookupInput = document.getElementById('visitorLookup');
     const suggestionsBox = document.getElementById('visitorSuggestions');
     const selectedVisitorId = document.getElementById('existingVisitorId');
@@ -283,9 +290,9 @@
     };
     let searchTimer = null;
 
-    const syncDepartment = () => {
-        const option = hostSelect.options[hostSelect.selectedIndex];
-        departmentPreview.value = option?.dataset?.department || 'Tự động sau khi chọn';
+    const syncHostEmployee = () => {
+        const selected = hostOptions.find((option) => option.value.trim().toLowerCase() === hostNameInput.value.trim().toLowerCase());
+        hostEmployeeId.value = selected?.dataset?.id || '';
     };
 
     const hideSuggestions = () => {
@@ -375,7 +382,8 @@
         }, 250);
     };
 
-    hostSelect.addEventListener('change', syncDepartment);
+    hostNameInput.addEventListener('input', syncHostEmployee);
+    hostNameInput.addEventListener('change', syncHostEmployee);
     lookupInput.addEventListener('input', searchVisitors);
     clearSelectionButton.addEventListener('click', clearSelectedVisitor);
     document.addEventListener('click', (event) => {
@@ -393,7 +401,7 @@
         submitButton.querySelector('span').textContent = submitButton.dataset.loadingText || 'Đang tạo...';
     });
 
-    syncDepartment();
+    syncHostEmployee();
 })();
 </script>
 @endpush

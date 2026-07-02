@@ -1504,7 +1504,6 @@
                                 <input class="form-control" id="employeeSearch" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Find or enter meeting person" data-search-url="{{ route('kiosk.employees.search') }}" required>
                             </div>
                             <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}">
-                            <div class="small text-secondary mt-2" id="selectedHost">Select a suggestion or keep the entered name.</div>
                             <div class="list-group premium-result-list mt-2" id="employeeResults"></div>
                         </div>
                         <div>
@@ -1799,16 +1798,15 @@
 
         const searchInput = document.getElementById('employeeSearch');
         const resultsBox = document.getElementById('employeeResults');
-        const selectedHost = document.getElementById('selectedHost');
         const selectedDepartment = document.getElementById('selectedDepartment');
         const hostEmployeeId = document.getElementById('hostEmployeeId');
         let searchTimer = null;
 
         function renderEmployees(items) {
             resultsBox.innerHTML = '';
-
             if (items.length === 0) {
-                resultsBox.innerHTML = `<div class="list-group-item text-secondary">${kioskLanguage === 'en' ? 'No matching employee. You can keep the entered name.' : 'Không tìm thấy nhân viên. Bạn vẫn có thể giữ tên đã nhập.'}</div>`;
+                resultsBox.classList.remove('show');
+                resultsBox.innerHTML = '';
                 return;
             }
 
@@ -1828,7 +1826,6 @@
                 item.appendChild(detail);
                 item.addEventListener('click', () => {
                     hostEmployeeId.value = employee.id;
-                    selectedHost.textContent = `${kioskLanguage === 'en' ? 'Selected' : 'Đã chọn'}: ${employee.name}`;
                     resultsBox.innerHTML = '';
                     searchInput.value = employee.name;
                 });
@@ -1839,7 +1836,6 @@
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimer);
             hostEmployeeId.value = '';
-            selectedHost.textContent = kioskLanguage === 'en' ? 'Using entered name (select a suggestion if available).' : 'Đang dùng tên nhập tay (có thể chọn gợi ý nếu phù hợp).';
 
             const keyword = searchInput.value.trim();
             if (keyword.length < 2) {
