@@ -132,12 +132,12 @@ class AdminUiController extends Controller
 
         $recentFilters = [
             'q' => trim((string) $request->query('recent_q', '')),
-            'date' => $request->query('recent_date', now()->toDateString()),
+            'date' => $request->query('recent_date', ''),
             'status' => $request->query('recent_status', 'all'),
         ];
 
-        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $recentFilters['date'])) {
-            $recentFilters['date'] = now()->toDateString();
+        if ($recentFilters['date'] !== '' && ! preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $recentFilters['date'])) {
+            $recentFilters['date'] = '';
         }
 
         $allowedRecentStatuses = ['all', 'pending', 'approved', 'checked_in', 'checked_out', 'rejected', 'cancelled'];
@@ -3330,8 +3330,11 @@ XML;
      */
     private function recentVisitsForDashboard(array $filters): Builder
     {
-        $query = $this->baseVisitQuery()
-            ->whereDate('scheduled_at', $filters['date']);
+        $query = $this->baseVisitQuery();
+
+        if (($filters['date'] ?? '') !== '') {
+            $query->whereDate('scheduled_at', $filters['date']);
+        }
 
         if ($filters['status'] !== 'all') {
             $query->where('status', $filters['status']);

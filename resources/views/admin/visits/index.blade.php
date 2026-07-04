@@ -55,7 +55,7 @@
     <section class="vs-main">
         <div class="vs-filter">
             <input id="visitSearch" class="form-control" placeholder="Tìm mã lịch, khách, người gặp, người tạo, mục đích...">
-            <input id="visitDateFilter" class="form-control" type="date" value="{{ now()->format('Y-m-d') }}">
+            <input id="visitDateFilter" class="form-control" type="date" value="" title="Để trống để xem tất cả ngày">
             <select id="departmentFilter" class="form-select">
                 <option value="all">Tất cả phòng ban</option>
                 @foreach (collect($visits)->pluck('department')->unique()->filter()->sort() as $department)
@@ -249,6 +249,9 @@
             tabs.forEach((item) => item.classList.remove('active'));
             tab.classList.add('active');
             status = tab.dataset.statusTab || 'all';
+            if (status === 'all') {
+                dateFilter.value = '';
+            }
             applyFilters();
         });
     });

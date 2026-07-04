@@ -741,7 +741,7 @@
                     <i class="bi bi-search"></i>
                     <input class="form-control" id="dashboardRecentSearch" name="recent_q" value="{{ $recentFilters['q'] ?? '' }}" placeholder="Tìm mã lịch, khách, người tiếp..." autocomplete="off">
                 </div>
-                <input class="form-control db-filter" name="recent_date" type="date" value="{{ $recentFilters['date'] ?? now()->toDateString() }}" style="width:160px;">
+                <input class="form-control db-filter" name="recent_date" type="date" value="{{ $recentFilters['date'] ?? '' }}" title="Để trống để xem tất cả ngày" style="width:160px;">
                 <select class="form-select db-filter" name="recent_status" style="width:180px;">
                     @foreach($recentStatusOptions as $value => $label)
                         <option value="{{ $value }}" @selected(($recentFilters['status'] ?? 'all') === $value)>{{ $label }}</option>
