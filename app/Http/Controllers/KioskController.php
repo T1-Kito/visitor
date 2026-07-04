@@ -22,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -102,7 +103,9 @@ class KioskController extends Controller
             'visitor_email' => ['nullable', 'email', 'max:160'],
             'visitor_company' => ['required', 'string', 'max:160'],
             'visitor_identity_no' => [$requiredForKiosk, 'string', 'max:80'],
-            'visitor_id_card_number' => [$requiredForKiosk, 'string', 'max:80'],
+            'visitor_id_card_number' => $isKioskV2
+                ? ['required', 'string', Rule::in(array_map('strval', range(1, 20)))]
+                : ['nullable', 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
             'host_employee_id' => ['nullable', 'exists:employees,id'],
@@ -115,6 +118,7 @@ class KioskController extends Controller
             'checkout_time' => [$requiredForKiosk, 'date_format:H:i'],
             'expected_checkout_time' => ['nullable', 'date_format:H:i'],
             'policy_accepted' => ['accepted'],
+            'safety_acknowledged' => ['accepted'],
         ]);
 
         $visitor = Visitor::query()->create([

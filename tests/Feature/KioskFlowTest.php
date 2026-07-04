@@ -29,6 +29,11 @@ class KioskFlowTest extends TestCase
             ->assertSee('4. Visiting Information')
             ->assertSee('name="visitor_identity_no"', false)
             ->assertSee('name="visitor_id_card_number"', false)
+            ->assertSee('Visitor card 20')
+            ->assertSee('name="safety_acknowledged"', false)
+            ->assertDontSee('id="employeeSearch"', false)
+            ->assertDontSee('id="employeeResults"', false)
+            ->assertDontSee('No matching employee')
             ->assertSee('name="checkin_date"', false)
             ->assertSee('name="checkin_time"', false)
             ->assertSee('name="checkout_date"', false)
@@ -92,7 +97,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => '',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P12345678',
-            'visitor_id_card_number' => 'VID-001',
+            'visitor_id_card_number' => '1',
             'host_employee_id' => $host->id,
             'host_name' => $host->name,
             'department_id' => $host->department_id ?? Department::query()->value('id'),
@@ -103,6 +108,7 @@ class KioskFlowTest extends TestCase
             'checkout_time' => $checkoutAt->format('H:i'),
             'visitor_note' => 'Tạo từ kiosk',
             'policy_accepted' => '1',
+            'safety_acknowledged' => '1',
         ]);
 
         $visit = Visit::query()->whereHas('visitor', function ($query): void {
@@ -116,7 +122,7 @@ class KioskFlowTest extends TestCase
 
         $this->assertSame('pending', $visit->status);
         $this->assertNull($visit->visitor->email);
-        $this->assertSame('VID-001', $visit->visitor->visitor_id_card_number);
+        $this->assertSame('1', $visit->visitor->visitor_id_card_number);
         $this->assertSame($checkinAt->format('Y-m-d H:i'), $visit->scheduled_at->format('Y-m-d H:i'));
         $this->assertSame($checkoutAt->format('Y-m-d H:i'), $visit->expected_checkout_at->format('Y-m-d H:i'));
         $this->assertNotNull($visit->qr_token);
@@ -146,7 +152,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => 'invalid.schedule@example.test',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P87654321',
-            'visitor_id_card_number' => 'VID-INVALID',
+            'visitor_id_card_number' => '2',
             'host_name' => $host->name,
             'department_id' => $host->department_id ?? Department::query()->value('id'),
             'host_employee_id' => $host->id,
@@ -156,6 +162,7 @@ class KioskFlowTest extends TestCase
             'checkout_date' => $checkoutAt->toDateString(),
             'checkout_time' => $checkoutAt->format('H:i'),
             'policy_accepted' => '1',
+            'safety_acknowledged' => '1',
         ])
             ->assertRedirect('/kiosk')
             ->assertSessionHasErrors('checkout_time');
@@ -250,7 +257,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => '',
             'visitor_company' => 'Manual Company',
             'visitor_identity_no' => 'P-MANUAL-01',
-            'visitor_id_card_number' => 'VISITOR-009',
+            'visitor_id_card_number' => '9',
             'host_name' => 'Nguyen Van Ngoai',
             'department_id' => $department->id,
             'purpose' => 'Họp',
@@ -259,12 +266,13 @@ class KioskFlowTest extends TestCase
             'checkout_date' => $checkoutAt->toDateString(),
             'checkout_time' => $checkoutAt->format('H:i'),
             'policy_accepted' => '1',
+            'safety_acknowledged' => '1',
         ])->assertRedirect();
 
         $visit = Visit::query()->where('host_name', 'Nguyen Van Ngoai')->firstOrFail();
         $this->assertNull($visit->host_employee_id);
         $this->assertSame($department->id, $visit->department_id);
-        $this->assertSame('VISITOR-009', $visit->visitor->visitor_id_card_number);
+        $this->assertSame('9', $visit->visitor->visitor_id_card_number);
         $this->assertNull($visit->visitor->email);
 
         $this->from('/kiosk')->post('/kiosk/checkin/manual', [
@@ -281,6 +289,7 @@ class KioskFlowTest extends TestCase
             'checkout_date' => $checkoutAt->toDateString(),
             'checkout_time' => $checkoutAt->format('H:i'),
             'policy_accepted' => '1',
+            'safety_acknowledged' => '1',
         ])->assertSessionHasErrors('visitor_id_card_number');
     }
 }

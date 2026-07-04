@@ -96,14 +96,7 @@
                     </div>
                 </div>
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Khu vuc truy cap</label>
-                        <select name="access_zone" class="form-select">
-                            @foreach ($accessZones as $zone)
-                                <option value="{{ $zone }}" @selected(old('access_zone', $visit->access_zone) === $zone)>{{ $zone }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <input type="hidden" name="access_zone" value="{{ old('access_zone', $visit->access_zone) }}">
                     <div class="col-md-6">
                         <label class="form-label">Loai check-in</label>
                         <select name="checkin_method" class="form-select" required>

@@ -2,7 +2,7 @@
 
 @section('title', 'Khách ra/vào')
 @section('page_title', 'Khách ra/vào')
-@section('page_subtitle', 'Quét mã và xử lý check-in/check-out trên cùng một màn hình')
+@section('page_subtitle', 'Nhập mã lịch hẹn và xử lý check-in/check-out trên cùng một màn hình')
 
 @push('styles')
 <style>
@@ -277,7 +277,7 @@
             @unless ($checkinScannedVisit)
                 <section class="access-card">
                     <div class="access-card-head">
-                        <div><h3>Quét mã check-in</h3><p>Nhập mã lịch hẹn hoặc đưa QR vào đầu đọc.</p></div>
+                        <div><h3>Check-in bằng mã lịch hẹn</h3><p>Nhập mã lịch hẹn để hiển thị thông tin khách cần làm thủ tục vào.</p></div>
                     </div>
                     <div class="access-body access-scan">
                         <div class="access-frame">
@@ -287,7 +287,7 @@
                         <form class="access-form" id="accessCheckinForm" action="{{ route('admin.checkin.scan-qr') }}" method="post">
                             @csrf
                             <div class="access-input-wrap">
-                                <input type="text" name="qr_token" id="accessCheckinInput" value="{{ old('qr_token') }}" placeholder="Nhập mã lịch hẹn hoặc mã QR" autocomplete="off">
+                                <input type="text" name="qr_token" id="accessCheckinInput" value="{{ old('qr_token') }}" placeholder="Nhập mã lịch hẹn" autocomplete="off">
                                 <i class="bi bi-upc-scan"></i>
                             </div>
                             <button class="access-btn primary" type="submit"><i class="bi bi-search"></i>Kiểm tra mã</button>
@@ -346,7 +346,7 @@
                     </form>
                     <div class="access-result-hint"><i class="bi bi-lightning-charge"></i> Nếu không có lượt quét mới, màn hình sẽ tự làm mới.</div>
                 @else
-                    <div class="access-empty"><div><i class="bi bi-person-bounding-box"></i><strong>Chưa có khách được chọn</strong><p>Quét QR hoặc nhập mã lịch hẹn bên trái để hiển thị thông tin khách cần làm thủ tục vào.</p></div></div>
+                    <div class="access-empty"><div><i class="bi bi-person-bounding-box"></i><strong>Chưa có khách được chọn</strong><p>Nhập mã lịch hẹn bên trái để hiển thị thông tin khách cần làm thủ tục vào.</p></div></div>
                 @endif
             </section>
         </div>
@@ -375,7 +375,7 @@
         <div class="access-workspace {{ $checkoutScannedVisit ? 'has-result' : '' }}">
             @unless ($checkoutScannedVisit)
                 <section class="access-card">
-                    <div class="access-card-head"><div><h3>Quét mã check-out</h3><p>Nhập mã lịch hẹn, QR hoặc chọn khách trong danh sách.</p></div></div>
+                    <div class="access-card-head"><div><h3>Check-out bằng mã lịch hẹn</h3><p>Nhập mã lịch hẹn hoặc chọn khách trong danh sách.</p></div></div>
                     <div class="access-body access-scan">
                         <div class="access-frame">
                             <span class="access-corner tl"></span><span class="access-corner tr"></span><span class="access-corner bl"></span><span class="access-corner br"></span>
@@ -384,7 +384,7 @@
                         <form class="access-form" id="accessCheckoutForm" action="{{ route('admin.checkout.scan-qr') }}" method="post">
                             @csrf
                             <div class="access-input-wrap">
-                                <input type="text" name="qr_token" id="accessCheckoutInput" placeholder="Nhập mã lịch hẹn hoặc mã QR" autocomplete="off">
+                                <input type="text" name="qr_token" id="accessCheckoutInput" placeholder="Nhập mã lịch hẹn" autocomplete="off">
                                 <i class="bi bi-upc-scan"></i>
                             </div>
                             <button class="access-btn primary" type="submit"><i class="bi bi-search"></i>Kiểm tra mã</button>
@@ -432,7 +432,7 @@
                     </form>
                     <div class="access-result-hint"><i class="bi bi-lightning-charge"></i> Nếu không có lượt quét mới, màn hình sẽ tự làm mới.</div>
                 @else
-                    <div class="access-empty"><div><i class="bi bi-person-bounding-box"></i><strong>Chưa có khách được chọn</strong><p>Quét QR, nhập mã lịch hẹn hoặc chọn khách trong danh sách để làm thủ tục ra.</p></div></div>
+                    <div class="access-empty"><div><i class="bi bi-person-bounding-box"></i><strong>Chưa có khách được chọn</strong><p>Nhập mã lịch hẹn hoặc chọn khách trong danh sách để làm thủ tục ra.</p></div></div>
                 @endif
             </section>
         </div>

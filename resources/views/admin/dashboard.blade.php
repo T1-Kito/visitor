@@ -285,7 +285,7 @@
 
 .db-card-head h3 {
     font-family: "Plus Jakarta Sans", sans-serif;
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1rem;
     letter-spacing: -0.02em;
     color: #0b1f3a;
@@ -402,7 +402,7 @@
 .db-visitor-cell { display:block; }
 
 
-.db-visitor-name { font-weight:700; font-size:0.85rem; color:#0b1f3a; line-height:1.2; }
+.db-visitor-name { font-weight:500; font-size:0.85rem; color:#0b1f3a; line-height:1.2; }
 .db-visitor-company { font-size:0.72rem; color:#7a93b0; }
 
 .db-host-cell { display:block; }
@@ -410,7 +410,7 @@
 
 .db-code {
     font-family: "Plus Jakarta Sans", sans-serif;
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.85rem;
     color: #0b1f3a;
     display: flex;
@@ -428,7 +428,7 @@
     color: #146bd7;
 }
 
-.db-time { font-weight:700; font-size:0.85rem; color:#0b1f3a; }
+.db-time { font-weight:500; font-size:0.85rem; color:#0b1f3a; }
 
 /* ===== ALERTS ===== */
 .db-alert-badge {
@@ -558,6 +558,13 @@
 
 .dashboard-recent-table .modern-table {
     height: 100%;
+}
+.dashboard-recent-table .modern-table thead th {
+    font-weight: 500;
+    letter-spacing: .04em;
+}
+.dashboard-recent-table .modern-table td {
+    font-weight: 400;
 }
 
 .db-pagination {
@@ -784,7 +791,7 @@
                             <td>
                                 <div class="db-host-cell">
 
-                                    <span style="font-size:.83rem;font-weight:600;color:#2c4a6e">{{ $visit['host'] }}</span>
+                                    <span style="font-size:.83rem;font-weight:500;color:#2c4a6e">{{ $visit['host'] }}</span>
                                 </div>
                             </td>
                             <td>
@@ -794,7 +801,7 @@
                             <td><x-status-badge :status="$visit['status']" /></td>
                             <td class="text-end">
                                 <a class="btn btn-sm btn-light" href="{{ route('admin.visits.show', $visit['id']) }}"
-                                   style="border-radius:10px;font-weight:700;font-size:.78rem;">Chi tiết</a>
+                                   style="border-radius:10px;font-weight:500;font-size:.78rem;">Chi tiết</a>
                             </td>
                         </tr>
                     @empty

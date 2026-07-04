@@ -847,8 +847,15 @@ a {
 
 .form-control:focus,
 .form-select:focus {
-    border-color: rgba(20, 107, 215, 0.75);
-    box-shadow: 0 0 0 0.22rem rgba(20, 107, 215, 0.12);
+    border-color: var(--gate-line-strong);
+    box-shadow: none;
+    outline: 0;
+}
+
+textarea.form-control:focus {
+    border-color: var(--gate-line-strong);
+    box-shadow: none;
+    outline: 0;
 }
 
 .modern-table {

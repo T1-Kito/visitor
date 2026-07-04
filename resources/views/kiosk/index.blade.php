@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 @php
     $pageSettings = $kioskSettings ?? [];
     $pagePrimaryColor = $pageSettings['kiosk.primary_color'] ?? '#146bd7';
@@ -409,6 +409,86 @@
             outline: none;
         }
 
+        .kiosk-select-shell {
+            position: relative;
+            width: 100%;
+        }
+
+        .kiosk-select-shell .form-select {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .kiosk-select-button {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .8rem;
+            padding: .58rem .88rem;
+            border: 1px solid var(--kiosk-line);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--kiosk-ink);
+            font: inherit;
+            font-size: .88rem;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .kiosk-input-wrap .kiosk-select-button {
+            padding-left: 2.55rem;
+        }
+        .kiosk-select-button i {
+            color: #7088a4;
+            font-size: .95rem;
+        }
+
+        .kiosk-select-menu {
+            position: absolute;
+            top: calc(100% + .35rem);
+            left: 0;
+            right: 0;
+            z-index: 80;
+            display: none;
+            max-height: 210px;
+            overflow-y: auto;
+            padding: .35rem;
+            border: 1px solid #dbe7f4;
+            border-radius: 14px;
+            background: #fff;
+        }
+
+        .kiosk-select-shell.is-open .kiosk-select-menu {
+            display: grid;
+            gap: .15rem;
+        }
+
+        .kiosk-select-option {
+            width: 100%;
+            min-height: 34px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--kiosk-ink);
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 600;
+            text-align: left;
+            padding: .42rem .55rem;
+        }
+        .kiosk-select-option:hover,
+        .kiosk-select-option.is-selected {
+            background: #fff;
+            color: var(--kiosk-ink);
+        }
+
         .kiosk-policy {
             display: flex;
             align-items: center;
@@ -419,6 +499,19 @@
             border-radius: 0;
             background: transparent;
             color: #334963;
+        }
+
+        .kiosk-safety-policy {
+            align-items: flex-start;
+        }
+
+        .kiosk-safety-list {
+            margin: .45rem 0 0 1rem;
+            padding: 0;
+        }
+
+        .kiosk-safety-list li {
+            margin: .22rem 0;
         }
 
         .kiosk-extra-panel {
@@ -463,16 +556,7 @@
         .kiosk-extra-toggle small {
             display: none;
         }
-
-        .kiosk-extra-toggle i:last-child {
-            transition: transform .18s ease;
-        }
-
-        .kiosk-extra-panel.is-open .kiosk-extra-toggle i:last-child {
-            transform: rotate(180deg);
-        }
-
-        .kiosk-extra-content {
+.kiosk-extra-content {
             display: none;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: .55rem 1rem;
@@ -1468,7 +1552,12 @@
                             <label class="form-label">Visitor ID card number <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-vcard"></i>
-                                <input class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Enter ID number" required>
+                                <select class="form-select" name="visitor_id_card_number" required>
+                                    <option value="" disabled @selected(! old('visitor_id_card_number'))>Select visitor card</option>
+                                    @for ($cardNo = 1; $cardNo <= 20; $cardNo++)
+                                        <option value="{{ $cardNo }}" @selected((string) old('visitor_id_card_number') === (string) $cardNo)>Visitor card {{ $cardNo }}</option>
+                                    @endfor
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -1500,11 +1589,10 @@
                         <div>
                             <label class="form-label">Meeting person <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
-                                <i class="bi bi-search"></i>
-                                <input class="form-control" id="employeeSearch" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Find or enter meeting person" data-search-url="{{ route('kiosk.employees.search') }}" required>
+                                <i class="bi bi-person-workspace"></i>
+                                <input class="form-control" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Enter meeting person" required>
                             </div>
-                            <input id="hostEmployeeId" name="host_employee_id" type="hidden" value="{{ old('host_employee_id') }}">
-                            <div class="list-group premium-result-list mt-2" id="employeeResults"></div>
+                            <input name="host_employee_id" type="hidden" value="">
                         </div>
                         <div>
                             <label class="form-label">Department <span class="text-danger">*</span></label>
@@ -1536,6 +1624,40 @@
                         <span class="form-check-label kiosk-policy-copy">
                             By submitting this form, you consent to the collection and processing of your personal data for visitor access, safety, and security purposes. Please refer to our
                             <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener noreferrer">Privacy Notice - DHL - Global</a>.
+                        </span>
+                    </label>
+
+                    <label class="form-check kiosk-policy kiosk-safety-policy">
+                        <input class="form-check-input" type="checkbox" name="safety_acknowledged" value="1" required>
+                        <span class="form-check-label kiosk-policy-copy">
+                            <span class="kiosk-safety-text" data-lang="en">
+                                I acknowledge and agree to comply with the following safety and security requirements while on DHL premise:
+                                <ul class="kiosk-safety-list">
+                                    <li>Display visitor badge at all times.</li>
+                                    <li>Remain within authorized areas only and be accompanied by an authorized escort when required.</li>
+                                    <li>Photography and video recording are prohibited without prior authorization.</li>
+                                    <li>No weapons, illegal substances, alcohol, hazardous materials, or prohibited items are allowed on site.</li>
+                                    <li>Comply with all safety instructions, emergency procedures, and site regulations.</li>
+                                    <li>Smoking is prohibited on the premises.</li>
+                                    <li>Immediately report any incident, injury, unsafe condition, security concern, or emergency.</li>
+                                    <li>In the event of an emergency alarm, proceed immediately to the designated Assembly Point and follow the instructions of DHL personnel.</li>
+                                    <li>Return visitor badge before leaving the premises.</li>
+                                </ul>
+                            </span>
+                            <span class="kiosk-safety-text" data-lang="vi" hidden>
+                                T&#244;i x&#225;c nh&#7853;n &#273;&#227; &#273;&#7885;c, hi&#7875;u v&#224; &#273;&#7891;ng &#253; tu&#226;n th&#7911; c&#225;c quy &#273;&#7883;nh v&#7873; an to&#224;n v&#224; an ninh sau &#273;&#226;y trong th&#7901;i gian c&#243; m&#7863;t t&#7841;i c&#417; s&#7903; DHL:
+                                <ul class="kiosk-safety-list">
+                                    <li>Lu&#244;n &#273;eo th&#7867; kh&#225;ch trong th&#7901;i gian &#7903; t&#7841;i c&#417; s&#7903; DHL.</li>
+                                    <li>Ch&#7881; ho&#7841;t &#273;&#7897;ng trong khu v&#7921;c &#273;&#432;&#7907;c ph&#233;p v&#224; c&#243; ng&#432;&#7901;i &#273;i c&#249;ng khi &#273;&#432;&#7907;c y&#234;u c&#7847;u.</li>
+                                    <li>Kh&#244;ng ch&#7909;p &#7843;nh ho&#7863;c quay phim khi ch&#432;a &#273;&#432;&#7907;c cho ph&#233;p.</li>
+                                    <li>Kh&#244;ng mang v&#361; kh&#237;, ch&#7845;t c&#7845;m, r&#432;&#7907;u bia, v&#7853;t li&#7879;u nguy hi&#7875;m ho&#7863;c v&#7853;t ph&#7849;m b&#7883; c&#7845;m v&#224;o c&#417; s&#7903;.</li>
+                                    <li>Tu&#226;n th&#7911; m&#7885;i h&#432;&#7899;ng d&#7851;n v&#7873; an to&#224;n, an ninh v&#224; quy tr&#236;nh kh&#7849;n c&#7845;p.</li>
+                                    <li>Kh&#244;ng h&#250;t thu&#7889;c trong khu&#244;n vi&#234;n DHL.</li>
+                                    <li>B&#225;o c&#225;o ngay m&#7885;i s&#7921; c&#7889;, th&#432;&#417;ng t&#237;ch, t&#236;nh hu&#7889;ng m&#7845;t an to&#224;n, v&#7845;n &#273;&#7873; an ninh ho&#7863;c t&#236;nh hu&#7889;ng kh&#7849;n c&#7845;p.</li>
+                                    <li>Khi c&#243; b&#225;o &#273;&#7897;ng kh&#7849;n c&#7845;p, nhanh ch&#243;ng di chuy&#7875;n &#273;&#7871;n &#272;i&#7875;m T&#7853;p K&#7871;t v&#224; tu&#226;n th&#7911; theo h&#432;&#7899;ng d&#7851;n c&#7911;a nh&#226;n vi&#234;n DHL.</li>
+                                    <li>Ho&#224;n tr&#7843; th&#7867; kh&#225;ch tr&#432;&#7899;c khi r&#7901;i kh&#7887;i c&#417; s&#7903;.</li>
+                                </ul>
+                            </span>
                         </span>
                     </label>
 
@@ -1623,7 +1745,6 @@
             '2. Thông tin gặp': '2. Meeting information',
             'Người cần gặp': 'Person to meet',
             'Phòng ban': 'Department',
-            'Chưa chọn nhân viên.': 'No employee selected.',
             '3. Thông tin chuyến thăm': '3. Visit information',
             'Mục đích đến': 'Purpose of visit',
             'Chọn mục đích': 'Select a purpose',
@@ -1640,9 +1761,9 @@
             'Khách có thể dùng điện thoại cá nhân để nhập thông tin nhanh hơn, hoặc lễ tân gửi link này trước cho khách.': 'Visitors can use their phone to enter information faster, or reception can send this link in advance.',
             'Check-in trực tiếp': 'Direct check-in',
             'Check-out trực tiếp': 'Direct check-out',
-            'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Scan the QR code or enter an approved visit code to check in.',
+            'Quét QR hoặc nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Enter an approved visit code to check in.',
             'Nhập mã lịch hẹn đã duyệt để hệ thống check-in ngay.': 'Enter an approved visit code to check in.',
-            'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Scan the QR code or enter the visit code of a visitor currently inside to check out.',
+            'Quét QR hoặc nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Enter the visit code of a visitor currently inside to check out.',
             'Nhập mã lịch hẹn của khách đang trong công ty để check-out ngay.': 'Enter the visit code of a visitor currently inside to check out.',
             'Hoặc nhập mã check-in': 'Or enter a check-in code',
             'Hoặc nhập mã check-out': 'Or enter a check-out code',
@@ -1658,7 +1779,6 @@
             'Thời gian làm việc': 'Working hours',
             'Xin cảm ơn!': 'Thank you!',
             'Chúc bạn một ngày tốt lành': 'Have a great day',
-            'Không tìm thấy nhân viên phù hợp.': 'No matching employee found.',
 
             // DHL kiosk form v2 translations
             '1. Thông tin khách': '1. Visitor Information',
@@ -1675,9 +1795,7 @@
             '3. Thông tin gặp': '3. Meeting Information',
             'Người cần gặp': 'Meeting person',
             'Phòng ban': 'Department',
-            'Chưa chọn nhân viên.': 'No employee selected.',
             '(Tùy chọn)': '(Optional)',
-            'Chọn gợi ý hoặc giữ tên đã nhập.': 'Select a suggestion or keep the entered name.',
             'Chọn phòng ban': 'Select department',
             '4. Thông tin chuyến thăm': '4. Visiting Information',
             'Mục đích đến': 'Visiting purpose',
@@ -1692,15 +1810,13 @@
             'Nhập nơi cấp': 'Enter place of issue',
             'Tìm tên nhân viên': 'Search employee name',
             'Tự động sau khi chọn': 'Filled automatically after selection',
-            'Nhập mã lịch hẹn hoặc mã QR': 'Enter visit code or QR code',
+            'Nhập mã lịch hẹn': 'Enter visit code',
             'Nhập mã lịch hẹn để check-out': 'Enter visit code to check out',
             'Nhập họ và tên': 'Enter full name',
             'Nhập số điện thoại': 'Enter phone number',
             'Nhập tên công ty/tổ chức': 'Enter company/organization name',
             'Nhập số CCCD/Hộ chiếu': 'Enter Citizen ID Number/Passport',
             'Nhập số thẻ': 'Enter ID number',
-            'Tìm nhân viên': 'Find staff',
-            'Tìm hoặc nhập người cần gặp': 'Find or enter meeting person',
         };
         const reverseKioskTranslations = Object.fromEntries(Object.entries(kioskTranslations).map(([vi, en]) => [en, vi]));
         const reverseKioskPlaceholders = Object.fromEntries(Object.entries(kioskPlaceholders).map(([vi, en]) => [en, vi]));
@@ -1729,14 +1845,83 @@
             document.documentElement.lang = kioskLanguage;
         }
 
+        function updateSafetyLanguage() {
+            document.querySelectorAll('.kiosk-safety-text[data-lang]').forEach((node) => {
+                node.hidden = node.dataset.lang !== kioskLanguage;
+            });
+        }
+
+        function enhanceKioskSelects() {
+            document.querySelectorAll('.kiosk-flat-form select.form-select').forEach((select) => {
+                if (select.dataset.kioskSelectEnhanced === '1') return;
+                select.dataset.kioskSelectEnhanced = '1';
+
+                const shell = document.createElement('div');
+                shell.className = 'kiosk-select-shell';
+                select.parentNode.insertBefore(shell, select);
+                shell.appendChild(select);
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'kiosk-select-button';
+                button.innerHTML = '<span></span><i class="bi bi-chevron-down"></i>';
+
+                const menu = document.createElement('div');
+                menu.className = 'kiosk-select-menu';
+
+                const refresh = () => {
+                    const selected = select.options[select.selectedIndex];
+                    button.querySelector('span').textContent = selected?.textContent?.trim() || select.options[0]?.textContent?.trim() || 'Select';
+                    menu.querySelectorAll('.kiosk-select-option').forEach((item) => {
+                        item.classList.toggle('is-selected', item.dataset.value === select.value);
+                    });
+                };
+
+                Array.from(select.options).forEach((option) => {
+                    if (option.disabled && option.value === '') return;
+
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'kiosk-select-option';
+                    item.dataset.value = option.value;
+                    item.textContent = option.textContent.trim();
+                    item.addEventListener('click', () => {
+                        select.value = option.value;
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        shell.classList.remove('is-open');
+                        refresh();
+                    });
+                    menu.appendChild(item);
+                });
+
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    document.querySelectorAll('.kiosk-select-shell.is-open').forEach((openShell) => {
+                        if (openShell !== shell) openShell.classList.remove('is-open');
+                    });
+                    shell.classList.toggle('is-open');
+                });
+
+                select.addEventListener('change', refresh);
+                shell.appendChild(button);
+                shell.appendChild(menu);
+                refresh();
+            });
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.kiosk-select-shell.is-open').forEach((shell) => shell.classList.remove('is-open'));
+        });
         const kioskLanguageSelect = document.getElementById('kioskLanguage');
         if (kioskLanguageSelect) {
             kioskLanguageSelect.value = kioskLanguage;
             kioskLanguageSelect.addEventListener('change', () => {
                 kioskLanguage = kioskLanguageSelect.value === 'en' ? 'en' : 'vi';
                 localStorage.setItem('kiosk-language-v2', kioskLanguage);
-                translateKiosk();
-                setLookupMode(document.getElementById('kioskLookupMode')?.value);
+                enhanceKioskSelects();
+        translateKiosk();
+        updateSafetyLanguage();
+        setLookupMode(document.getElementById('kioskLookupMode')?.value);
                 updateClock();
             });
         }
@@ -1774,8 +1959,8 @@
             return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
         }
 
-        function fillRealtimeVisitSchedule() {
-            if (visitTimesEdited || visitTimeFields.length !== 4) return;
+        function fillRealtimeVisitSchedule(force = false) {
+            if ((!force && visitTimesEdited) || visitTimeFields.length !== 4) return;
             const checkin = new Date();
             const checkout = new Date(checkin.getTime() + (4 * 60 * 60 * 1000));
             visitTimeFields[0].value = localDateValue(checkin);
@@ -1785,8 +1970,9 @@
         }
 
         fillRealtimeVisitSchedule();
+        setInterval(() => fillRealtimeVisitSchedule(), 30000);
         visitTimeFields.forEach((field) => {
-            field.addEventListener('focus', fillRealtimeVisitSchedule);
+            field.addEventListener('focus', () => fillRealtimeVisitSchedule());
             field.addEventListener('input', () => { visitTimesEdited = true; });
         });
         const extraPanel = document.querySelector('[data-kiosk-extra-panel]');
@@ -1794,73 +1980,6 @@
         extraToggle?.addEventListener('click', () => {
             const isOpen = extraPanel?.classList.toggle('is-open') ?? false;
             extraToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
-
-        const searchInput = document.getElementById('employeeSearch');
-        const resultsBox = document.getElementById('employeeResults');
-        const selectedDepartment = document.getElementById('selectedDepartment');
-        const hostEmployeeId = document.getElementById('hostEmployeeId');
-        let searchTimer = null;
-
-        function renderEmployees(items) {
-            resultsBox.innerHTML = '';
-            if (items.length === 0) {
-                resultsBox.classList.remove('show');
-                resultsBox.innerHTML = '';
-                return;
-            }
-
-            items.forEach((employee) => {
-                const item = document.createElement('button');
-                item.type = 'button';
-                item.className = 'list-group-item list-group-item-action';
-
-                const name = document.createElement('strong');
-                name.textContent = employee.name;
-                const detail = document.createElement('span');
-                detail.className = 'text-secondary';
-                detail.textContent = `${employee.position ?? '-'} - ${employee.department ?? '-'}`;
-
-                item.appendChild(name);
-                item.appendChild(document.createElement('br'));
-                item.appendChild(detail);
-                item.addEventListener('click', () => {
-                    hostEmployeeId.value = employee.id;
-                    resultsBox.innerHTML = '';
-                    searchInput.value = employee.name;
-                });
-                resultsBox.appendChild(item);
-            });
-        }
-
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchTimer);
-            hostEmployeeId.value = '';
-
-            const keyword = searchInput.value.trim();
-            if (keyword.length < 2) {
-                resultsBox.innerHTML = '';
-                return;
-            }
-
-            searchTimer = setTimeout(async () => {
-                const url = `${searchInput.dataset.searchUrl}?q=${encodeURIComponent(keyword)}`;
-
-                try {
-                    const response = await fetch(url, {
-                        headers: { Accept: 'application/json' },
-                        cache: 'no-store',
-                    });
-                    if (! response.ok) {
-                        throw new Error(`Employee search failed: ${response.status}`);
-                    }
-
-                    const payload = await response.json();
-                    renderEmployees(payload.data ?? []);
-                } catch (error) {
-                    resultsBox.innerHTML = `<div class="list-group-item text-danger">${kioskLanguage === 'en' ? 'Unable to search employees. Please try again.' : 'Không thể tìm nhân viên. Vui lòng thử lại.'}</div>`;
-                }
-            }, 250);
         });
 
         const lookupForm = document.getElementById('kioskLookupForm');
@@ -1871,6 +1990,9 @@
         const lookupHelp = document.getElementById('kioskLookupHelp');
         const lookupDivider = document.getElementById('kioskLookupDivider');
         const registerForm = document.getElementById('kioskRegisterForm');
+        registerForm?.addEventListener('submit', () => {
+            fillRealtimeVisitSchedule(!visitTimesEdited);
+        });
         const visitorNameInput = document.getElementById('kioskVisitorName');
         const lookupModal = document.getElementById('kioskLookupModal');
         const modalTitle = document.getElementById('kioskLookupTitle');
@@ -1911,7 +2033,7 @@
             if (lookupInput) {
                 lookupInput.placeholder = normalizedMode === 'checkout'
                     ? kioskLanguage === 'en' ? 'Enter visit code to check out' : 'Nhập mã lịch hẹn để check-out'
-                    : kioskLanguage === 'en' ? 'Enter visit code or QR code' : 'Nhập mã lịch hẹn hoặc mã QR';
+                    : kioskLanguage === 'en' ? 'Enter visit code' : 'Nhập mã lịch hẹn';
             }
 
             if (lookupSubmitButton) {
@@ -2150,8 +2272,11 @@
             }, 4200);
         }
 
+        enhanceKioskSelects();
         translateKiosk();
+        updateSafetyLanguage();
         setLookupMode(document.getElementById('kioskLookupMode')?.value);
     </script>
 </body>
 </html>
+
