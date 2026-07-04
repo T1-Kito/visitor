@@ -100,7 +100,6 @@ trait HasAdminLayoutData
             ['label' => 'Lịch hẹn', 'route' => 'admin.visits.index', 'icon' => 'bi-calendar-check-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Đăng ký online', 'route' => 'admin.online-registration', 'icon' => 'bi-send-fill', 'permission' => 'visits.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách cần duyệt', 'route' => 'admin.approvals.index', 'icon' => 'bi-patch-check-fill', 'permission' => 'approvals.manage', 'group' => 'VẬN HÀNH'],
-            ['label' => 'Khách ra/vào', 'route' => 'admin.access.index', 'icon' => 'bi-arrow-left-right', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Danh sách ra/vào', 'route' => 'admin.access.lists', 'icon' => 'bi-list-check', 'permission' => 'checkin.manage', 'group' => 'VẬN HÀNH'],
             ['label' => 'Khách', 'route' => 'admin.visitors.index', 'icon' => 'bi-person-lines-fill', 'permission' => 'visitors.manage', 'group' => 'QUẢN LÝ'],
             ['label' => 'Nhân viên', 'route' => 'admin.employees.index', 'icon' => 'bi-people-fill', 'permission' => 'employees.manage', 'group' => 'QUẢN LÝ'],

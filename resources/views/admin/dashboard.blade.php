@@ -704,14 +704,7 @@
         <div class="db-action-icon"><i class="bi bi-check2-square"></i></div>
         <div><div class="db-action-title">Duyệt lịch</div><div class="db-action-sub">Xử lý yêu cầu chờ</div></div>
     </a>
-    <a href="{{ route('admin.access.index', ['mode' => 'checkin']) }}" class="db-action-btn">
-        <div class="db-action-icon"><i class="bi bi-qr-code-scan"></i></div>
-        <div><div class="db-action-title">Check-in</div><div class="db-action-sub">Quét QR, cấp thẻ</div></div>
-    </a>
-    <a href="{{ route('admin.access.index', ['mode' => 'checkout']) }}" class="db-action-btn">
-        <div class="db-action-icon"><i class="bi bi-box-arrow-left"></i></div>
-        <div><div class="db-action-title">Check-out</div><div class="db-action-sub">Thu hồi quyền ra/vào</div></div>
-    </a>
+
     <a href="{{ route('admin.reports.index') }}" class="db-action-btn">
         <div class="db-action-icon"><i class="bi bi-file-earmark-arrow-down"></i></div>
         <div><div class="db-action-title">Xuất báo cáo</div><div class="db-action-sub">CSV, Excel, in ấn</div></div>

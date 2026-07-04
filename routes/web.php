@@ -132,7 +132,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/approvals/{visit}/wait', [AdminUiController::class, 'waitVisit'])
         ->name('admin.approvals.wait');
 
-    Route::get('/access', [AdminUiController::class, 'accessIndex'])
+    Route::get('/access', fn () => redirect()->route('admin.visits.index'))
         ->middleware('permission:checkin.manage')
         ->name('admin.access.index');
     Route::put('/access/quick-settings', [SystemAdminController::class, 'accessQuickSettingsUpdate'])
