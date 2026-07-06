@@ -1554,9 +1554,9 @@
                                 <i class="bi bi-person-vcard"></i>
                                 <select class="form-select" name="visitor_id_card_number" required>
                                     <option value="" disabled @selected(! old('visitor_id_card_number'))>Select visitor card</option>
-                                    @for ($cardNo = 1; $cardNo <= 20; $cardNo++)
-                                        <option value="{{ $cardNo }}" @selected((string) old('visitor_id_card_number') === (string) $cardNo)>Visitor card {{ $cardNo }}</option>
-                                    @endfor
+                                    @foreach (($visitorCardOptions ?? collect()) as $card)
+                                        <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label'] }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>

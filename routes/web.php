@@ -171,6 +171,15 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/badges', [AdminUiController::class, 'badgesIndex'])
         ->middleware('permission:badges.manage')
         ->name('admin.badges.index');
+    Route::post('/badges', [AdminUiController::class, 'badgesStore'])
+        ->middleware('permission:badges.manage')
+        ->name('admin.badges.store');
+    Route::put('/badges/{badge}', [AdminUiController::class, 'badgesUpdate'])
+        ->middleware('permission:badges.manage')
+        ->name('admin.badges.update');
+    Route::delete('/badges/{badge}', [AdminUiController::class, 'badgesDestroy'])
+        ->middleware('permission:badges.manage')
+        ->name('admin.badges.destroy');
 
     Route::get('/alerts', [AdminUiController::class, 'alertsIndex'])
         ->middleware('permission:alerts.view')

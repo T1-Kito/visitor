@@ -2139,12 +2139,65 @@ class AdminUiController extends Controller
     {
         $badges = Badge::query()
             ->with(['visit.visitor', 'visit.hostEmployee.department'])
+            ->orderByRaw("status = 'active' DESC")
             ->orderBy('badge_no')
             ->get();
 
         return view('admin.badges.index', $this->withBase([
             'badges' => $badges,
         ]));
+    }
+
+    public function badgesStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'badge_no' => ['required', 'string', 'max:40', \Illuminate\Validation\Rule::unique('badges', 'badge_no')],
+            'status' => ['nullable', 'in:available,revoked'],
+        ]);
+
+        Badge::query()->create([
+            'badge_no' => trim($validated['badge_no']),
+            'status' => $validated['status'] ?? 'available',
+        ]);
+
+        return redirect()->route('admin.badges.index')->with('status', 'Đã thêm số thẻ khách.');
+    }
+
+    public function badgesUpdate(Request $request, Badge $badge): RedirectResponse
+    {
+        $validated = $request->validate([
+            'badge_no' => ['required', 'string', 'max:40', \Illuminate\Validation\Rule::unique('badges', 'badge_no')->ignore($badge->id)],
+            'status' => ['required', 'in:available,revoked'],
+        ]);
+
+        if ($badge->status === 'active') {
+            $badge->update([
+                'badge_no' => trim($validated['badge_no']),
+            ]);
+
+            return redirect()->route('admin.badges.index')->with('status', 'Đã cập nhật mã thẻ đang sử dụng.');
+        }
+
+        $badge->update([
+            'badge_no' => trim($validated['badge_no']),
+            'status' => $validated['status'],
+            'visit_id' => $validated['status'] === 'available' ? null : $badge->visit_id,
+            'issued_at' => $validated['status'] === 'available' ? null : $badge->issued_at,
+            'valid_until' => $validated['status'] === 'available' ? null : $badge->valid_until,
+        ]);
+
+        return redirect()->route('admin.badges.index')->with('status', 'Đã cập nhật số thẻ khách.');
+    }
+
+    public function badgesDestroy(Badge $badge): RedirectResponse
+    {
+        if ($badge->status === 'active') {
+            return redirect()->route('admin.badges.index')->with('error', 'Không thể xóa thẻ đang được khách sử dụng.');
+        }
+
+        $badge->delete();
+
+        return redirect()->route('admin.badges.index')->with('status', 'Đã xóa số thẻ khách.');
     }
 
     public function confirmCheckout(Visit $visit): RedirectResponse

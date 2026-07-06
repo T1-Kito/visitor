@@ -1,11 +1,25 @@
 @extends('layouts.admin')
 
-@section('title', $visit->code.' | '.html_entity_decode('Chi ti&#7871;t l&#7883;ch h&#7865;n', ENT_QUOTES, 'UTF-8'))
-@section('page_title', html_entity_decode('Chi ti&#7871;t l&#7883;ch h&#7865;n', ENT_QUOTES, 'UTF-8'))
-@section('page_subtitle', html_entity_decode('Theo d&otilde;i h&#7891; s&#417; kh&aacute;ch v&agrave; ti&#7871;n tr&igrave;nh x&#7917; l&yacute;', ENT_QUOTES, 'UTF-8'))
+@section('title', $visit->code.' | Chi tiết lịch hẹn')
+@section('page_title', 'Chi tiết lịch hẹn')
+@section('page_subtitle', 'Theo dõi hồ sơ khách và tiến trình xử lý')
+
 @push('styles')
 <style>
-.visit-app{display:grid;gap:1rem;color:#10233d}.va-back{display:inline-flex;align-items:center;gap:.35rem;width:max-content;color:#7187a3;text-decoration:none;font-size:.78rem;font-weight:500}.va-back:hover{color:#146bd7}.va-profile-card{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1.1rem;border:1px solid #e2edf8;border-radius:18px;background:#fff;box-shadow:0 12px 30px rgba(17,39,68,.055)}.va-profile-main{min-width:0}.va-profile-title{display:flex;align-items:center;gap:.65rem;flex-wrap:wrap}.va-profile-title h1{margin:0;color:#10233d;font-size:1.16rem;font-weight:600;line-height:1.2}.va-company-line{display:flex;align-items:center;gap:.45rem;margin-top:.45rem;color:#253a54;font-size:.84rem;font-weight:500}.va-company-line i{color:#d40511}.va-profile-tags{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin-top:.65rem}.va-chip{display:inline-flex;align-items:center;gap:.35rem;min-height:30px;padding:.3rem .58rem;border:1px solid #e2edf8;border-radius:9px;background:#fbfdff;color:#10233d;font-size:.72rem;font-weight:500}.va-chip i{color:#526b87}.va-created{display:flex;align-items:center;gap:.35rem;color:#7187a3;font-size:.75rem;white-space:nowrap}.va-created i{color:#526b87}.va-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}.va-kpi{display:flex;align-items:center;gap:.85rem;padding:.85rem;border:1px solid #e8f0f8;border-radius:17px;background:#fff;box-shadow:0 10px 22px rgba(17,39,68,.04)}.va-kpi-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;font-size:1.05rem}.va-kpi:nth-child(1) .va-kpi-icon{background:#eaf4ff;color:#1976d2}.va-kpi:nth-child(2) .va-kpi-icon{background:#f3ecff;color:#7c3aed}.va-kpi:nth-child(3) .va-kpi-icon{background:#fff0f0;color:#d40511}.va-kpi:nth-child(4) .va-kpi-icon{background:#eafaf0;color:#16a34a}.va-kpi span{display:block;color:#526b87;font-size:.75rem}.va-kpi strong{display:block;margin-top:.06rem;color:#10233d;font-size:1.28rem;font-weight:600;line-height:1}.va-kpi small{display:block;margin-top:.2rem;color:#8aa0ba;font-size:.66rem}.va-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:.9rem;align-items:start}.va-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;min-width:0}.va-side{display:grid;gap:.9rem;position:sticky;top:.9rem}.va-panel{border:1px solid #e2edf8;border-radius:18px;background:#fff;box-shadow:0 12px 28px rgba(17,39,68,.04);overflow:hidden;min-width:0}.va-wide{grid-column:1/-1}.va-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.85rem 1rem;border-bottom:1px solid #eef4fb}.va-panel-head h2{display:flex;align-items:center;gap:.42rem;margin:0;color:#10233d;font-size:.95rem;font-weight:600}.va-panel-head h2 i{color:#d40511}.va-panel-head p{margin:.16rem 0 0;color:#7187a3;font-size:.74rem}.va-body{padding:1rem}.va-info-list{display:grid}.va-row{display:grid;grid-template-columns:24px minmax(110px,.55fr) minmax(0,1fr);gap:.55rem;align-items:center;padding:.55rem 0;border-bottom:1px solid #eef4fb}.va-row:last-child{border-bottom:0}.va-row i{width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:#f3f8ff;color:#526b87;font-size:.8rem}.va-label{color:#7187a3;font-size:.74rem}.va-value{color:#10233d;font-size:.78rem;font-weight:500;overflow-wrap:anywhere}.va-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:.42rem;padding:.55rem .85rem;border:1px solid #dbe7f4;border-radius:13px;background:#fff;color:#2c4967;font-size:.82rem;font-weight:500;text-decoration:none}.va-btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#1976d2,#11a9c7)}.va-btn.success{border:0;color:#fff;background:#16a34a}.va-btn.danger{border-color:#fecaca;background:#fff7f7;color:#dc2626}.va-btn.soft{background:#f8fbff}.va-btn:disabled,.va-btn[aria-disabled=true]{opacity:.55;pointer-events:none}.va-action-stack,.va-share-actions{display:grid;gap:.5rem}.va-share-actions{grid-template-columns:1fr 1fr}.va-share-actions form{margin:0}.va-qr-card{text-align:center}.va-qr-visual{display:grid;place-items:center;width:min(210px,100%);margin:0 auto;padding:.75rem;border:1px solid #dbe7f4;border-radius:18px;background:#fff}.va-qr-visual svg{width:100%;height:auto}.va-empty-qr{display:grid;place-items:center;min-height:188px;border:1px dashed #bdd6ee;border-radius:18px;background:#f8fbff;color:#7187a3;font-size:.84rem}.va-token{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem;padding:.58rem .7rem;border-radius:13px;background:#edf5ff;color:#1976d2;font-size:.76rem;font-weight:600;word-break:break-all}.va-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.65rem}.va-mini{padding:.55rem;border:1px solid #edf3fb;border-radius:13px;background:#fbfdff;text-align:left}.va-mini span{display:block;color:#7187a3;font-size:.66rem}.va-mini strong{display:block;margin-top:.08rem;color:#10233d;font-size:.74rem;font-weight:500}.va-flow{display:grid;grid-template-columns:repeat(5,minmax(96px,1fr));gap:.45rem;padding:1rem;overflow-x:auto}.va-step{position:relative;display:grid;justify-items:center;gap:.35rem;text-align:center;color:#7187a3}.va-step:before{content:"";position:absolute;top:15px;left:-50%;right:50%;height:2px;background:#dce8f5}.va-step:first-child:before{display:none}.va-step.done:before{background:#22c55e}.va-dot{width:30px;height:30px;display:grid;place-items:center;border-radius:999px;background:#f3f7fb;color:#8aa0ba;border:1px solid #dce8f5;z-index:1}.va-step.done .va-dot{background:#22c55e;color:#fff;border-color:#22c55e}.va-step strong{color:#253a54;font-size:.72rem;font-weight:600}.va-step span{font-size:.66rem;line-height:1.3}.va-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}.va-status-card{padding:.8rem;border:1px solid #edf3fb;border-radius:16px;background:#fff}.va-status-card h3{margin:0 0 .5rem;color:#10233d;font-size:.86rem;font-weight:600}.va-status-card div{display:flex;justify-content:space-between;gap:.6rem;color:#7187a3;font-size:.75rem}.va-status-card strong{color:#10233d;font-weight:500;text-align:right}.va-log-table{width:100%;border-collapse:separate;border-spacing:0}.va-log-table th{padding:.7rem;color:#7187a3;font-size:.68rem;font-weight:600;text-align:left;border-bottom:1px solid #eef4fb}.va-log-table td{padding:.72rem;color:#34506c;font-size:.76rem;border-bottom:1px solid #f1f5fa}@media(max-width:1300px){.va-detail-grid{grid-template-columns:1fr}.va-side{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:900px){.va-profile-card{flex-direction:column}.va-kpi-grid,.va-main,.va-side,.va-status-grid{grid-template-columns:1fr}.va-row{grid-template-columns:24px 1fr}.va-row .va-value{grid-column:2}.va-flow{grid-template-columns:repeat(5,120px)}}
+.visit-app{display:grid;gap:.9rem;color:#10233d}.va-top{display:flex;align-items:center;justify-content:space-between;gap:1rem}.va-back{display:inline-flex;align-items:center;gap:.35rem;color:#526b87;text-decoration:none;font-size:.82rem;font-weight:500}.va-actions{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;flex-wrap:wrap}.va-btn{min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:.42rem;padding:.55rem .85rem;border:1px solid #dbe7f4;border-radius:13px;background:#fff;color:#2c4967;font-size:.82rem;font-weight:500;text-decoration:none}.va-btn.primary{border:0;color:#fff;background:linear-gradient(135deg,#1976d2,#11a9c7);box-shadow:0 12px 24px rgba(20,107,215,.13)}.va-btn.success{border:0;color:#fff;background:linear-gradient(135deg,#16a34a,#22c55e)}.va-btn.danger{border-color:#fecaca;background:#fff7f7;color:#dc2626}.va-btn.soft{background:#f8fbff}.va-btn:disabled,.va-btn[aria-disabled=true]{opacity:.55;pointer-events:none}.va-hero{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;background:rgba(255,255,255,.88);box-shadow:0 14px 34px rgba(17,39,68,.05)}.va-person{display:flex;align-items:center;gap:.9rem;min-width:0}.va-avatar{width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:#e9f2ff;color:#1976d2;font-size:1.25rem;font-weight:600}.va-title{min-width:0}.va-title h1{margin:0;color:#10233d;font-size:1.22rem;font-weight:600;letter-spacing:0}.va-meta{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin-top:.28rem;color:#6f839f;font-size:.82rem}.va-code{color:#1976d2;font-weight:600}.va-summary{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr));gap:.5rem;min-width:460px}.va-summary div{padding:.62rem .75rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff}.va-summary span{display:block;color:#7187a3;font-size:.68rem;font-weight:500}.va-summary strong{display:block;margin-top:.1rem;color:#10233d;font-size:.82rem;font-weight:500;overflow-wrap:anywhere}.va-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:.9rem;align-items:start}.va-main{display:grid;gap:.9rem;min-width:0}.va-panel{border:1px solid #e2edf8;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(17,39,68,.045);overflow:hidden;min-width:0}.va-panel-head{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.9rem 1rem;border-bottom:1px solid #eef4fb}.va-panel-head h2{margin:0;color:#10233d;font-size:.96rem;font-weight:600;letter-spacing:0}.va-panel-head p{margin:.16rem 0 0;color:#7187a3;font-size:.76rem}.va-body{padding:1rem}.va-info-sections{display:grid;gap:1rem}.va-section h3{margin:0 0 .65rem;color:#526b87;font-size:.78rem;font-weight:600}.va-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.58rem}.va-info{display:grid;grid-template-columns:30px minmax(0,1fr);gap:.52rem;align-items:center;padding:.62rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff}.va-info i{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:#edf6ff;color:#1976d2}.va-label{display:block;color:#7187a3;font-size:.68rem;font-weight:500}.va-value{display:block;margin-top:.08rem;color:#10233d;font-size:.82rem;font-weight:500;overflow-wrap:anywhere}.va-flow{display:grid;grid-template-columns:repeat(5,minmax(96px,1fr));gap:.45rem;padding:1rem;overflow-x:auto}.va-step{position:relative;display:grid;justify-items:center;gap:.35rem;text-align:center;color:#7187a3}.va-step:before{content:"";position:absolute;top:15px;left:-50%;right:50%;height:2px;background:#dce8f5}.va-step:first-child:before{display:none}.va-step.done:before{background:#22c55e}.va-dot{width:30px;height:30px;display:grid;place-items:center;border-radius:999px;background:#f3f7fb;color:#8aa0ba;border:1px solid #dce8f5;z-index:1}.va-step.done .va-dot{background:#22c55e;color:#fff;border-color:#22c55e}.va-step strong{color:#253a54;font-size:.72rem;font-weight:600}.va-step span{font-size:.66rem;line-height:1.3}.va-log-table{width:100%;border-collapse:separate;border-spacing:0}.va-log-table th{padding:.7rem;color:#7187a3;font-size:.68rem;font-weight:600;text-transform:none;border-bottom:1px solid #eef4fb}.va-log-table td{padding:.72rem;color:#34506c;font-size:.76rem;border-bottom:1px solid #f1f5fa}.va-side{display:grid;gap:.9rem;position:sticky;top:.9rem}.va-qr-card{text-align:center}.va-qr-visual{display:grid;place-items:center;width:min(210px,100%);margin:0 auto;padding:.75rem;border:1px solid #dbe7f4;border-radius:18px;background:#fff}.va-qr-visual svg{width:100%;height:auto}.va-empty-qr{display:grid;place-items:center;min-height:188px;border:1px dashed #bdd6ee;border-radius:18px;background:#f8fbff;color:#7187a3;font-size:.84rem}.va-token{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem;padding:.58rem .7rem;border-radius:13px;background:#edf5ff;color:#1976d2;font-size:.76rem;font-weight:600;word-break:break-all}.va-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.65rem}.va-mini{padding:.55rem;border:1px solid #edf3fb;border-radius:13px;background:#fbfdff;text-align:left}.va-mini span{display:block;color:#7187a3;font-size:.66rem}.va-mini strong{display:block;margin-top:.08rem;color:#10233d;font-size:.74rem;font-weight:500}.va-action-stack,.va-share-actions{display:grid;gap:.5rem}.va-share-actions{grid-template-columns:1fr 1fr}.va-share-actions form{margin:0}.va-note{width:100%;min-height:94px;border:1px solid #dbe7f4;border-radius:14px;padding:.72rem;color:#10233d;font-size:.86rem;resize:vertical}.va-contact{display:grid;gap:.5rem}.va-contact-row{display:flex;align-items:center;gap:.5rem;color:#34506c;font-size:.8rem;overflow-wrap:anywhere}.va-contact-row i{color:#1976d2}.va-attachment{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.65rem;border:1px solid #edf3fb;border-radius:14px;background:#fbfdff;color:#7187a3;font-size:.8rem}.va-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem}.va-status-card{padding:.8rem;border:1px solid #edf3fb;border-radius:16px;background:#fff}.va-status-card h3{margin:0 0 .5rem;color:#10233d;font-size:.86rem;font-weight:600}.va-status-card div{display:flex;justify-content:space-between;gap:.6rem;color:#7187a3;font-size:.75rem}.va-status-card strong{color:#10233d;font-weight:500;text-align:right}@media(max-width:1500px){.va-grid{grid-template-columns:minmax(0,1fr) 300px}.va-summary{min-width:390px}}@media(max-width:1200px){.va-hero{grid-template-columns:1fr}.va-summary{min-width:0}.va-grid{grid-template-columns:1fr}.va-side{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:768px){.va-top,.va-person{align-items:flex-start;flex-direction:column}.va-actions{justify-content:flex-start}.va-summary,.va-info-grid,.va-status-grid,.va-side{grid-template-columns:1fr}.va-flow{grid-template-columns:repeat(5,120px)}}
+.va-back{
+    margin-bottom:.22rem;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    color:#7187a3;
+    font-size:.72rem;
+}
+.va-back:hover{
+    background:transparent;
+    color:#146bd7;
+}
 </style>
 @endpush
 
@@ -14,40 +28,40 @@
     $stepByStatus = ['pending' => 1, 'approved' => 2, 'checked_in' => 4, 'checked_out' => 5, 'rejected' => 2, 'cancelled' => 2];
     $currentStep = $stepByStatus[$visit->status] ?? 1;
     $qrIsValid = $visit->qr_token && (! $visit->qr_expires_at || $visit->qr_expires_at->isFuture());
-    $statusTextHtml = [
-        'pending' => 'Ch&#7901; duy&#7879;t',
-        'approved' => '&#272;&atilde; duy&#7879;t',
-        'rejected' => 'T&#7915; ch&#7889;i',
-        'checked_in' => '&#272;ang trong c&ocirc;ng ty',
-        'checked_out' => '&#272;&atilde; r&#7901;i c&ocirc;ng ty',
-        'cancelled' => '&#272;&atilde; h&#7911;y',
-        'waiting' => 'Y&ecirc;u c&#7847;u ch&#7901;',
-    ][$visit->status] ?? e($visit->status);
-    $statusText = html_entity_decode(strip_tags($statusTextHtml), ENT_QUOTES, 'UTF-8');
+    $statusText = [
+        'pending' => 'Chờ duyệt',
+        'approved' => 'Đã duyệt',
+        'rejected' => 'Từ chối',
+        'checked_in' => 'Đang trong công ty',
+        'checked_out' => 'Đã rời công ty',
+        'cancelled' => 'Đã hủy',
+        'waiting' => 'Yêu cầu chờ',
+    ][$visit->status] ?? $visit->status;
     $methodText = [
-        'qr' => 'M&#227; QR',
-        'badge' => 'Th&#7867; t&#7841;m',
-        'manual' => 'Nh&#7853;p th&#7911; c&ocirc;ng',
+        'qr' => 'Mã QR',
+        'badge' => 'Thẻ tạm',
+        'manual' => 'Nhập thủ công',
     ][$visit->checkin_method] ?? strtoupper((string) $visit->checkin_method);
-    $auditActionLabels = array_map(fn ($label) => html_entity_decode($label, ENT_QUOTES, 'UTF-8'), [
-        'kiosk.walk_in_created' => 'Kh&aacute;ch &#273;&atilde; &#273;&#259;ng k&yacute; t&#7841;i kiosk',
-        'visit.created' => '&#272;&atilde; t&#7841;o l&#7883;ch h&#7865;n',
-        'visit.updated' => '&#272;&atilde; c&#7853;p nh&#7853;t l&#7883;ch h&#7865;n',
-        'visit.cancelled' => '&#272;&atilde; h&#7911;y l&#7883;ch h&#7865;n',
-        'approval.approved' => '&#272;&atilde; duy&#7879;t l&#7883;ch h&#7865;n',
-        'approval.approved_and_checked_in' => '&#272;&atilde; duy&#7879;t v&agrave; cho kh&aacute;ch v&agrave;o',
-        'approval.rejected' => '&#272;&atilde; t&#7915; ch&#7889;i l&#7883;ch h&#7865;n',
-        'approval.wait' => 'Y&ecirc;u c&#7847;u kh&aacute;ch ch&#7901; x&aacute;c nh&#7853;n',
-        'visit.checked_in' => '&#272;&atilde; x&aacute;c nh&#7853;n kh&aacute;ch v&agrave;o',
-        'visit.checked_out' => '&#272;&atilde; x&aacute;c nh&#7853;n kh&aacute;ch ra',
-        'visit.qr_generated' => '&#272;&atilde; t&#7841;o m&atilde; QR',
-        'visit.qr_emailed' => '&#272;&atilde; g&#7917;i m&atilde; QR qua email',
-        'visit.qr_scanned_for_checkin' => '&#272;&atilde; qu&eacute;t m&atilde; &#273;&#7875; check-in',
-        'visit.qr_scanned_for_checkout' => '&#272;&atilde; qu&eacute;t m&atilde; &#273;&#7875; check-out',
-        'visit.badge_scanned_for_checkout' => '&#272;&atilde; qu&eacute;t th&#7867; &#273;&#7875; check-out',
-        'visit.host_checkin_email_sent' => '&#272;&atilde; g&#7917;i email b&aacute;o ng&#432;&#7901;i ti&#7871;p',
-        'visit.host_checkin_email_failed' => 'G&#7917;i email b&aacute;o ng&#432;&#7901;i ti&#7871;p th&#7845;t b&#7841;i',
-    ]);    $hideQrWorkflow = $kioskLobbyModeEnabled ?? false;
+    $auditActionLabels = [
+        'kiosk.walk_in_created' => 'Khách đã đăng ký tại kiosk',
+        'visit.created' => 'Đã tạo lịch hẹn',
+        'visit.updated' => 'Đã cập nhật lịch hẹn',
+        'visit.cancelled' => 'Đã hủy lịch hẹn',
+        'approval.approved' => 'Đã duyệt lịch hẹn',
+        'approval.approved_and_checked_in' => 'Đã duyệt và cho khách vào',
+        'approval.rejected' => 'Đã từ chối lịch hẹn',
+        'approval.wait' => 'Yêu cầu khách chờ xác nhận',
+        'visit.checked_in' => 'Đã xác nhận khách vào',
+        'visit.checked_out' => 'Đã xác nhận khách ra',
+        'visit.qr_generated' => 'Đã tạo mã QR',
+        'visit.qr_emailed' => 'Đã gửi mã QR qua email',
+        'visit.qr_scanned_for_checkin' => 'Đã quét mã để check-in',
+        'visit.qr_scanned_for_checkout' => 'Đã quét mã để check-out',
+        'visit.badge_scanned_for_checkout' => 'Đã quét thẻ để check-out',
+        'visit.host_checkin_email_sent' => 'Đã gửi email báo người tiếp',
+        'visit.host_checkin_email_failed' => 'Gửi email báo người tiếp thất bại',
+    ];
+    $hideQrWorkflow = $kioskLobbyModeEnabled ?? false;
     $canEditInCurrentMode = $canEdit && (! $hideQrWorkflow || $visit->status === 'pending');
     $canCancelInCurrentMode = $canCancel && (! $hideQrWorkflow || $visit->status === 'pending');
     $printQrSvg = (! $hideQrWorkflow && $visit->qr_token)
@@ -86,96 +100,173 @@
 @endphp
 
 <div class="visit-app">
-    <a class="va-back" href="{{ route('admin.visits.index') }}"><i class="bi bi-arrow-left"></i>Danh s&aacute;ch l&#7883;ch h&#7865;n</a>
-
-    <section class="va-profile-card">
-        <div class="va-profile-main">
-            <div class="va-profile-title">
-                <h1>{{ $visit->visitor?->full_name ?? 'Kh&aacute;ch' }}</h1>
-                <span class="status-badge status-{{ $visit->status === 'checked_in' ? 'info' : ($visit->status === 'rejected' ? 'rejected' : ($visit->status === 'pending' ? 'pending' : 'approved')) }}">{!! $statusTextHtml !!}</span>
-            </div>
-            <div class="va-company-line"><i class="bi bi-building"></i>{{ $visit->visitor?->company ?: '-' }}</div>
-            <div class="va-profile-tags">
-                <span class="va-chip"><i class="bi bi-telephone"></i>{{ $visit->visitor?->phone ?: '-' }}</span>
-                <span class="va-chip"><i class="bi bi-envelope"></i>{{ $visit->visitor?->email ?: '-' }}</span>
-                <span class="va-chip"><i class="bi bi-person-vcard"></i>M&atilde; KH: {{ $visit->visitor?->visitor_id_card_number ?: '-' }}</span>
+    <section class="va-hero">
+        <div class="va-person">
+            <div class="va-avatar">{{ strtoupper(mb_substr($visit->visitor?->full_name ?? 'K', 0, 1)) }}</div>
+            <div class="va-title">
+                <a class="va-back" href="{{ route('admin.visits.index') }}"><i class="bi bi-arrow-left"></i>Danh sách lịch hẹn</a>
+                <h1>{{ $visit->visitor?->full_name ?? 'Khách' }}</h1>
+                <div class="va-meta">
+                    <span class="va-code">{{ $visit->code }}</span>
+                    <span>·</span>
+                    <span>{{ $visit->visitor?->company ?? 'Khách vãng lai' }}</span>
+                    <x-status-badge :status="$visit->status" />
+                </div>
             </div>
         </div>
-        <div class="va-created"><i class="bi bi-calendar2-week"></i>T&#7841;o l&uacute;c {{ $visit->created_at?->format('d/m/Y H:i') }}</div>
+        <div class="va-summary">
+            <div><span>Người tiếp</span><strong>{{ $visit->host_display_name }}</strong></div>
+            <div><span>Check-in dự kiến</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+            <div><span>Phòng ban</span><strong>{{ $visit->department_display_name }}</strong></div>
+        </div>
     </section>
 
-    <section class="va-kpi-grid">
-        <div class="va-kpi"><div class="va-kpi-icon"><i class="bi bi-box-arrow-in-right"></i></div><div><span>L&#432;&#7907;t ra/v&agrave;o</span><strong>{{ $visit->actual_checkin_at ? '01' : '00' }}</strong><small>{!! $visit->actual_checkout_at ? '&#272;&atilde; ho&agrave;n t&#7845;t' : 'Theo l&#7883;ch hi&#7879;n t&#7841;i' !!}</small></div></div>
-        <div class="va-kpi"><div class="va-kpi-icon"><i class="bi bi-calendar-check"></i></div><div><span>L&#7883;ch h&#7865;n</span><strong>01</strong><small>{!! $statusTextHtml !!}</small></div></div>
-        <div class="va-kpi"><div class="va-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div><div><span>C&#7843;nh b&aacute;o</span><strong>00</strong><small>Ch&#432;a ghi nh&#7853;n c&#7843;nh b&aacute;o</small></div></div>
-        <div class="va-kpi"><div class="va-kpi-icon"><i class="bi bi-clock-history"></i></div><div><span>L&#7847;n v&agrave;o g&#7847;n nh&#7845;t</span><strong>{{ ($visit->actual_checkin_at ?? $visit->scheduled_at)?->format('H:i') ?? '-' }}</strong><small>{{ ($visit->actual_checkin_at ?? $visit->scheduled_at)?->format('d/m/Y') ?? '-' }}</small></div></div>
-    </section>
-
-    <div class="va-detail-grid">
+    <div class="va-grid">
         <main class="va-main">
             <section class="va-panel">
-                <div class="va-panel-head"><h2><i class="bi bi-person"></i>Th&ocirc;ng tin c&aacute; nh&acirc;n</h2></div>
-                <div class="va-body va-info-list">
-                    <div class="va-row"><i class="bi bi-person"></i><span class="va-label">H&#7885; t&ecirc;n</span><span class="va-value">{{ $visit->visitor?->full_name ?? '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-telephone"></i><span class="va-label">S&#7889; &#273;i&#7879;n tho&#7841;i</span><span class="va-value">{{ $visit->visitor?->phone ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-envelope"></i><span class="va-label">Email</span><span class="va-value">{{ $visit->visitor?->email ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-card-text"></i><span class="va-label">CCCD / H&#7897; chi&#7871;u</span><span class="va-value">{{ $visit->visitor?->identity_no ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-person-vcard"></i><span class="va-label">S&#7889; th&#7867; kh&aacute;ch</span><span class="va-value">{{ $visit->visitor?->visitor_id_card_number ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-chat-left-text"></i><span class="va-label">Ghi ch&uacute;</span><span class="va-value">{{ $visit->notes ?: '-' }}</span></div>
+                <div class="va-panel-head">
+                    <div>
+                        <h2>Thông tin chính</h2>
+                        <p>Tạo lúc {{ $visit->created_at?->format('d/m/Y H:i') ?? '-' }} bởi {{ auth()->user()?->name ?? 'Hệ thống' }}</p>
+                    </div>
+                </div>
+                <div class="va-body va-info-sections">
+                    <div class="va-section">
+                        <h3>Khách</h3>
+                        <div class="va-info-grid">
+                            <div class="va-info"><i class="bi bi-person"></i><div><span class="va-label">Họ tên</span><span class="va-value">{{ $visit->visitor?->full_name ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-building"></i><div><span class="va-label">Công ty</span><span class="va-value">{{ $visit->visitor?->company ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-telephone"></i><div><span class="va-label">Số điện thoại</span><span class="va-value">{{ $visit->visitor?->phone ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-envelope"></i><div><span class="va-label">Email</span><span class="va-value">{{ $visit->visitor?->email ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-card-text"></i><div><span class="va-label">CCCD / Hộ chiếu</span><span class="va-value">{{ $visit->visitor?->identity_no ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-person-vcard"></i><div><span class="va-label">Số thẻ khách</span><span class="va-value">{{ $visit->visitor?->visitor_id_card_number ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-chat-text"></i><div><span class="va-label">Ghi chú</span><span class="va-value">{{ $visit->visitor?->note ?? '-' }}</span></div></div>
+                        </div>
+                    </div>
+                    <div class="va-section">
+                        <h3>Lịch hẹn</h3>
+                        <div class="va-info-grid">
+                            <div class="va-info"><i class="bi bi-upc-scan"></i><div><span class="va-label">Mã lịch hẹn</span><span class="va-value">{{ $visit->code }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-card-checklist"></i><div><span class="va-label">Loại lịch hẹn</span><span class="va-value">{{ $visit->visitor?->company ? 'Đặt trước' : 'Khách vãng lai' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-calendar-check"></i><div><span class="va-label">Ngày giờ check-in</span><span class="va-value">{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-clock-history"></i><div><span class="va-label">Ngày giờ check-out dự kiến</span><span class="va-value">{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-geo-alt"></i><div><span class="va-label">Khu vực</span><span class="va-value">{{ $visit->access_zone ?? '-' }}</span></div></div>
+                            @unless ($hideQrWorkflow)
+                            <div class="va-info"><i class="bi bi-qr-code-scan"></i><div><span class="va-label">Hình thức vào</span><span class="va-value">{{ $methodText }}</span></div></div>
+
+                            @endunless
+                            <div class="va-info"><i class="bi bi-bullseye"></i><div><span class="va-label">Mục đích đến</span><span class="va-value">{{ $visit->purpose ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-person-workspace"></i><div><span class="va-label">Người tiếp</span><span class="va-value">{{ $visit->host_display_name }}</span></div></div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="va-panel">
-                <div class="va-panel-head"><h2><i class="bi bi-building"></i>Th&ocirc;ng tin c&ocirc;ng ty</h2></div>
-                <div class="va-body va-info-list">
-                    <div class="va-row"><i class="bi bi-building"></i><span class="va-label">C&ocirc;ng ty</span><span class="va-value">{{ $visit->visitor?->company ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-person-workspace"></i><span class="va-label">Ng&#432;&#7901;i ti&#7871;p</span><span class="va-value">{{ $visit->host_display_name ?: '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-diagram-3"></i><span class="va-label">Ph&ograve;ng ban</span><span class="va-value">{{ $visit->department?->name ?? '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-box-arrow-in-right"></i><span class="va-label">Check-in</span><span class="va-value">{{ $visit->actual_checkin_at?->format('d/m/Y H:i') ?? $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</span></div>
-                    <div class="va-row"><i class="bi bi-box-arrow-left"></i><span class="va-label">Check-out</span><span class="va-value">{{ $visit->actual_checkout_at?->format('d/m/Y H:i') ?? $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</span></div>
+                <div class="va-panel-head"><h2>Tiến trình</h2></div>
+                <div class="va-flow">
+                    <div class="va-step done"><div class="va-dot"><i class="bi bi-check"></i></div><strong>Tạo lịch</strong><span>{{ $visit->created_at?->format('d/m/Y H:i') ?? '-' }}</span></div>
+                    @unless ($hideQrWorkflow)
+                                            <div class="va-step {{ $visit->qr_token ? 'done' : '' }}"><div class="va-dot"><i class="bi bi-qr-code"></i></div><strong>Sinh QR</strong><span>{{ $visit->qr_token ? ($visit->qr_expires_at?->format('d/m/Y H:i') ?? 'Đã cấp') : 'Chưa cấp' }}</span></div>
+
+                    @endunless
+                    <div class="va-step {{ $currentStep >= 2 ? 'done' : '' }}"><div class="va-dot"><i class="bi bi-person-check"></i></div><strong>Phê duyệt</strong><span>{{ $visit->approval?->acted_at?->format('d/m/Y H:i') ?? 'Chờ xử lý' }}</span></div>
+                    <div class="va-step {{ $currentStep >= 4 ? 'done' : '' }}"><div class="va-dot"><i class="bi bi-box-arrow-in-right"></i></div><strong>Khách vào</strong><span>{{ $visit->actual_checkin_at?->format('d/m/Y H:i') ?? 'Chưa vào' }}</span></div>
+                    <div class="va-step {{ $currentStep >= 5 ? 'done' : '' }}"><div class="va-dot"><i class="bi bi-box-arrow-left"></i></div><strong>Khách ra</strong><span>{{ $visit->actual_checkout_at?->format('d/m/Y H:i') ?? 'Chưa ra' }}</span></div>
                 </div>
             </section>
 
+            <div class="va-status-grid">
+                <section class="va-status-card">
+                    <h3>Khách vào</h3>
+                    <div><span>Thời gian</span><strong>{{ $visit->actual_checkin_at?->format('d/m/Y H:i') ?? 'Chưa vào' }}</strong></div>
+                    <div><span>Trạng thái</span><strong>{{ $visit->actual_checkin_at ? 'Đã vào' : 'Chưa vào' }}</strong></div>
+                </section>
+                <section class="va-status-card">
+                    <h3>Khách ra</h3>
+                    <div><span>Thời gian</span><strong>{{ $visit->actual_checkout_at?->format('d/m/Y H:i') ?? 'Chưa ra' }}</strong></div>
+                    <div><span>Trạng thái</span><strong>{{ $visit->actual_checkout_at ? 'Đã ra' : 'Chưa ra' }}</strong></div>
+                </section>
+                <section class="va-status-card">
+                    <h3>Thẻ ra vào</h3>
+                    <div><span>Badge ID</span><strong>{{ $visit->activeBadge?->badge_no ?? $visit->badges->first()?->badge_no ?? '-' }}</strong></div>
+                    <div><span>Trạng thái</span><strong>{{ $visit->activeBadge?->status ?? $visit->badges->first()?->status ?? '-' }}</strong></div>
+                </section>
+            </div>
+
+            <section class="va-panel">
+                <div class="va-panel-head"><h2>Nhật ký hoạt động</h2></div>
+                <div class="table-responsive">
+                    <table class="va-log-table">
+                        <thead><tr><th>Thời gian</th><th>Người thực hiện</th><th>Hành động</th><th>Mô tả</th></tr></thead>
+                        <tbody>
+                        @forelse ($activityLogs as $log)
+                            <tr>
+                                <td>{{ $log->created_at?->format('d/m/Y H:i:s') }}</td>
+                                <td>{{ $log->user?->name ?? 'Hệ thống' }}</td>
+                                <td title="{{ $log->action }}">{{ $auditActionLabels[$log->action] ?? 'Hoạt động hệ thống' }}</td>
+                                <td>
+                                    @if (! empty($log->meta['reason']))
+                                        {{ $log->meta['reason'] }}
+                                    @elseif (! empty($log->meta['code']))
+                                        Lịch hẹn {{ $log->meta['code'] }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-secondary">Chưa có nhật ký hoạt động.</td></tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
 
         <aside class="va-side">
             @unless ($hideQrWorkflow)
             <section class="va-panel va-qr-card">
                 <div class="va-panel-head">
-                    <h2>QR & thao t&aacute;c</h2>
+                    <h2>QR & thao tác</h2>
                     @if ($qrIsValid)
-                        <span class="status-badge status-approved">Hi&#7879;u l&#7921;c</span>
+                        <span class="status-badge status-approved">Hiệu lực</span>
                     @else
-                        <span class="status-badge status-pending">Ch&#432;a c&oacute; QR</span>
+                        <span class="status-badge status-pending">Chưa có QR</span>
                     @endif
                 </div>
                 <div class="va-body">
                     @if ($visit->qr_token)
-                        <div class="va-qr-visual">{!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(210)->margin(1)->errorCorrection('M')->generate($visit->qr_token) !!}</div>
+                        <div class="va-qr-visual">
+                            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(210)->margin(1)->errorCorrection('M')->generate($visit->qr_token) !!}
+                        </div>
                         <div class="va-token"><span>{{ $visit->qr_token }}</span><i class="bi bi-copy"></i></div>
                     @else
-                        <div class="va-empty-qr"><div><i class="bi bi-qr-code d-block fs-1 mb-2"></i>QR s&#7869; &#273;&#432;&#7907;c sinh khi l&#7883;ch s&#7861;n s&agrave;ng.</div></div>
+                        <div class="va-empty-qr"><div><i class="bi bi-qr-code d-block fs-1 mb-2"></i>QR sẽ được sinh khi lịch sẵn sàng.</div></div>
                     @endif
+
                     <div class="va-mini-grid">
-                        <div class="va-mini"><span>Hi&#7879;u l&#7921;c t&#7915;</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
-                        <div class="va-mini"><span>H&#7871;t h&#7841;n</span><strong>{{ $visit->qr_expires_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+                        <div class="va-mini"><span>Hiệu lực từ</span><strong>{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
+                        <div class="va-mini"><span>Hết hạn</span><strong>{{ $visit->qr_expires_at?->format('d/m/Y H:i') ?? '-' }}</strong></div>
                     </div>
+
                     <div class="va-action-stack mt-3">
                         <button class="va-btn soft" type="button" onclick="printAdminQrTicket()" @disabled(! $visit->qr_token)><i class="bi bi-printer"></i>In QR</button>
                         @if ($canGenerateQr)
-                            <form action="{{ route('admin.visits.generate-qr', $visit) }}" method="post">@csrf<button class="va-btn primary w-100" type="submit"><i class="bi bi-qr-code"></i>Sinh l&#7841;i QR</button></form>
+                            <form action="{{ route('admin.visits.generate-qr', $visit) }}" method="post">@csrf<button class="va-btn primary w-100" type="submit"><i class="bi bi-qr-code"></i>Sinh lại QR</button></form>
                         @else
-                            <button class="va-btn soft" type="button" disabled><i class="bi bi-qr-code"></i>Ch&#432;a th&#7875; sinh</button>
+                            <button class="va-btn soft" type="button" disabled><i class="bi bi-qr-code"></i>Chưa thể sinh</button>
                         @endif
                     </div>
+
                     @if ($visit->qr_token)
                         <div class="va-share-actions mt-2">
                             @if ($shareEmail)
-                                <form action="{{ route('admin.visits.send-qr-email', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang g&#7917;i..."><i class="bi bi-envelope"></i>Gmail</button></form>
+                                <form action="{{ route('admin.visits.send-qr-email', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="Đang gửi..."><i class="bi bi-envelope"></i>Gmail</button></form>
                             @else
                                 <span class="va-btn danger" aria-disabled="true"><i class="bi bi-envelope"></i>Gmail</span>
                             @endif
-                            <button class="va-btn primary" id="adminQrCopyShareBtn" type="button" onclick="copyAdminQrMessage()"><i class="bi bi-clipboard"></i>Sao ch&eacute;p</button>
+                            <button class="va-btn primary" id="adminQrCopyShareBtn" type="button" onclick="copyAdminQrMessage()"><i class="bi bi-clipboard"></i>Sao chép</button>
                         </div>
                     @endif
                 </div>
@@ -183,30 +274,54 @@
             @endunless
 
             <section class="va-panel">
-                <div class="va-panel-head"><h2>X&#7917; l&yacute;</h2></div>
+                <div class="va-panel-head"><h2>Xử lý</h2></div>
                 <div class="va-body va-action-stack">
                     @if ($visit->status === 'pending')
                         @if ($hideQrWorkflow)
-                            <form action="{{ route('admin.approvals.approve-checkin', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&yacute;..."><i class="bi bi-door-open"></i>Duy&#7879;t & cho kh&aacute;ch v&agrave;o</button></form>
+                            <form action="{{ route('admin.approvals.approve-checkin', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="Đang xử lý..."><i class="bi bi-door-open"></i>Duyệt & cho khách vào</button></form>
                         @else
-                            <form action="{{ route('admin.approvals.approve', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="&#272;ang duy&#7879;t..."><i class="bi bi-check-circle"></i>Duy&#7879;t l&#7883;ch</button></form>
+                            <form action="{{ route('admin.approvals.approve', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check-circle"></i>Duyệt lịch</button></form>
                         @endif
-                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Tu choi tu trang chi tiet."><button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang t&#7915; ch&#7889;i..."><i class="bi bi-x-circle"></i>T&#7915; ch&#7889;i</button></form>
+                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x-circle"></i>Từ chối</button></form>
                     @elseif ($visit->status === 'approved')
-                        <span class="va-btn soft w-100"><i class="bi bi-check-circle"></i>&#272;&atilde; duy&#7879;t</span>
-                        @unless ($hideQrWorkflow)
-                            <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Tu choi tu trang chi tiet."><button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang t&#7915; ch&#7889;i..."><i class="bi bi-x-circle"></i>T&#7915; ch&#7889;i</button></form>
-                            <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&yacute;..."><i class="bi bi-box-arrow-in-right"></i>Cho kh&aacute;ch v&agrave;o</button></form>
-                        @endunless
+                        <span class="va-btn soft w-100"><i class="bi bi-check-circle"></i>&#272;&#227; duy&#7879;t</span>
+                        @if ($hideQrWorkflow)
+                            <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&#253;..."><i class="bi bi-box-arrow-in-right"></i>Cho kh&#225;ch v&#224;o</button></form>
+                        @else
+                            <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="T&#7915; ch&#7889;i t&#7915; trang chi ti&#7871;t."><button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang t&#7915; ch&#7889;i..."><i class="bi bi-x-circle"></i>T&#7915; ch&#7889;i</button></form>
+                            <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&#253;..."><i class="bi bi-box-arrow-in-right"></i>Cho kh&#225;ch v&#224;o</button></form>
+                        @endif
                     @elseif ($visit->status === 'checked_in')
-                        <form action="{{ route('admin.checkout.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&yacute;..."><i class="bi bi-box-arrow-left"></i>Cho kh&aacute;ch ra</button></form>
+                        <form action="{{ route('admin.checkout.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&#253;..."><i class="bi bi-box-arrow-left"></i>Cho kh&#225;ch ra</button></form>
                     @else
-                        <span class="va-btn soft w-100">{!! $statusTextHtml !!}</span>
+                        <span class="va-btn soft w-100">{{ $statusText }}</span>
                     @endif
                     @if ($canEditInCurrentMode)
-                        <div style="height:1px;background:#eef4fb;margin:.2rem 0;"></div>
-                        <button class="va-btn primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#visitEditModal"><i class="bi bi-pencil-square"></i>S&#7917;a l&#7883;ch h&#7865;n</button>
+                        <div class="va-action-separator" style="height:1px;background:#eef4fb;margin:.2rem 0;"></div>
+                        @if ($canEditInCurrentMode)
+                            <button class="va-btn primary w-100" type="button" data-bs-toggle="modal" data-bs-target="#visitEditModal"><i class="bi bi-pencil-square"></i>S&#7917;a l&#7883;ch h&#7865;n</button>
+                        @endif
                     @endif
+                </div>
+            </section>
+
+            <section class="va-panel">
+                <div class="va-panel-head"><h2>Ghi chú & liên hệ</h2></div>
+                <div class="va-body">
+                    <textarea class="va-note" placeholder="Nhập ghi chú...">{{ $visit->approval?->note ?? $visit->rejection_reason }}</textarea>
+                    <button class="va-btn primary w-100 mt-2" type="button" disabled><i class="bi bi-save"></i>Lưu ghi chú</button>
+                    <div class="va-contact mt-3">
+                        <div class="va-contact-row"><i class="bi bi-telephone"></i>{{ $visit->visitor?->phone ?? '-' }}</div>
+                        <div class="va-contact-row"><i class="bi bi-envelope"></i>{{ $visit->visitor?->email ?? '-' }}</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="va-panel">
+                <div class="va-panel-head"><h2>Tài liệu</h2></div>
+                <div class="va-body">
+                    <div class="va-attachment"><span><i class="bi bi-file-earmark"></i> Chưa có tài liệu</span></div>
+                    <button class="va-btn soft w-100 mt-2" type="button" disabled><i class="bi bi-plus"></i>Thêm tài liệu</button>
                 </div>
             </section>
         </aside>
@@ -260,7 +375,15 @@
                             @endforeach
                         </select>
                     </div>
-                    <input type="hidden" name="access_zone" value="{{ old('access_zone', $visit->access_zone) }}">
+                    <div class="col-md-6">
+                        <label class="form-label">Khu v&#7921;c truy c&#7853;p</label>
+                        <select name="access_zone" class="form-select">
+                            <option value="">Ch&#7885;n khu v&#7921;c</option>
+                            @foreach ($accessZones as $zone)
+                                <option value="{{ $zone }}" @selected(old('access_zone', $visit->access_zone) === $zone)>{{ $zone }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="col-12 pt-2"><div class="fw-semibold text-danger small text-uppercase">Th&#244;ng tin chuy&#7871;n th&#259;m</div></div>
                     <div class="col-12"><label class="form-label">M&#7909;c &#273;&#237;ch &#273;&#7871;n *</label><input type="text" name="purpose" value="{{ old('purpose', $visit->purpose) }}" class="form-control" required></div>

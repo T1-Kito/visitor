@@ -43,6 +43,7 @@ class KioskController extends Controller
             'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
             'lastKioskVisit' => $lastVisit,
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'visitorCardOptions' => $this->visitorCardOptions(),
         ]);
     }
 
@@ -95,6 +96,10 @@ class KioskController extends Controller
     {
         $isKioskV2 = $request->input('registration_form') === 'kiosk_v2';
         $requiredForKiosk = $isKioskV2 ? 'required' : 'nullable';
+        $visitorCardValues = array_values(array_unique(array_merge(
+            $this->visitorCardOptions()->pluck('value')->map(fn ($value): string => (string) $value)->all(),
+            array_map('strval', range(1, 20))
+        )));
 
         $validated = $request->validate([
             'registration_form' => ['nullable', 'in:kiosk_v2'],
@@ -104,7 +109,7 @@ class KioskController extends Controller
             'visitor_company' => ['required', 'string', 'max:160'],
             'visitor_identity_no' => [$requiredForKiosk, 'string', 'max:80'],
             'visitor_id_card_number' => $isKioskV2
-                ? ['required', 'string', Rule::in(array_map('strval', range(1, 20)))]
+                ? ['required', 'string', Rule::in($visitorCardValues)]
                 : ['nullable', 'string', 'max:80'],
             'visitor_identity_issued_place' => ['nullable', 'string', 'max:160'],
             'visitor_identity_issued_date' => ['nullable', 'date', 'before_or_equal:today'],
@@ -505,6 +510,26 @@ class KioskController extends Controller
         ]);
     }
 
+    private function visitorCardOptions(): \Illuminate\Support\Collection
+    {
+        $badges = Badge::query()
+            ->where('status', 'available')
+            ->orderBy('badge_no')
+            ->get(['badge_no'])
+            ->map(fn (Badge $badge): array => [
+                'value' => $badge->badge_no,
+                'label' => $badge->badge_no,
+            ]);
+
+        if ($badges->isNotEmpty()) {
+            return $badges;
+        }
+
+        return collect(range(1, 20))->map(fn (int $number): array => [
+            'value' => (string) $number,
+            'label' => 'Visitor card '.$number,
+        ]);
+    }
     private function issueBadgeForVisit(Visit $visit): ?Badge
     {
         $badge = Badge::query()
