@@ -2139,9 +2139,13 @@ class AdminUiController extends Controller
     {
         $badges = Badge::query()
             ->with(['visit.visitor', 'visit.hostEmployee.department'])
-            ->orderByRaw("status = 'active' DESC")
-            ->orderBy('badge_no')
-            ->get();
+            ->get()
+            ->sortBy(function (Badge $badge) {
+                $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), mb_strtolower($badge->badge_no));
+
+                return ($badge->status === 'active' ? '0' : '1') . '|' . $naturalKey;
+            })
+            ->values();
 
         return view('admin.badges.index', $this->withBase([
             'badges' => $badges,
@@ -2151,16 +2155,103 @@ class AdminUiController extends Controller
     public function badgesStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'badge_no' => ['required', 'string', 'max:40', \Illuminate\Validation\Rule::unique('badges', 'badge_no')],
+            'badge_no' => ['nullable', 'string', 'max:40'],
+            'badge_numbers' => ['nullable', 'string', 'max:12000'],
+            'badge_prefix' => ['nullable', 'string', 'max:30'],
+            'badge_range_start' => ['nullable', 'integer', 'min:1', 'max:9999'],
+            'badge_range_end' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'status' => ['nullable', 'in:available,revoked'],
+        ], [
+            'badge_no.max' => 'Số thẻ không được quá 40 ký tự.',
+            'badge_numbers.max' => 'Danh sách thẻ quá dài, vui lòng chia thành nhiều lần thêm.',
+            'badge_range_start.integer' => 'Số bắt đầu phải là số.',
+            'badge_range_end.integer' => 'Số kết thúc phải là số.',
         ]);
 
-        Badge::query()->create([
-            'badge_no' => trim($validated['badge_no']),
-            'status' => $validated['status'] ?? 'available',
-        ]);
+        $badgeNumbers = collect();
 
-        return redirect()->route('admin.badges.index')->with('status', 'Đã thêm số thẻ khách.');
+        if (filled($validated['badge_no'] ?? null)) {
+            $badgeNumbers->push(trim((string) $validated['badge_no']));
+        }
+
+        if (filled($validated['badge_numbers'] ?? null)) {
+            $items = preg_split('/[\r\n,;]+/u', (string) $validated['badge_numbers']);
+            foreach ($items as $item) {
+                $item = trim((string) $item);
+                if ($item !== '') {
+                    $badgeNumbers->push($item);
+                }
+            }
+        }
+
+        $rangeStart = $validated['badge_range_start'] ?? null;
+        $rangeEnd = $validated['badge_range_end'] ?? null;
+
+        if ($rangeStart !== null || $rangeEnd !== null) {
+            if ($rangeStart === null || $rangeEnd === null || $rangeEnd < $rangeStart) {
+                return back()
+                    ->withErrors(['badge_range_start' => 'Vui lòng nhập dải số hợp lệ, ví dụ từ 1 đến 100.'])
+                    ->withInput();
+            }
+
+            $prefix = trim((string) ($validated['badge_prefix'] ?? 'Visitor card'));
+            if ($prefix === '') {
+                $prefix = 'Visitor card';
+            }
+
+            for ($number = (int) $rangeStart; $number <= (int) $rangeEnd; $number++) {
+                $badgeNumbers->push($prefix . ' ' . $number);
+            }
+        }
+
+        $badgeNumbers = $badgeNumbers
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($badgeNumbers->isEmpty()) {
+            return back()
+                ->withErrors(['badge_no' => 'Vui lòng nhập ít nhất một số thẻ khách.'])
+                ->withInput();
+        }
+
+        if ($badgeNumbers->count() > 300) {
+            return back()
+                ->withErrors(['badge_numbers' => 'Mỗi lần chỉ nên thêm tối đa 300 thẻ để hệ thống xử lý ổn định.'])
+                ->withInput();
+        }
+
+        $tooLong = $badgeNumbers->first(fn ($value) => mb_strlen($value) > 40);
+        if ($tooLong !== null) {
+            return back()
+                ->withErrors(['badge_numbers' => 'Số thẻ "' . $tooLong . '" dài quá 40 ký tự.'])
+                ->withInput();
+        }
+
+        $existing = Badge::query()
+            ->whereIn('badge_no', $badgeNumbers->all())
+            ->pluck('badge_no')
+            ->all();
+
+        if (! empty($existing)) {
+            return back()
+                ->withErrors(['badge_numbers' => 'Các số thẻ đã tồn tại: ' . implode(', ', array_slice($existing, 0, 12)) . (count($existing) > 12 ? '...' : '')])
+                ->withInput();
+        }
+
+        $status = $validated['status'] ?? 'available';
+
+        foreach ($badgeNumbers as $badgeNo) {
+            Badge::query()->create([
+                'badge_no' => $badgeNo,
+                'status' => $status,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.badges.index')
+            ->with('status', 'Đã thêm ' . $badgeNumbers->count() . ' số thẻ khách.');
     }
 
     public function badgesUpdate(Request $request, Badge $badge): RedirectResponse

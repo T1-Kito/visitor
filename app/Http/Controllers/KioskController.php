@@ -514,8 +514,9 @@ class KioskController extends Controller
     {
         $badges = Badge::query()
             ->where('status', 'available')
-            ->orderBy('badge_no')
             ->get(['badge_no'])
+            ->sortBy(fn (Badge $badge): string => $this->naturalBadgeSortKey($badge->badge_no))
+            ->values()
             ->map(fn (Badge $badge): array => [
                 'value' => $badge->badge_no,
                 'label' => $badge->badge_no,
@@ -530,11 +531,16 @@ class KioskController extends Controller
             'label' => 'Visitor card '.$number,
         ]);
     }
+    private function naturalBadgeSortKey(string $badgeNo): string
+    {
+        return preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), mb_strtolower($badgeNo));
+    }
     private function issueBadgeForVisit(Visit $visit): ?Badge
     {
         $badge = Badge::query()
             ->where('status', 'available')
-            ->orderBy('badge_no')
+            ->get()
+            ->sortBy(fn (Badge $badge): string => $this->naturalBadgeSortKey($badge->badge_no))
             ->first();
 
         if ($badge === null) {
