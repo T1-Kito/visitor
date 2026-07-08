@@ -22,19 +22,20 @@
 .vs-table{width:100%;min-width:1240px;border-collapse:collapse;table-layout:fixed}
 .vs-table th{height:38px;padding:8px 12px;border-top:1px solid #edf3fb;border-bottom:1px solid #dfe8f2;background:#f8fafc;color:#71839a;font-size:11px;font-weight:600;text-align:left;text-transform:uppercase}
 .vs-table td{height:60px;padding:8px 12px;border-bottom:1px solid #e8eef5;background:#fff;color:#20364f;font-size:13px;vertical-align:middle}
-.vs-table tbody tr:hover td{background:#f8fbff}
-.vs-table th:nth-child(1){width:145px}.vs-table th:nth-child(2){width:16%}.vs-table th:nth-child(3){width:16%}.vs-table th:nth-child(4){width:13%}.vs-table th:nth-child(5){width:13%}.vs-table th:nth-child(6){width:12%}.vs-table th:nth-child(7){width:120px}.vs-table th:nth-child(8){width:120px}.vs-table th:nth-child(9){width:105px;text-align:right}
+.vs-table tbody tr:hover td{background:#f8fbff}.vs-table tbody tr[data-row-link]{cursor:pointer}
+.vs-table th:nth-child(1){width:145px}.vs-table th:nth-child(2){width:16%}.vs-table th:nth-child(3){width:16%}.vs-table th:nth-child(4){width:13%}.vs-table th:nth-child(5){width:13%}.vs-table th:nth-child(6){width:12%}.vs-table th:nth-child(7){width:120px}.vs-table th:nth-child(8){width:120px}.vs-table th:nth-child(9){width:96px;text-align:right}
 .vs-table td:last-child{text-align:right}
 .vs-table-code{color:#146bd7;font-weight:600;text-decoration:none;white-space:nowrap}
 .vs-table-primary{display:block;color:#10233d;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vs-table-secondary{display:block;margin-top:2px;color:#8192a8;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vs-table-time{font-weight:500;white-space:nowrap}
-.vs-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px}
-.vs-row-actions form{display:inline-flex;margin:0}
-.vs-icon-btn{width:32px;height:32px;display:inline-grid;place-items:center;border:1px solid #d8e5f2;border-radius:8px;background:#fff;color:#46627f;text-decoration:none;font-size:14px}
+.vs-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;white-space:nowrap}
+.vs-row-actions form{display:inline-flex;margin:0}.vs-row-actions .vs-delete-action{margin-left:4px;padding-left:7px;border-left:1px solid #edf3fb}
+.vs-icon-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:1px solid #d8e5f2;border-radius:10px;background:#fff;color:#46627f;text-decoration:none;font-size:14px}
 .vs-icon-btn:hover{border-color:#a9c9ea;background:#f4f9ff;color:#146bd7}
 .vs-icon-btn.approve,.vs-icon-btn.checkin{border-color:#bce7ce;background:#f0fdf4;color:#15803d}
 .vs-icon-btn.checkout{border-color:#fed7aa;background:#fff7ed;color:#c2410c}
+.vs-icon-btn.danger{border-color:#fecaca;background:#fff;color:#dc2626}.vs-icon-btn.danger:hover{border-color:#fca5a5;background:#fff5f5;color:#b91c1c}
 .vs-icon-btn.done{cursor:default;border-color:#e2e8f0;background:#f8fafc;color:#94a3b8}
 .vs-filter-empty{padding:32px 16px;text-align:center;color:#8192a8;font-size:13px}
 .vs-card,.vs-row,.vs-btn,.vs-tab{transition:none!important}.vs-card:hover{transform:none!important;box-shadow:none!important}
@@ -98,8 +99,7 @@
                 </thead>
                 <tbody id="visitsGrid">
                 @forelse ($visits as $visit)
-                    <tr class="vs-row"
-                        data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['approver'].' '.$visit['department'].' '.$visit['purpose']) }}"
+                    <tr class="vs-row" data-row-link="{{ route('admin.visits.show', $visit['id']) }}" onclick="if (!event.target.closest('a,button,form,input,select')) window.location=this.dataset.rowLink" data-search="{{ strtolower($visit['code'].' '.$visit['visitor'].' '.$visit['host'].' '.$visit['creator'].' '.$visit['approver'].' '.$visit['department'].' '.$visit['purpose']) }}"
                         data-status="{{ $visit['status'] }}"
                         data-department="{{ strtolower($visit['department']) }}"
                         data-creator="{{ str_starts_with($visit['creator'], 'Kiosk') ? 'kiosk' : strtolower($visit['creator']) }}" data-date="{{ $visit['date_iso'] ?? '' }}">
@@ -126,21 +126,18 @@
                         <td><x-status-badge :status="$visit['status']" /></td>
                         <td>
                             <div class="vs-row-actions">
-                                <a class="vs-icon-btn" href="{{ route('admin.visits.show', $visit['id']) }}" title="Xem chi tiết" aria-label="Xem chi tiết"><i class="bi bi-eye"></i></a>
-                                <form action="{{ route('admin.visits.destroy', $visit['id']) }}" method="post" onsubmit="return confirm('Xóa lịch hẹn này?')" data-disable-on-submit>
+                                @if ($visit['status'] === 'pending')
+                                    <form action="{{ route('admin.approvals.approve', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn approve" type="submit" title="Duyet lich" aria-label="Duyet lich"><i class="bi bi-check2"></i></button></form>
+                                @elseif ($visit['status'] === 'approved')
+                                    <form action="{{ route('admin.checkin.confirm', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn checkin" type="submit" title="Cho khach vao" aria-label="Cho khach vao"><i class="bi bi-box-arrow-in-right"></i></button></form>
+                                @elseif ($visit['status'] === 'checked_in')
+                                    <form action="{{ route('admin.checkout.confirm', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn checkout" type="submit" title="Cho khach ra" aria-label="Cho khach ra"><i class="bi bi-box-arrow-right"></i></button></form>
+                                @endif
+                                <form class="vs-delete-action" action="{{ route('admin.visits.destroy', $visit['id']) }}" method="post" onsubmit="return confirm('Xoa lich hen nay?')" data-disable-on-submit>
                                     @csrf
                                     @method('delete')
-                                    <button class="vs-icon-btn danger" type="submit" title="Xóa lịch hẹn" aria-label="Xóa lịch hẹn"><i class="bi bi-trash"></i></button>
+                                    <button class="vs-icon-btn danger" type="submit" title="Xoa lich hen" aria-label="Xoa lich hen"><i class="bi bi-trash"></i></button>
                                 </form>
-                        @if ($visit['status'] === 'pending')
-                                    <form action="{{ route('admin.approvals.approve', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn approve" type="submit" title="Duyệt lịch" aria-label="Duyệt lịch"><i class="bi bi-check2"></i></button></form>
-                        @elseif ($visit['status'] === 'approved')
-                                    <form action="{{ route('admin.checkin.confirm', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn checkin" type="submit" title="Cho khách vào" aria-label="Cho khách vào"><i class="bi bi-box-arrow-in-right"></i></button></form>
-                        @elseif ($visit['status'] === 'checked_in')
-                                    <form action="{{ route('admin.checkout.confirm', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn checkout" type="submit" title="Cho khách ra" aria-label="Cho khách ra"><i class="bi bi-box-arrow-right"></i></button></form>
-                        @else
-                                    <span class="vs-icon-btn done" title="Đã xử lý" aria-label="Đã xử lý"><i class="bi bi-check2"></i></span>
-                        @endif
                             </div>
                         </td>
                     </tr>

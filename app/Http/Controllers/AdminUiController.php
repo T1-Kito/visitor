@@ -2166,14 +2166,7 @@ class AdminUiController extends Controller
         $badges = Badge::query()
             ->with(['visit.visitor', 'visit.hostEmployee.department'])
             ->get()
-            ->sortBy(function (Badge $badge) {
-                $nameKey = Str::lower(Str::ascii($badge->badge_no));
-                $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
-                    || str_contains($nameKey, 'khach khong vao');
-                $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), $nameKey);
-
-                return ($isNoEntryCard ? '9' : ($badge->status === 'active' ? '0' : '1')) . '|' . $naturalKey;
-            })
+            ->sortBy('id')
             ->values();
 
         return view('admin.badges.index', $this->withBase([
