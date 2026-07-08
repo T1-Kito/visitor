@@ -298,6 +298,15 @@
                                 </button>
                             </form>
                         @endif
+                    
+                        <form method="post" action="{{ route('admin.notifications.destroy', $notification) }}" onsubmit="return confirm('Xóa thông báo này?')" data-disable-on-submit>
+                            @csrf
+                            @method('delete')
+                            <button class="btn btn-outline-danger" type="submit">
+                                <i class="bi bi-trash"></i>
+                                Xóa
+                            </button>
+                        </form>
                     </div>
                 </article>
             @empty

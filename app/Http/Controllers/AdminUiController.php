@@ -23,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -1238,6 +1239,31 @@ class AdminUiController extends Controller
             ->with('status', "Da huy lich {$visit->code}.");
     }
 
+    public function visitsDestroy(Visit $visit): RedirectResponse
+    {
+        $code = $visit->code;
+        $visitId = $visit->id;
+
+        DB::transaction(function () use ($visit, $visitId): void {
+            Badge::query()
+                ->where('visit_id', $visitId)
+                ->update([
+                    'visit_id' => null,
+                    'status' => 'available',
+                    'issued_at' => null,
+                ]);
+
+            $visit->delete();
+        });
+
+        $this->logAudit('visit.deleted', 'visit', (string) $visitId, [
+            'code' => $code,
+        ]);
+
+        return redirect()
+            ->route('admin.visits.index')
+            ->with('status', "Da xoa lich hen {$code}.");
+    }
     public function generateVisitQr(Visit $visit): RedirectResponse
     {
         if ($visit->status !== 'approved') {
@@ -2141,9 +2167,12 @@ class AdminUiController extends Controller
             ->with(['visit.visitor', 'visit.hostEmployee.department'])
             ->get()
             ->sortBy(function (Badge $badge) {
-                $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), mb_strtolower($badge->badge_no));
+                $nameKey = Str::lower(Str::ascii($badge->badge_no));
+                $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
+                    || str_contains($nameKey, 'khach khong vao');
+                $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), $nameKey);
 
-                return ($badge->status === 'active' ? '0' : '1') . '|' . $naturalKey;
+                return ($isNoEntryCard ? '9' : ($badge->status === 'active' ? '0' : '1')) . '|' . $naturalKey;
             })
             ->values();
 
@@ -2591,6 +2620,18 @@ class AdminUiController extends Controller
             ->with('status', 'Da danh dau tat ca thong bao la da doc.');
     }
 
+    public function notificationsDestroy(Notification $notification): RedirectResponse
+    {
+        if ((int) $notification->user_id !== (int) auth()->id()) {
+            abort(404);
+        }
+
+        $notification->delete();
+
+        return redirect()
+            ->route('admin.notifications.index')
+            ->with('status', 'Da xoa thong bao.');
+    }
     public function reportsIndex(Request $request): View
     {
         $filters = $this->reportFilters($request);

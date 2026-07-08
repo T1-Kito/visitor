@@ -660,17 +660,28 @@ class CatalogController extends Controller
 
     public function visitorsDestroy(Visitor $visitor): RedirectResponse
     {
-        if ($visitor->visits()->exists()) {
-            return redirect()
-                ->back()
-                ->with('error', 'Khong the xoa khach da co lich su ra vao. Can giu lai de bao cao va audit.');
-        }
-
         $visitorId = (string) $visitor->id;
         $visitorName = $visitor->full_name;
-        $visitor->delete();
+        $visitIds = $visitor->visits()->pluck('id');
 
-        $this->logAudit('visitor.deleted', 'visitor', $visitorId, ['name' => $visitorName]);
+        DB::transaction(function () use ($visitor, $visitIds): void {
+            if ($visitIds->isNotEmpty()) {
+                Badge::query()
+                    ->whereIn('visit_id', $visitIds)
+                    ->update([
+                        'visit_id' => null,
+                        'status' => 'available',
+                        'issued_at' => null,
+                    ]);
+            }
+
+            $visitor->delete();
+        });
+
+        $this->logAudit('visitor.deleted', 'visitor', $visitorId, [
+            'name' => $visitorName,
+            'visits_deleted' => $visitIds->count(),
+        ]);
 
         return redirect()
             ->route('admin.visitors.index')

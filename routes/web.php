@@ -114,6 +114,9 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/visits/{visit}/cancel', [AdminUiController::class, 'cancelVisit'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.cancel');
+    Route::delete('/visits/{visit}', [AdminUiController::class, 'visitsDestroy'])
+        ->middleware('permission:visits.manage')
+        ->name('admin.visits.destroy');
     Route::post('/visits/{visit}/generate-qr', [AdminUiController::class, 'generateVisitQr'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.generate-qr');
@@ -212,6 +215,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('admin.notifications.read');
     Route::patch('/notifications/read-all', [AdminUiController::class, 'markAllNotificationsRead'])
         ->name('admin.notifications.read-all');
+    Route::delete('/notifications/{notification}', [AdminUiController::class, 'notificationsDestroy'])
+        ->name('admin.notifications.destroy');
 
     Route::get('/departments', [CatalogController::class, 'departmentsIndex'])
         ->middleware('permission:departments.manage')

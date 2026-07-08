@@ -533,7 +533,13 @@ class KioskController extends Controller
     }
     private function naturalBadgeSortKey(string $badgeNo): string
     {
-        return preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), mb_strtolower($badgeNo));
+        $nameKey = Str::lower(Str::ascii($badgeNo));
+        $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
+            || str_contains($nameKey, 'khach khong vao');
+
+        $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), $nameKey);
+
+        return ($isNoEntryCard ? '9' : '1') . '|' . $naturalKey;
     }
     private function issueBadgeForVisit(Visit $visit): ?Badge
     {

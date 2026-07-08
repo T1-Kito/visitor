@@ -82,13 +82,11 @@
                             <div class="resource-actions">
                                 <a class="resource-icon-btn" href="{{ route('admin.visitors.show', $visitor) }}" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
                                 <a class="resource-icon-btn" href="{{ route('admin.visitors.edit', $visitor) }}" title="Sửa hồ sơ"><i class="bi bi-pencil"></i></a>
-                                @if ($visitor->visits_count === 0)
-                                    <form method="post" action="{{ route('admin.visitors.destroy', $visitor) }}" onsubmit="return confirm('Xóa hồ sơ khách này?')">
-                                        @csrf
-                                        @method('delete')
-                                        <button class="resource-icon-btn danger" type="submit" title="Xóa hồ sơ"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                @endif
+                                <form method="post" action="{{ route('admin.visitors.destroy', $visitor) }}" onsubmit="return confirm('Xóa hồ sơ khách này? Các lịch hẹn liên quan cũng sẽ bị xóa.')">
+                                    @csrf
+                                    @method('delete')
+                                    <button class="resource-icon-btn danger" type="submit" title="Xóa hồ sơ"><i class="bi bi-trash"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>

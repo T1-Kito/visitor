@@ -127,6 +127,11 @@
                         <td>
                             <div class="vs-row-actions">
                                 <a class="vs-icon-btn" href="{{ route('admin.visits.show', $visit['id']) }}" title="Xem chi tiết" aria-label="Xem chi tiết"><i class="bi bi-eye"></i></a>
+                                <form action="{{ route('admin.visits.destroy', $visit['id']) }}" method="post" onsubmit="return confirm('Xóa lịch hẹn này?')" data-disable-on-submit>
+                                    @csrf
+                                    @method('delete')
+                                    <button class="vs-icon-btn danger" type="submit" title="Xóa lịch hẹn" aria-label="Xóa lịch hẹn"><i class="bi bi-trash"></i></button>
+                                </form>
                         @if ($visit['status'] === 'pending')
                                     <form action="{{ route('admin.approvals.approve', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn approve" type="submit" title="Duyệt lịch" aria-label="Duyệt lịch"><i class="bi bi-check2"></i></button></form>
                         @elseif ($visit['status'] === 'approved')
