@@ -283,26 +283,6 @@
                     @endif
                 </div>
             </section>
-
-            <section class="va-panel">
-                <div class="va-panel-head"><h2>Ghi chú & liên hệ</h2></div>
-                <div class="va-body">
-                    <textarea class="va-note" placeholder="Nhập ghi chú...">{{ $visit->approval?->note ?? $visit->rejection_reason }}</textarea>
-                    <button class="va-btn primary w-100 mt-2" type="button" disabled><i class="bi bi-save"></i>Lưu ghi chú</button>
-                    <div class="va-contact mt-3">
-                        <div class="va-contact-row"><i class="bi bi-telephone"></i>{{ $visit->visitor?->phone ?? '-' }}</div>
-                        <div class="va-contact-row"><i class="bi bi-envelope"></i>{{ $visit->visitor?->email ?? '-' }}</div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="va-panel">
-                <div class="va-panel-head"><h2>Tài liệu</h2></div>
-                <div class="va-body">
-                    <div class="va-attachment"><span><i class="bi bi-file-earmark"></i> Chưa có tài liệu</span></div>
-                    <button class="va-btn soft w-100 mt-2" type="button" disabled><i class="bi bi-plus"></i>Thêm tài liệu</button>
-                </div>
-            </section>
         </aside>
     </div>
 </div>
