@@ -2166,12 +2166,21 @@ class AdminUiController extends Controller
         $badges = Badge::query()
             ->with(['visit.visitor', 'visit.hostEmployee.department'])
             ->get()
-            ->sortBy('id')
+            ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
             ->values();
 
         return view('admin.badges.index', $this->withBase([
             'badges' => $badges,
         ]));
+    }
+
+    private function badgeDisplaySortKey(Badge $badge): string
+    {
+        $nameKey = Str::lower(Str::ascii($badge->badge_no));
+        $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
+            || str_contains($nameKey, 'khach khong vao');
+
+        return ($isNoEntryCard ? '9' : '1') . '|' . str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
     }
 
     public function badgesStore(Request $request): RedirectResponse

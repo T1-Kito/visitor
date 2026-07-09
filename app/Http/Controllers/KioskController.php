@@ -514,8 +514,8 @@ class KioskController extends Controller
     {
         $badges = Badge::query()
             ->where('status', 'available')
-            ->get(['badge_no'])
-            ->sortBy(fn (Badge $badge): string => $this->naturalBadgeSortKey($badge->badge_no))
+            ->get(['id', 'badge_no'])
+            ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
             ->values()
             ->map(fn (Badge $badge): array => [
                 'value' => $badge->badge_no,
@@ -531,22 +531,20 @@ class KioskController extends Controller
             'label' => 'Visitor card '.$number,
         ]);
     }
-    private function naturalBadgeSortKey(string $badgeNo): string
+    private function badgeDisplaySortKey(Badge $badge): string
     {
-        $nameKey = Str::lower(Str::ascii($badgeNo));
+        $nameKey = Str::lower(Str::ascii($badge->badge_no));
         $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
             || str_contains($nameKey, 'khach khong vao');
 
-        $naturalKey = preg_replace_callback('/\d+/', fn ($match) => str_pad($match[0], 12, '0', STR_PAD_LEFT), $nameKey);
-
-        return ($isNoEntryCard ? '9' : '1') . '|' . $naturalKey;
+        return ($isNoEntryCard ? '9' : '1') . '|' . str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
     }
     private function issueBadgeForVisit(Visit $visit): ?Badge
     {
         $badge = Badge::query()
             ->where('status', 'available')
             ->get()
-            ->sortBy(fn (Badge $badge): string => $this->naturalBadgeSortKey($badge->badge_no))
+            ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
             ->first();
 
         if ($badge === null) {
