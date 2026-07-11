@@ -13,6 +13,8 @@ class Badge extends Model
 
     protected $fillable = [
         'badge_no',
+        'label_vi',
+        'label_en',
         'tenant_id',
         'visit_id',
         'status',

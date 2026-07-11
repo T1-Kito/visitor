@@ -17,6 +17,8 @@ class Department extends Model
         'tenant_id',
         'parent_id',
         'name',
+        'name_vi',
+        'name_en',
     ];
 
     public function parent(): BelongsTo

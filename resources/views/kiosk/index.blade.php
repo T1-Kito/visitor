@@ -1555,7 +1555,7 @@
                                 <select class="form-select" name="visitor_id_card_number" required>
                                     <option value="" disabled @selected(! old('visitor_id_card_number'))>Select visitor card</option>
                                     @foreach (($visitorCardOptions ?? collect()) as $card)
-                                        <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label'] }}</option>
+                                        <option value="{{ $card['value'] }}" data-label-vi="{{ $card['label_vi'] }}" data-label-en="{{ $card['label_en'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label_en'] }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -1599,7 +1599,7 @@
                             <select class="form-select" id="selectedDepartment" name="department_id" required>
                                 <option value="" disabled @selected(! old('department_id'))>Select department</option>
                                 @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}" @selected((string) old('department_id') === (string) $department->id)>{{ $department->name }}</option>
+                                    <option value="{{ $department->id }}" data-label-vi="{{ $department->name_vi ?: $department->name }}" data-label-en="{{ $department->name_en ?: $department->name }}" @selected((string) old('department_id') === (string) $department->id)>{{ $department->name_en ?: $department->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -1851,6 +1851,20 @@
             });
         }
 
+        function updateLocalizedOptions() {
+            document.querySelectorAll('option[data-label-vi][data-label-en]').forEach((option) => {
+                option.textContent = kioskLanguage === 'en' ? option.dataset.labelEn : option.dataset.labelVi;
+                const select = option.closest('select');
+                const shell = select?.closest('.kiosk-select-shell');
+                const item = shell?.querySelector(`.kiosk-select-option[data-value="${CSS.escape(option.value)}"]`);
+                if (item) item.textContent = option.textContent;
+                if (select?.value === option.value) {
+                    const label = shell?.querySelector('.kiosk-select-button span');
+                    if (label) label.textContent = option.textContent;
+                }
+            });
+        }
+
         function enhanceKioskSelects() {
             document.querySelectorAll('.kiosk-flat-form select.form-select').forEach((select) => {
                 if (select.dataset.kioskSelectEnhanced === '1') return;
@@ -1918,6 +1932,7 @@
             kioskLanguageSelect.addEventListener('change', () => {
                 kioskLanguage = kioskLanguageSelect.value === 'en' ? 'en' : 'vi';
                 localStorage.setItem('kiosk-language-v2', kioskLanguage);
+                updateLocalizedOptions();
                 enhanceKioskSelects();
         translateKiosk();
         updateSafetyLanguage();
@@ -2272,6 +2287,7 @@
             }, 4200);
         }
 
+        updateLocalizedOptions();
         enhanceKioskSelects();
         translateKiosk();
         updateSafetyLanguage();

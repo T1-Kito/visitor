@@ -42,7 +42,7 @@ class KioskController extends Controller
         return view('kiosk.index', [
             'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
             'lastKioskVisit' => $lastVisit,
-            'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'departments' => Department::query()->orderBy('name')->get(['id', 'name', 'name_vi', 'name_en']),
             'visitorCardOptions' => $this->visitorCardOptions(),
         ]);
     }
@@ -514,12 +514,13 @@ class KioskController extends Controller
     {
         $badges = Badge::query()
             ->where('status', 'available')
-            ->get(['id', 'badge_no'])
+            ->get(['id', 'badge_no', 'label_vi', 'label_en'])
             ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
             ->values()
             ->map(fn (Badge $badge): array => [
                 'value' => $badge->badge_no,
-                'label' => $badge->badge_no,
+                'label_vi' => $badge->label_vi ?: $badge->badge_no,
+                'label_en' => $badge->label_en ?: $badge->badge_no,
             ]);
 
         if ($badges->isNotEmpty()) {
@@ -528,7 +529,8 @@ class KioskController extends Controller
 
         return collect(range(1, 20))->map(fn (int $number): array => [
             'value' => (string) $number,
-            'label' => 'Visitor card '.$number,
+            'label_vi' => 'Thẻ khách '.$number,
+            'label_en' => 'Visitor card '.$number,
         ]);
     }
     private function badgeDisplaySortKey(Badge $badge): string

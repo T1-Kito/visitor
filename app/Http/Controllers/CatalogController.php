@@ -36,7 +36,9 @@ class CatalogController extends Controller
             $query->where(function ($departmentQuery) use ($keyword): void {
                 $departmentQuery
                     ->where('code', 'like', '%'.$keyword.'%')
-                    ->orWhere('name', 'like', '%'.$keyword.'%');
+                    ->orWhere('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('name_vi', 'like', '%'.$keyword.'%')
+                    ->orWhere('name_en', 'like', '%'.$keyword.'%');
             });
         }
 
@@ -50,11 +52,16 @@ class CatalogController extends Controller
     public function departmentsStore(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['nullable', 'string', 'max:120'],
+            'name_vi' => ['required_without:name', 'nullable', 'string', 'max:120'],
+            'name_en' => ['nullable', 'string', 'max:120'],
             'parent_id' => ['nullable', 'exists:departments,id'],
         ]);
 
-        $validated['code'] = $this->generateDepartmentCode($validated['name']);
+        $validated['name_vi'] = $validated['name_vi'] ?? $validated['name'];
+        $validated['name_en'] = $validated['name_en'] ?? $validated['name_vi'];
+        $validated['name'] = $validated['name_vi'];
+        $validated['code'] = $this->generateDepartmentCode($validated['name_vi']);
         $department = Department::query()->create($validated);
         $this->logAudit('department.created', 'department', (string) $department->id, $validated);
 
@@ -103,7 +110,9 @@ class CatalogController extends Controller
     public function departmentsUpdate(Request $request, Department $department): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['nullable', 'string', 'max:120'],
+            'name_vi' => ['required_without:name', 'nullable', 'string', 'max:120'],
+            'name_en' => ['nullable', 'string', 'max:120'],
             'parent_id' => [
                 'nullable',
                 'exists:departments,id',
@@ -114,7 +123,10 @@ class CatalogController extends Controller
             ],
         ]);
 
-        $validated['code'] = $this->generateDepartmentCode($validated['name'], $department->id);
+        $validated['name_vi'] = $validated['name_vi'] ?? $validated['name'];
+        $validated['name_en'] = $validated['name_en'] ?? $department->name_en ?? $validated['name_vi'];
+        $validated['name'] = $validated['name_vi'];
+        $validated['code'] = $this->generateDepartmentCode($validated['name_vi'], $department->id);
         $department->update($validated);
         $this->logAudit('department.updated', 'department', (string) $department->id, $validated);
 

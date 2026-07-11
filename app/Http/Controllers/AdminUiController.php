@@ -2192,6 +2192,8 @@ class AdminUiController extends Controller
             'badge_range_start' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'badge_range_end' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'status' => ['nullable', 'in:available,revoked'],
+            'label_vi' => ['required_with:badge_no', 'nullable', 'string', 'max:120'],
+            'label_en' => ['required_with:badge_no', 'nullable', 'string', 'max:120'],
         ], [
             'badge_no.max' => 'Số thẻ không được quá 40 ký tự.',
             'badge_numbers.max' => 'Danh sách thẻ quá dài, vui lòng chia thành nhiều lần thêm.',
@@ -2274,8 +2276,11 @@ class AdminUiController extends Controller
         $status = $validated['status'] ?? 'available';
 
         foreach ($badgeNumbers as $badgeNo) {
+            $autoVi = preg_replace('/^Visitor\s+card\s+(\d+)$/i', 'Thẻ khách $1', $badgeNo);
             Badge::query()->create([
                 'badge_no' => $badgeNo,
+                'label_vi' => $badgeNumbers->count() === 1 && filled($validated['label_vi'] ?? null) ? trim($validated['label_vi']) : $autoVi,
+                'label_en' => $badgeNumbers->count() === 1 && filled($validated['label_en'] ?? null) ? trim($validated['label_en']) : $badgeNo,
                 'status' => $status,
             ]);
         }
@@ -2290,11 +2295,15 @@ class AdminUiController extends Controller
         $validated = $request->validate([
             'badge_no' => ['required', 'string', 'max:40', \Illuminate\Validation\Rule::unique('badges', 'badge_no')->ignore($badge->id)],
             'status' => ['required', 'in:available,revoked'],
+            'label_vi' => ['required', 'string', 'max:120'],
+            'label_en' => ['required', 'string', 'max:120'],
         ]);
 
         if ($badge->status === 'active') {
             $badge->update([
                 'badge_no' => trim($validated['badge_no']),
+                'label_vi' => trim($validated['label_vi']),
+                'label_en' => trim($validated['label_en']),
             ]);
 
             return redirect()->route('admin.badges.index')->with('status', 'Đã cập nhật mã thẻ đang sử dụng.');
@@ -2302,6 +2311,8 @@ class AdminUiController extends Controller
 
         $badge->update([
             'badge_no' => trim($validated['badge_no']),
+            'label_vi' => trim($validated['label_vi']),
+            'label_en' => trim($validated['label_en']),
             'status' => $validated['status'],
             'visit_id' => $validated['status'] === 'available' ? null : $badge->visit_id,
             'issued_at' => $validated['status'] === 'available' ? null : $badge->issued_at,

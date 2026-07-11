@@ -122,7 +122,11 @@
                     </div>
                     <div>
                         <label class="form-label">Tên phòng ban <span class="text-danger">*</span></label>
-                        <input class="form-control" name="name" value="{{ old('name', $department->name) }}" required>
+                        <input class="form-control" name="name_vi" value="{{ old('name_vi', $department->name_vi ?: $department->name) }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Tên phòng ban (English)</label>
+                        <input class="form-control" name="name_en" value="{{ old('name_en', $department->name_en ?: $department->name) }}" required>
                         @error('name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div>

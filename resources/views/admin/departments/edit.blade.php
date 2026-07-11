@@ -23,7 +23,11 @@
                     </div>
                     <div class="col-md-8">
                         <label class="form-label">Tên phòng ban</label>
-                        <input class="form-control" name="name" value="{{ old('name', $department->name) }}" required>
+                        <input class="form-control" name="name_vi" value="{{ old('name_vi', $department->name_vi ?: $department->name) }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Tên phòng ban (English)</label>
+                        <input class="form-control" name="name_en" value="{{ old('name_en', $department->name_en ?: $department->name) }}" required>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Phòng ban cha</label>

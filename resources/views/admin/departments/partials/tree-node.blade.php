@@ -62,6 +62,8 @@
                             data-edit-department
                             data-department-id="{{ $department->id }}"
                             data-department-name="{{ $department->name }}"
+                            data-department-name-vi="{{ $department->name_vi ?: $department->name }}"
+                            data-department-name-en="{{ $department->name_en ?: $department->name }}"
                             data-department-code="{{ $department->code }}"
                             data-parent-id="{{ $department->parent_id ?? '' }}"
                             data-update-url="{{ route('admin.departments.update', $department) }}">

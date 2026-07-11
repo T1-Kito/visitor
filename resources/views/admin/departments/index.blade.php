@@ -162,9 +162,13 @@
             </div>
             <div class="modal-body d-grid gap-3">
                 <div>
-                    <label class="form-label">Tên phòng ban <span class="text-danger">*</span></label>
-                    <input class="form-control" name="name" value="{{ old('name') }}" placeholder="Nhân sự" required>
+                    <label class="form-label">Tên phòng ban (Tiếng Việt) <span class="text-danger">*</span></label>
+                    <input class="form-control" name="name_vi" value="{{ old('name_vi') }}" placeholder="Nhân sự" required>
                     <div class="form-text">Mã phòng ban sẽ được hệ thống tự sinh từ tên phòng ban.</div>
+                </div>
+                <div>
+                    <label class="form-label">Tên phòng ban (English) <span class="text-danger">*</span></label>
+                    <input class="form-control" name="name_en" value="{{ old('name_en') }}" placeholder="Human Resources" required>
                 </div>
                 <div>
                     <label class="form-label">Phòng ban cha</label>
@@ -215,12 +219,17 @@
                     <div class="form-text">Mã sẽ tự cập nhật nếu tên phòng ban thay đổi.</div>
                 </div>
                 <div>
-                    <label class="form-label" for="editDepartmentName">Tên phòng ban <span class="text-danger">*</span></label>
+                    <label class="form-label" for="editDepartmentName">Tên phòng ban (Tiếng Việt) <span class="text-danger">*</span></label>
                     <input id="editDepartmentName"
                            class="form-control"
-                           name="name"
-                           value="{{ old('form_context') === 'edit_department' ? old('name') : '' }}"
+                           name="name_vi"
+                           value="{{ old('form_context') === 'edit_department' ? old('name_vi') : '' }}"
                            required>
+                </div>
+                <div>
+                    <label class="form-label" for="editDepartmentNameEn">Tên phòng ban (English) <span class="text-danger">*</span></label>
+                    <input id="editDepartmentNameEn" class="form-control" name="name_en"
+                           value="{{ old('form_context') === 'edit_department' ? old('name_en') : '' }}" required>
                 </div>
                 <div>
                     <label class="form-label" for="editDepartmentParentSelect">Phòng ban cha</label>
@@ -306,10 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('editDepartmentForm');
     const departmentIdInput = document.getElementById('editDepartmentId');
     const nameInput = document.getElementById('editDepartmentName');
+    const nameEnInput = document.getElementById('editDepartmentNameEn');
     const codeDisplay = document.getElementById('editDepartmentCode');
     const parentSelect = document.getElementById('editDepartmentParentSelect');
 
-    if (!modalEl || !form || !departmentIdInput || !nameInput || !codeDisplay || !parentSelect) return;
+    if (!modalEl || !form || !departmentIdInput || !nameInput || !nameEnInput || !codeDisplay || !parentSelect) return;
 
     const editButtons = Array.from(document.querySelectorAll('[data-edit-department]'));
 
@@ -356,7 +366,8 @@ document.addEventListener('DOMContentLoaded', () => {
         configureParentOptions(departmentId);
 
         if (!preserveOldInput) {
-            nameInput.value = button.dataset.departmentName || '';
+            nameInput.value = button.dataset.departmentNameVi || button.dataset.departmentName || '';
+            nameEnInput.value = button.dataset.departmentNameEn || button.dataset.departmentName || '';
             parentSelect.value = button.dataset.parentId || '';
         }
     };
@@ -375,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.action = '#';
         departmentIdInput.value = '';
         nameInput.value = '';
+        nameEnInput.value = '';
         codeDisplay.textContent = '-';
         parentSelect.value = '';
 
