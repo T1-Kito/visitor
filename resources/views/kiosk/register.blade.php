@@ -418,7 +418,7 @@
                             <i class="bi bi-bullseye"></i>
                             <select id="purpose" name="purpose" required>
                                 <option value="" disabled {{ old('purpose') ? '' : 'selected' }}>Chọn mục đích</option>
-                                @foreach (['Họp', 'Giao hàng', 'Phỏng vấn', 'Tham quan', 'Khác'] as $purpose)
+                                @foreach (['Họp', 'Tham quan', 'Đào tạo', 'Đánh giá, kiểm tra', 'Phỏng vấn', 'Nhà thầu làm việc', 'Bảo trì, sửa chữa', 'Giao nhận hàng hóa, chứng từ', 'Khác'] as $purpose)
                                     <option value="{{ $purpose }}" @selected(old('purpose') === $purpose)>{{ $purpose }}</option>
                                 @endforeach
                             </select>

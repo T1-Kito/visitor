@@ -38,6 +38,8 @@ class KioskFlowTest extends TestCase
             ->assertSee('name="checkin_time"', false)
             ->assertSee('name="checkout_date"', false)
             ->assertSee('name="checkout_time"', false)
+            ->assertSee('DHL Privacy Notice')
+            ->assertSee('Thông báo Bảo mật của DHL tại')
             ->assertSee('Privacy Notice - DHL - Global')
             ->assertDontSee('name="visitor_identity_issued_place"', false)
             ->assertDontSee('name="visitor_identity_issued_date"', false)

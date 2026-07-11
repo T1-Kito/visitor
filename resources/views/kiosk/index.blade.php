@@ -1611,21 +1611,23 @@
                         <div>
                             <label class="form-label">Visiting purpose <span class="text-danger">*</span></label>
                             <select class="form-select" name="purpose" required>
-                                <option value="" disabled {{ old('purpose') ? '' : 'selected' }}>Select purpose</option>
-                                @foreach (['Họp' => 'Meeting', 'Giao hàng' => 'Delivery', 'Phỏng vấn' => 'Interview', 'Tham quan' => 'Site visit', 'Khác' => 'Other'] as $purposeValue => $purposeLabel)
-                                    <option value="{{ $purposeValue }}" @selected(old('purpose') === $purposeValue)>{{ $purposeLabel }}</option>
+                                <option value="" disabled data-label-vi="Chọn mục đích" data-label-en="Select purpose" {{ old('purpose') ? '' : 'selected' }}>Select purpose</option>
+                                @foreach ([
+                                    'Họp' => 'Meeting',
+                                    'Tham quan' => 'Visit',
+                                    'Đào tạo' => 'Training',
+                                    'Đánh giá, kiểm tra' => 'Audit',
+                                    'Phỏng vấn' => 'Interview',
+                                    'Nhà thầu làm việc' => 'Contractor Work',
+                                    'Bảo trì, sửa chữa' => 'Maintenance & Repair',
+                                    'Giao nhận hàng hóa, chứng từ' => 'Delivery & Collection',
+                                    'Khác' => 'Other',
+                                ] as $purposeValue => $purposeLabel)
+                                    <option value="{{ $purposeValue }}" data-label-vi="{{ $purposeValue }}" data-label-en="{{ $purposeLabel }}" @selected(old('purpose') === $purposeValue)>{{ $purposeLabel }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
-
-                    <label class="form-check kiosk-policy">
-                        <input class="form-check-input" type="checkbox" name="policy_accepted" value="1" required>
-                        <span class="form-check-label kiosk-policy-copy">
-                            By submitting this form, you consent to the collection and processing of your personal data for visitor access, safety, and security purposes. Please refer to our
-                            <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener noreferrer">Privacy Notice - DHL - Global</a>.
-                        </span>
-                    </label>
 
                     <label class="form-check kiosk-policy kiosk-safety-policy">
                         <input class="form-check-input" type="checkbox" name="safety_acknowledged" value="1" required>
@@ -1657,6 +1659,20 @@
                                     <li>Khi c&#243; b&#225;o &#273;&#7897;ng kh&#7849;n c&#7845;p, nhanh ch&#243;ng di chuy&#7875;n &#273;&#7871;n &#272;i&#7875;m T&#7853;p K&#7871;t v&#224; tu&#226;n th&#7911; theo h&#432;&#7899;ng d&#7851;n c&#7911;a nh&#226;n vi&#234;n DHL.</li>
                                     <li>Ho&#224;n tr&#7843; th&#7867; kh&#225;ch tr&#432;&#7899;c khi r&#7901;i kh&#7887;i c&#417; s&#7903;.</li>
                                 </ul>
+                            </span>
+                        </span>
+                    </label>
+
+                    <label class="form-check kiosk-policy">
+                        <input class="form-check-input" type="checkbox" name="policy_accepted" value="1" required>
+                        <span class="form-check-label kiosk-policy-copy">
+                            <span class="kiosk-safety-text" data-lang="en">
+                                I consent to DHL collecting and processing the personal data provided in this form for the purpose of visitor access and ensuring safety and security at its premises. DHL’s Privacy Notice is available at
+                                <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener noreferrer">DHL Privacy Notice</a>.
+                            </span>
+                            <span class="kiosk-safety-text" data-lang="vi" hidden>
+                                Tôi đồng ý cho DHL thu thập, lưu trữ và xử lý thông tin cá nhân được cung cấp trong biểu mẫu này nhằm mục đích quản lý việc ra vào, bảo đảm an toàn, an ninh tại cơ sở. Thông báo Bảo mật của DHL tại
+                                <a href="{{ route('kiosk.privacy-notice') }}" target="_blank" rel="noopener noreferrer">Privacy Notice - DHL - Global</a>.
                             </span>
                         </span>
                     </label>
@@ -1749,9 +1765,13 @@
             'Mục đích đến': 'Purpose of visit',
             'Chọn mục đích': 'Select a purpose',
             'Họp': 'Meeting',
-            'Giao hàng': 'Delivery',
+            'Tham quan': 'Visit',
+            'Đào tạo': 'Training',
+            'Đánh giá, kiểm tra': 'Audit',
             'Phỏng vấn': 'Interview',
-            'Tham quan': 'Site visit',
+            'Nhà thầu làm việc': 'Contractor Work',
+            'Bảo trì, sửa chữa': 'Maintenance & Repair',
+            'Giao nhận hàng hóa, chứng từ': 'Delivery & Collection',
             'Khác': 'Other',
             'Tôi đồng ý tuân thủ quy định ra/vào và hướng dẫn của lễ tân/bảo vệ.': 'I agree to follow the access rules and instructions from reception/security.',
             'Gửi yêu cầu tiếp khách': 'Submit visit request',
@@ -1801,7 +1821,6 @@
             '4. Thông tin chuyến thăm': '4. Visiting Information',
             'Mục đích đến': 'Visiting purpose',
             'Chọn mục đích': 'Select purpose',
-            'Bằng việc gửi biểu mẫu này, bạn đồng ý cho phép thu thập và xử lý dữ liệu cá nhân nhằm phục vụ việc ra/vào, an toàn và an ninh cho khách. Vui lòng tham khảo': 'By submitting this form, you consent to the collection and processing of your personal data for visitor access, safety, and security purposes. Please refer to our',
         };
         const kioskPlaceholders = {
             'Nhập họ và tên': 'Enter full name',
