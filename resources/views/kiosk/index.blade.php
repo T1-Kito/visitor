@@ -1553,7 +1553,7 @@
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-vcard"></i>
                                 <select class="form-select" name="visitor_id_card_number" required>
-                                    <option value="" disabled @selected(! old('visitor_id_card_number'))>Select visitor card</option>
+                                    <option value="" disabled data-label-vi="Chọn thẻ khách" data-label-en="Select visitor card" @selected(! old('visitor_id_card_number'))>Chọn thẻ khách</option>
                                     @foreach (($visitorCardOptions ?? collect()) as $card)
                                         <option value="{{ $card['value'] }}" data-label-vi="{{ $card['label_vi'] }}" data-label-en="{{ $card['label_en'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label_en'] }}</option>
                                     @endforeach
@@ -1590,7 +1590,7 @@
                             <label class="form-label">Meeting person <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-workspace"></i>
-                                <input class="form-control" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Enter meeting person" required>
+                                <input class="form-control" name="host_name" value="{{ old('host_name') }}" autocomplete="off" placeholder="Nhập người cần gặp" required>
                             </div>
                             <input name="host_employee_id" type="hidden" value="">
                         </div>
@@ -1787,6 +1787,7 @@
             'Công ty/Tổ chức': 'Company/Organization',
             'CCCD/Hộ chiếu': 'Citizen Identification Card/Passport',
             'Số thẻ khách': 'Visitor ID card number',
+            'Chọn thẻ khách': 'Select visitor card',
             '2. Thông tin check-in/out': '2. Check-in/out Information',
             'Ngày check-in': 'Check-in date',
             'Giờ check-in': 'Check-in time',
@@ -1817,6 +1818,7 @@
             'Nhập tên công ty/tổ chức': 'Enter company/organization name',
             'Nhập số CCCD/Hộ chiếu': 'Enter Citizen ID Number/Passport',
             'Nhập số thẻ': 'Enter ID number',
+            'Nhập người cần gặp': 'Enter meeting person',
         };
         const reverseKioskTranslations = Object.fromEntries(Object.entries(kioskTranslations).map(([vi, en]) => [en, vi]));
         const reverseKioskPlaceholders = Object.fromEntries(Object.entries(kioskPlaceholders).map(([vi, en]) => [en, vi]));
