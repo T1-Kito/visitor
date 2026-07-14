@@ -11,6 +11,7 @@
 .vc-btn-main{min-width:148px;min-height:40px;padding:0 1rem;border-radius:10px;font-size:.82rem;font-weight:600;background:#146bd7;box-shadow:0 8px 18px rgba(20,107,215,.16)}
 .vc-btn-cancel{min-height:40px;padding:0 .9rem;border-radius:10px;color:#526b87;font-size:.82rem;font-weight:500}
 .vc-btn-main[disabled]{cursor:not-allowed;opacity:.72;box-shadow:none}
+.vc-card-trigger{position:relative;width:100%;min-height:48px;padding:.65rem 2.4rem .65rem 2.35rem;border:1px solid #d8e5f2;border-radius:13px;background:#fff;color:#0b1f3a;font-size:.86rem;text-align:left}.vc-card-trigger::after{content:"";position:absolute;right:1rem;top:50%;width:8px;height:8px;border-right:2px solid #29435f;border-bottom:2px solid #29435f;transform:translateY(-65%) rotate(45deg);transition:transform .15s ease}.vc-card-trigger[aria-expanded="true"]::after{transform:translateY(-25%) rotate(225deg)}.vc-card-trigger-placeholder{color:#526b87}.vc-card-menu{display:none;position:fixed;z-index:1060;overflow-y:auto;padding:.35rem;border:1px solid #cad9e9;border-radius:13px;background:#fff;box-shadow:0 18px 42px rgba(15,35,60,.2)}.vc-card-menu.show{display:block}.vc-card-option{display:block;width:100%;padding:.62rem .75rem;border:0;border-radius:9px;background:#fff;color:#17324f;font-size:.84rem;text-align:left}.vc-card-option:hover,.vc-card-option:focus{background:#eef6ff;color:#0b5fc6;outline:0}.vc-card-option[aria-selected="true"]{background:#e4f1ff;color:#0b5fc6;font-weight:800}
 @media(max-width:768px){.vc-footer{flex-direction:row;justify-content:flex-end;align-items:center}.vc-btn-main{width:auto;min-width:148px}.vc-btn-cancel{width:auto}}
 .vc-no-focus .vc-control .form-control:focus,
 .vc-no-focus .vc-control .form-select:focus{
@@ -130,12 +131,18 @@
                             <label>Số thẻ khách</label>
                             <div class="vc-control">
                                 <i class="bi bi-person-vcard"></i>
-                                <select id="visitorIdCardNumber" class="form-select" name="visitor_id_card_number">
-                                    <option value="">Chọn thẻ khách</option>
+                                <div id="visitorCardPicker">
+                                    <input id="visitorIdCardNumber" type="hidden" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}">
+                                    <button id="visitorCardTrigger" class="vc-card-trigger" type="button" aria-expanded="false" aria-haspopup="listbox">
+                                        <span id="visitorCardLabel" class="vc-card-trigger-placeholder">Chọn thẻ khách</span>
+                                    </button>
+                                    <div id="visitorCardMenu" class="vc-card-menu" role="listbox">
+                                        <button class="vc-card-option" type="button" role="option" data-value="">Chọn thẻ khách</button>
                                     @foreach ($visitorCardOptions as $card)
-                                        <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label'] }}</option>
+                                            <button class="vc-card-option" type="button" role="option" data-value="{{ $card['value'] }}">{{ $card['label'] }}</button>
                                     @endforeach
-                                </select>
+                                    </div>
+                                </div>
                             </div>
                             @error('visitor_id_card_number')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>
@@ -284,6 +291,11 @@
     const clearSelectionButton = document.getElementById('clearVisitorSelection');
     const form = document.getElementById('visitCreateForm');
     const submitButton = document.getElementById('visitSubmitButton');
+    const cardPicker = document.getElementById('visitorCardPicker');
+    const cardTrigger = document.getElementById('visitorCardTrigger');
+    const cardLabel = document.getElementById('visitorCardLabel');
+    const cardMenu = document.getElementById('visitorCardMenu');
+    const cardOptions = Array.from(cardMenu.querySelectorAll('.vc-card-option'));
     const fields = {
         name: document.getElementById('visitorName'),
         phone: document.getElementById('visitorPhone'),
@@ -305,6 +317,35 @@
         suggestionsBox.innerHTML = '';
     };
 
+    const closeCardMenu = () => {
+        cardMenu.classList.remove('show');
+        cardTrigger.setAttribute('aria-expanded', 'false');
+    };
+
+    const positionCardMenuBelow = () => {
+        const rect = cardTrigger.getBoundingClientRect();
+        const availableHeight = window.innerHeight - rect.bottom - 12;
+        cardMenu.style.top = `${rect.bottom + 6}px`;
+        cardMenu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - rect.width - 8))}px`;
+        cardMenu.style.width = `${rect.width}px`;
+        cardMenu.style.maxHeight = `${Math.max(96, Math.min(280, availableHeight))}px`;
+    };
+
+    const setCardValue = (value) => {
+        const normalizedValue = String(value || '');
+        const selectedOption = cardOptions.find((option) => option.dataset.value === normalizedValue);
+        fields.visitorIdCardNumber.value = normalizedValue;
+        cardLabel.textContent = selectedOption?.textContent.trim() || normalizedValue || 'Chọn thẻ khách';
+        cardLabel.classList.toggle('vc-card-trigger-placeholder', normalizedValue === '');
+        cardOptions.forEach((option) => option.setAttribute('aria-selected', option.dataset.value === normalizedValue ? 'true' : 'false'));
+    };
+
+    const openCardMenu = () => {
+        positionCardMenuBelow();
+        cardMenu.classList.add('show');
+        cardTrigger.setAttribute('aria-expanded', 'true');
+    };
+
     const setSelectedVisitor = (visitor) => {
         selectedVisitorId.value = visitor.id;
         fields.name.value = visitor.full_name || '';
@@ -312,7 +353,7 @@
         fields.email.value = visitor.email || '';
         fields.company.value = visitor.company || '';
         fields.identityNo.value = visitor.identity_no || '';
-        fields.visitorIdCardNumber.value = visitor.visitor_id_card_number || '';
+        setCardValue(visitor.visitor_id_card_number || '');
         fields.note.value = visitor.note || fields.note.value || '';
         lookupInput.value = visitor.full_name || '';
         selectedVisitorText.textContent = `Đã chọn khách cũ: ${visitor.visitor_code ? visitor.visitor_code + ' - ' : ''}${visitor.full_name || 'Khách'}${visitor.phone ? ' - ' + visitor.phone : ''}`;
@@ -391,11 +432,43 @@
     hostNameInput.addEventListener('change', syncHostEmployee);
     lookupInput.addEventListener('input', searchVisitors);
     clearSelectionButton.addEventListener('click', clearSelectedVisitor);
+    cardTrigger.addEventListener('click', () => {
+        if (cardMenu.classList.contains('show')) {
+            closeCardMenu();
+        } else {
+            openCardMenu();
+        }
+    });
+    cardOptions.forEach((option) => {
+        option.addEventListener('click', () => {
+            setCardValue(option.dataset.value);
+            closeCardMenu();
+            cardTrigger.focus();
+        });
+    });
+    cardTrigger.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openCardMenu();
+            (cardOptions.find((option) => option.getAttribute('aria-selected') === 'true') || cardOptions[0])?.focus();
+        }
+    });
+    cardMenu.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeCardMenu();
+            cardTrigger.focus();
+        }
+    });
     document.addEventListener('click', (event) => {
         if (!suggestionsBox.contains(event.target) && event.target !== lookupInput) {
             hideSuggestions();
         }
+        if (!cardPicker.contains(event.target) && !cardMenu.contains(event.target)) {
+            closeCardMenu();
+        }
     });
+    window.addEventListener('resize', closeCardMenu);
+    window.addEventListener('scroll', closeCardMenu, true);
 
     form.addEventListener('submit', () => {
         if (!submitButton || submitButton.disabled) {
@@ -406,6 +479,8 @@
         submitButton.querySelector('span').textContent = submitButton.dataset.loadingText || 'Đang tạo...';
     });
 
+    document.body.appendChild(cardMenu);
+    setCardValue(fields.visitorIdCardNumber.value);
     syncHostEmployee();
 })();
 </script>

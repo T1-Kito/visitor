@@ -36,8 +36,8 @@ class AdminVisitCardDropdownTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.visits.create'))
             ->assertOk()
-            ->assertSee('<select id="visitorIdCardNumber"', false)
-            ->assertSee('value="CARD-BILINGUAL"', false)
+            ->assertSee('<input id="visitorIdCardNumber" type="hidden"', false)
+            ->assertSee('data-value="CARD-BILINGUAL"', false)
             ->assertSee('VI: The khach song ngu — EN: Bilingual visitor card')
             ->assertDontSee('CARD-IN-USE');
     }
