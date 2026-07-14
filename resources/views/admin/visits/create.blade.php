@@ -130,7 +130,12 @@
                             <label>Số thẻ khách</label>
                             <div class="vc-control">
                                 <i class="bi bi-person-vcard"></i>
-                                <input id="visitorIdCardNumber" class="form-control" name="visitor_id_card_number" value="{{ old('visitor_id_card_number') }}" placeholder="Nhập số thẻ khách">
+                                <select id="visitorIdCardNumber" class="form-select" name="visitor_id_card_number">
+                                    <option value="">Chọn thẻ khách</option>
+                                    @foreach ($visitorCardOptions as $card)
+                                        <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label'] }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             @error('visitor_id_card_number')<span class="vc-error">{{ $message }}</span>@enderror
                         </div>

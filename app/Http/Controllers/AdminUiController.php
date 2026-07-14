@@ -938,6 +938,7 @@ class AdminUiController extends Controller
         return view('admin.visits.create', $this->withBase([
             'hosts' => $this->hostsForSelect(),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'visitorCardOptions' => $this->visitorCardOptionsForAdmin(),
             'accessZones' => $this->accessZones(),
             'visitFormToken' => $this->createVisitFormToken(),
         ]));
@@ -1112,6 +1113,7 @@ class AdminUiController extends Controller
             'canGenerateQr' => $visit->status === 'approved',
             'hosts' => $this->hostsForSelect(),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->visitor?->visitor_id_card_number),
             'accessZones' => $this->accessZones(),
             'activityLogs' => AuditLog::query()
                 ->where('entity_type', 'visit')
@@ -1136,6 +1138,7 @@ class AdminUiController extends Controller
             'visit' => $visit,
             'hosts' => $this->hostsForSelect(),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
+            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->visitor?->visitor_id_card_number),
             'accessZones' => $this->accessZones(),
         ]));
     }
@@ -2181,6 +2184,45 @@ class AdminUiController extends Controller
             || str_contains($nameKey, 'khach khong vao');
 
         return ($isNoEntryCard ? '9' : '1') . '|' . str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Admin screens do not switch language, so show both configured labels.
+     *
+     * @return Collection<int, array{value: string, label: string}>
+     */
+    private function visitorCardOptionsForAdmin(?string $currentValue = null): Collection
+    {
+        $currentValue = trim((string) $currentValue);
+
+        $options = Badge::query()
+            ->where(function ($query) use ($currentValue): void {
+                $query->where('status', 'available');
+
+                if ($currentValue !== '') {
+                    $query->orWhere('badge_no', $currentValue);
+                }
+            })
+            ->get(['id', 'badge_no', 'label_vi', 'label_en'])
+            ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
+            ->map(function (Badge $badge): array {
+                $labelVi = trim((string) ($badge->label_vi ?: $badge->badge_no));
+                $labelEn = trim((string) ($badge->label_en ?: $badge->badge_no));
+                $label = $labelVi === $labelEn ? $labelVi : 'VI: '.$labelVi.' — EN: '.$labelEn;
+
+                if (! in_array($badge->badge_no, [$labelVi, $labelEn], true)) {
+                    $label .= ' ('.$badge->badge_no.')';
+                }
+
+                return ['value' => $badge->badge_no, 'label' => $label];
+            })
+            ->values();
+
+        if ($currentValue !== '' && ! $options->contains('value', $currentValue)) {
+            $options->prepend(['value' => $currentValue, 'label' => $currentValue.' (đang lưu)']);
+        }
+
+        return $options;
     }
 
     public function badgesStore(Request $request): RedirectResponse

@@ -311,7 +311,15 @@
                     <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="visitor_email" value="{{ old('visitor_email', $visit->visitor?->email) }}" class="form-control"></div>
                     <div class="col-md-6"><label class="form-label">C&#244;ng ty / T&#7893; ch&#7913;c</label><input type="text" name="visitor_company" value="{{ old('visitor_company', $visit->visitor?->company) }}" class="form-control"></div>
                     <div class="col-md-6"><label class="form-label">CCCD / H&#7897; chi&#7871;u</label><input type="text" name="visitor_identity_no" value="{{ old('visitor_identity_no', $visit->visitor?->identity_no) }}" class="form-control"></div>
-                    <div class="col-md-6"><label class="form-label">S&#7889; th&#7867; kh&#225;ch</label><input type="text" name="visitor_id_card_number" value="{{ old('visitor_id_card_number', $visit->visitor?->visitor_id_card_number) }}" class="form-control"></div>
+                    <div class="col-md-6">
+                        <label class="form-label">S&#7889; th&#7867; kh&#225;ch</label>
+                        <select name="visitor_id_card_number" class="form-select">
+                            <option value="">Ch&#7885;n th&#7867; kh&#225;ch</option>
+                            @foreach ($visitorCardOptions as $card)
+                                <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number', $visit->visitor?->visitor_id_card_number) === (string) $card['value'])>{{ $card['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="col-12 pt-2"><div class="fw-semibold text-danger small text-uppercase">Th&#244;ng tin v&#224;o / ra</div></div>
                     <div class="col-md-4"><label class="form-label">Ng&#224;y v&#224;o *</label><input type="date" name="visit_date" value="{{ old('visit_date', $visit->scheduled_at?->toDateString()) }}" class="form-control" required></div>
