@@ -467,8 +467,13 @@
             closeCardMenu();
         }
     });
-    window.addEventListener('resize', closeCardMenu);
-    window.addEventListener('scroll', closeCardMenu, true);
+    const keepCardMenuPositioned = () => {
+        if (cardMenu.classList.contains('show')) {
+            positionCardMenuBelow();
+        }
+    };
+    window.addEventListener('resize', keepCardMenuPositioned);
+    window.addEventListener('scroll', keepCardMenuPositioned, true);
 
     form.addEventListener('submit', () => {
         if (!submitButton || submitButton.disabled) {

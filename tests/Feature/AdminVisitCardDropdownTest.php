@@ -39,6 +39,8 @@ class AdminVisitCardDropdownTest extends TestCase
             ->assertSee('<input id="visitorIdCardNumber" type="hidden"', false)
             ->assertSee('data-value="CARD-BILINGUAL"', false)
             ->assertSee('VI: The khach song ngu — EN: Bilingual visitor card')
+            ->assertSee("window.addEventListener('scroll', keepCardMenuPositioned, true);", false)
+            ->assertDontSee("window.addEventListener('scroll', closeCardMenu, true);", false)
             ->assertDontSee('CARD-IN-USE');
     }
 
