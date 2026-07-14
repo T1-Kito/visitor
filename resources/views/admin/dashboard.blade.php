@@ -796,12 +796,14 @@
                                 <div class="d-inline-flex gap-2 align-items-center justify-content-end">
                                     <a class="btn btn-sm btn-light" href="{{ route('admin.visits.show', $visit['id']) }}"
                                        style="border-radius:10px;font-weight:500;font-size:.78rem;">Chi tiết</a>
+                                    @if (auth()->user()?->hasPermission('visits.delete'))
                                     <form method="post" action="{{ route('admin.visits.destroy', $visit['id']) }}" onsubmit="return confirm('Xóa lịch hẹn này?')" data-disable-on-submit>
                                         @csrf
                                         @method('delete')
                                         <button class="btn btn-sm btn-outline-danger" type="submit"
                                             style="border-radius:10px;font-weight:500;font-size:.78rem;">Xóa</button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

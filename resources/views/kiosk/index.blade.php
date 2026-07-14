@@ -1410,7 +1410,8 @@
     $workingHours = $settings['kiosk.working_hours'] ?? '07:30 - 18:00';
     $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
     $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
-    $logoUrls = array_values(array_filter([$ownerLogoUrl, $customerLogoUrl]));
+    $logoUrls = array_values(array_unique(array_filter([$ownerLogoUrl, $customerLogoUrl])));
+    [$ownerLogoUrl, $customerLogoUrl] = [$logoUrls[0] ?? null, $logoUrls[1] ?? null];
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
     $secondaryColor = $settings['kiosk.secondary_color'] ?? '#0cb4d8';

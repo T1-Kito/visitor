@@ -43,6 +43,7 @@
                 ['label' => 'Tạo lịch hẹn', 'desc' => 'Đăng ký khách mới', 'slug' => 'visits.manage'],
                 ['label' => 'Sửa lịch hẹn', 'desc' => 'Cập nhật thông tin lịch', 'slug' => 'visits.manage'],
                 ['label' => 'Hủy lịch hẹn', 'desc' => 'Hủy lịch khi cần', 'slug' => 'visits.manage'],
+                ['label' => 'Xóa lịch hẹn', 'desc' => 'Xóa hoàn toàn lịch hẹn', 'slug' => 'visits.delete'],
                 ['label' => 'Gửi QR qua email', 'desc' => 'Gửi mã QR cho khách', 'slug' => 'visits.manage'],
             ],
         ],
@@ -51,6 +52,7 @@
             'items' => [
                 ['label' => 'Xem yêu cầu duyệt', 'desc' => 'Danh sách lịch chờ duyệt', 'slug' => 'approvals.manage'],
                 ['label' => 'Duyệt lịch hẹn', 'desc' => 'Chấp thuận hoặc từ chối', 'slug' => 'approvals.manage'],
+                ['label' => 'Từ chối duyệt khách', 'desc' => 'Cho phép thực hiện thao tác từ chối', 'slug' => 'approvals.delete'],
             ],
         ],
         'access' => [
@@ -60,6 +62,7 @@
                 ['label' => 'Check-in khách', 'desc' => 'Xác nhận khách vào', 'slug' => 'checkin.manage'],
                 ['label' => 'Check-out khách', 'desc' => 'Xác nhận khách ra', 'slug' => 'checkin.manage'],
                 ['label' => 'Xem danh sách ra/vào', 'desc' => 'Tra cứu lịch sử ra vào', 'slug' => 'checkin.manage'],
+                ['label' => 'Xóa dữ liệu khách ra/vào', 'desc' => 'Quyền xóa dữ liệu vận hành ra/vào', 'slug' => 'access.delete'],
             ],
         ],
         'visitors' => [
@@ -68,7 +71,7 @@
                 ['label' => 'Xem khách', 'desc' => 'Danh bạ khách', 'slug' => 'visitors.manage'],
                 ['label' => 'Thêm khách', 'desc' => 'Tạo hồ sơ khách', 'slug' => 'visitors.manage'],
                 ['label' => 'Sửa khách', 'desc' => 'Cập nhật hồ sơ khách', 'slug' => 'visitors.manage'],
-                ['label' => 'Xóa khách', 'desc' => 'Xóa hồ sơ khách', 'slug' => 'visitors.manage'],
+                ['label' => 'Xóa khách', 'desc' => 'Xóa hồ sơ khách', 'slug' => 'visitors.delete'],
             ],
         ],
         'employees' => [
@@ -111,6 +114,8 @@
                 ['label' => 'Cài đặt máy in', 'desc' => 'Cấu hình in phiếu', 'slug' => 'system.manage'],
                 ['label' => 'Phân quyền', 'desc' => 'Quản lý vai trò và quyền', 'slug' => 'system.manage'],
                 ['label' => 'Cảnh báo an ninh', 'desc' => 'Danh sách cảnh báo', 'slug' => 'alerts.view'],
+                ['label' => 'Xóa cảnh báo', 'desc' => 'Xóa quy tắc cảnh báo an ninh', 'slug' => 'alerts.delete'],
+                ['label' => 'Xóa thông báo', 'desc' => 'Xóa thông báo của tài khoản', 'slug' => 'notifications.delete'],
             ],
         ],
     ];

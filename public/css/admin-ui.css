@@ -4322,6 +4322,10 @@ textarea.form-control:focus {
     overflow: hidden;
 }
 
+.sidebar-panel .brand-badge.has-logo img {
+    border-radius: 18px;
+}
+
 
 
 

@@ -22,8 +22,10 @@ class RestrictPublicRegistrationPort
             'POST kiosk/checkin/manual',
         ];
         $requestSignature = strtoupper($request->method()).' '.$request->path();
+        $isRegistrationStatus = $request->isMethod('GET')
+            && $request->is('kiosk/checkin/status/*', 'kiosk/status/*');
 
-        abort_unless(in_array($requestSignature, $allowedRequests, true), 404);
+        abort_unless($isRegistrationStatus || in_array($requestSignature, $allowedRequests, true), 404);
 
         return $next($request);
     }

@@ -25,7 +25,7 @@
                     <i class="bi bi-pencil"></i>
                     Sửa
                 </button>
-                @if ($visitor->visits_count === 0)
+                @if ($visitor->visits_count === 0 && auth()->user()?->hasPermission('visitors.delete'))
                     <form method="post" action="{{ route('admin.visitors.destroy', $visitor) }}" onsubmit="return confirm('Xóa hồ sơ khách này?')">
                         @csrf
                         @method('DELETE')

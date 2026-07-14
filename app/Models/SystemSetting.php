@@ -33,8 +33,18 @@ class SystemSetting extends Model
 
         $values = array_merge($defaults, $stored);
 
-        if (empty($values['admin.logo_url']) && ! empty($defaults['admin.logo_url'])) {
-            $values['admin.logo_url'] = $defaults['admin.logo_url'];
+        $defaultLogoKeys = [
+            'admin.logo_url',
+            'login.logo_url',
+            'kiosk.owner_logo_url',
+            'kiosk.customer_logo_url',
+            'kiosk.logo_url',
+        ];
+
+        foreach ($defaultLogoKeys as $key) {
+            if (empty($values[$key]) && ! empty($defaults[$key])) {
+                $values[$key] = $defaults[$key];
+            }
         }
 
         $publicAssetKeys = [

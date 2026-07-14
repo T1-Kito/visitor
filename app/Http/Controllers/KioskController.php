@@ -193,11 +193,14 @@ class KioskController extends Controller
 
         if (PublicRegistrationAccess::isPublicPortRequest($request)) {
             $request->session()->forget(['kiosk_checkin_visit_id', 'kiosk_last_visit_id']);
+            $request->session()->flash('kiosk_success_return_url', route('kiosk.register'));
 
             return redirect()
-                ->route('kiosk.register')
+                ->route('kiosk.checkin.status', $visit)
                 ->with('status', 'Đã gửi yêu cầu đăng ký. Vui lòng chờ nhân viên phụ trách phê duyệt.');
         }
+
+        $request->session()->flash('kiosk_success_return_url', route('kiosk.index'));
 
         return redirect()
             ->route('kiosk.checkin.status', $visit)
@@ -507,6 +510,7 @@ class KioskController extends Controller
             'visit' => $visit,
             'canConfirm' => (int) $request->session()->get('kiosk_checkin_visit_id') === $visit->id,
             'kioskSettings' => SystemSetting::values(SystemSetting::kioskDefaults()),
+            'successReturnUrl' => $request->session()->get('kiosk_success_return_url', route('kiosk.index')),
         ]);
     }
 

@@ -23,6 +23,6 @@ class AdminSeederTest extends TestCase
         $this->assertSame('admin@company.local', $admin->email);
         $this->assertTrue($admin->is_active);
         $this->assertSame(['admin'], $admin->roles->pluck('slug')->all());
-        $this->assertCount(11, $admin->roles->first()->permissions);
+        $this->assertCount(17, $admin->roles->first()->permissions);
     }
 }

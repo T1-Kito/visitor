@@ -867,6 +867,16 @@ class SystemAdminController extends Controller
             'working_hours' => ['required', 'string', 'max:80'],
             'login_title' => ['required', 'string', 'max:120'],
             'login_subtitle' => ['required', 'string', 'max:180'],
+            'admin_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'login_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'owner_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'customer_logo_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'favicon_file' => ['nullable', 'file', 'mimes:ico,jpg,jpeg,png,webp,svg', 'max:1024'],
+            'remove_admin_logo' => ['nullable', 'boolean'],
+            'remove_login_logo' => ['nullable', 'boolean'],
+            'remove_owner_logo' => ['nullable', 'boolean'],
+            'remove_customer_logo' => ['nullable', 'boolean'],
+            'remove_favicon' => ['nullable', 'boolean'],
             'background_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_background' => ['nullable', 'boolean'],
             'primary_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -877,6 +887,31 @@ class SystemAdminController extends Controller
         ]);
 
         $currentSettings = SystemSetting::values(SystemSetting::kioskDefaults());
+
+        $logoSettings = [
+            'admin.logo_url' => ['file' => 'admin_logo_file', 'remove' => 'remove_admin_logo', 'prefix' => 'admin-logo'],
+            'login.logo_url' => ['file' => 'login_logo_file', 'remove' => 'remove_login_logo', 'prefix' => 'login-logo'],
+            'kiosk.owner_logo_url' => ['file' => 'owner_logo_file', 'remove' => 'remove_owner_logo', 'prefix' => 'owner-logo'],
+            'kiosk.customer_logo_url' => ['file' => 'customer_logo_file', 'remove' => 'remove_customer_logo', 'prefix' => 'customer-logo'],
+            'app.favicon_url' => ['file' => 'favicon_file', 'remove' => 'remove_favicon', 'prefix' => 'favicon'],
+        ];
+        $resolvedLogos = [];
+
+        foreach ($logoSettings as $settingKey => $logoSetting) {
+            $currentUrl = $currentSettings[$settingKey] ?? null;
+
+            if ($request->boolean($logoSetting['remove'])) {
+                $this->deleteKioskUpload($currentUrl);
+                $currentUrl = null;
+            }
+
+            $resolvedLogos[$settingKey] = $this->resolveUploadedSetting(
+                $request,
+                $currentUrl,
+                $logoSetting['file'],
+                $logoSetting['prefix'],
+            );
+        }
 
         $backgroundUrl = $currentSettings['kiosk.background_url'] ?? null;
         if ($request->boolean('remove_background')) {
@@ -889,6 +924,7 @@ class SystemAdminController extends Controller
         }
 
         SystemSetting::putMany([
+            ...$resolvedLogos,
             'kiosk.company_name' => $validated['company_name'],
             'kiosk.system_name' => $validated['system_name'],
             'kiosk.subtitle' => $validated['subtitle'],

@@ -261,13 +261,17 @@
                         @else
                             <form action="{{ route('admin.approvals.approve', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn success w-100" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check-circle"></i>Duyệt lịch</button></form>
                         @endif
-                        <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x-circle"></i>Từ chối</button></form>
+                        @if (auth()->user()?->hasPermission('approvals.delete'))
+                            <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="Từ chối từ trang chi tiết."><button class="va-btn danger w-100" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x-circle"></i>Từ chối</button></form>
+                        @endif
                     @elseif ($visit->status === 'approved')
                         <span class="va-btn soft w-100"><i class="bi bi-check-circle"></i>&#272;&#227; duy&#7879;t</span>
                         @if ($hideQrWorkflow)
                             <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&#253;..."><i class="bi bi-box-arrow-in-right"></i>Cho kh&#225;ch v&#224;o</button></form>
                         @else
-                            <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="T&#7915; ch&#7889;i t&#7915; trang chi ti&#7871;t."><button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang t&#7915; ch&#7889;i..."><i class="bi bi-x-circle"></i>T&#7915; ch&#7889;i</button></form>
+                            @if (auth()->user()?->hasPermission('approvals.delete'))
+                                <form action="{{ route('admin.approvals.reject', $visit) }}" method="post" data-disable-on-submit>@csrf<input type="hidden" name="reason" value="T&#7915; ch&#7889;i t&#7915; trang chi ti&#7871;t."><button class="va-btn danger w-100" type="submit" data-loading-text="&#272;ang t&#7915; ch&#7889;i..."><i class="bi bi-x-circle"></i>T&#7915; ch&#7889;i</button></form>
+                            @endif
                             <form action="{{ route('admin.checkin.confirm', $visit) }}" method="post" data-disable-on-submit>@csrf<button class="va-btn primary w-100" type="submit" data-loading-text="&#272;ang x&#7917; l&#253;..."><i class="bi bi-box-arrow-in-right"></i>Cho kh&#225;ch v&#224;o</button></form>
                         @endif
                     @elseif ($visit->status === 'checked_in')
@@ -334,16 +338,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Khu v&#7921;c truy c&#7853;p</label>
-                        <select name="access_zone" class="form-select">
-                            <option value="">Ch&#7885;n khu v&#7921;c</option>
-                            @foreach ($accessZones as $zone)
-                                <option value="{{ $zone }}" @selected(old('access_zone', $visit->access_zone) === $zone)>{{ $zone }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     <div class="col-12 pt-2"><div class="fw-semibold text-danger small text-uppercase">Th&#244;ng tin chuy&#7871;n th&#259;m</div></div>
                     <div class="col-12"><label class="form-label">M&#7909;c &#273;&#237;ch &#273;&#7871;n *</label><input type="text" name="purpose" value="{{ old('purpose', $visit->purpose) }}" class="form-control" required></div>
                     <div class="col-12"><label class="form-label">Ghi ch&#250; ti&#7871;p &#273;&#243;n</label><textarea name="visitor_note" class="form-control" rows="3">{{ old('visitor_note', $visit->visitor?->note) }}</textarea></div>

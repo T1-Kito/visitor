@@ -48,6 +48,17 @@ Enable-WindowsOptionalFeature -Online -FeatureName `
     IIS-ISAPIExtensions, IIS-ISAPIFilter, IIS-ManagementConsole, `
     IIS-ManagementScriptingTools `
     -All -NoRestart | Out-Null
+
+foreach ($serviceName in @('WAS', 'W3SVC')) {
+    Set-Service -Name $serviceName -StartupType Automatic -ErrorAction SilentlyContinue
+    Start-Service -Name $serviceName -ErrorAction SilentlyContinue
+}
+
+$iisServicesReady = (Get-Service WAS, W3SVC -ErrorAction SilentlyContinue | Where-Object Status -ne 'Running').Count -eq 0
+if (-not $iisServicesReady) {
+    throw "IIS da duoc bat nhung dich vu WAS/W3SVC chua khoi dong. Hay khoi dong lai Windows roi chay lai bo cai."
+}
+
 Import-Module WebAdministration -ErrorAction Stop
 
 Write-Host "Dang dung ban cai cu neu co..."
@@ -255,8 +266,13 @@ Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name processModel.identityType -V
 Set-ItemProperty "IIS:\AppPools\$appPoolName" -Name startMode -Value AlwaysRunning
 
 $phpCgi = Join-Path $phpPath "php-cgi.exe"
-& $appcmd set config /section:system.webServer/fastCgi "/+[fullPath='$phpCgi',maxInstances='8',instanceMaxRequests='10000',activityTimeout='120',requestTimeout='120']" /commit:apphost 2>$null
-& $appcmd set config /section:system.webServer/handlers "/+[name='PHP_via_FastCGI',path='*.php',verb='GET,HEAD,POST,PUT,DELETE,PATCH,OPTIONS',modules='FastCgiModule',scriptProcessor='$phpCgi',resourceType='Either',requireAccess='Script']" /commit:apphost 2>$null
+& $appcmd set config /section:system.webServer/fastCgi "/-[fullPath='$phpCgi']" /commit:apphost 2>$null | Out-Null
+& $appcmd set config /section:system.webServer/fastCgi "/+[fullPath='$phpCgi',maxInstances='8',instanceMaxRequests='10000',activityTimeout='120',requestTimeout='120']" /commit:apphost
+if ($LASTEXITCODE -ne 0) { throw "Khong cau hinh duoc IIS FastCGI." }
+
+& $appcmd set config /section:system.webServer/handlers "/-[name='PHP_via_FastCGI']" /commit:apphost 2>$null | Out-Null
+& $appcmd set config /section:system.webServer/handlers "/+[name='PHP_via_FastCGI',path='*.php',verb='GET,HEAD,POST,PUT,DELETE,PATCH,OPTIONS',modules='FastCgiModule',scriptProcessor='$phpCgi',resourceType='Either',requireAccess='Script']" /commit:apphost
+if ($LASTEXITCODE -ne 0) { throw "Khong cau hinh duoc PHP handler tren IIS." }
 
 New-Website -Name $siteName -Port $WebPort -PhysicalPath (Join-Path $appPath "public") -ApplicationPool $appPoolName | Out-Null
 
@@ -288,7 +304,14 @@ $secrets = @{
 } | ConvertTo-Json
 $secrets | Set-Content (Join-Path $InstallPath "data\installation-secrets.json") -Encoding UTF8
 
+Start-WebAppPool -Name $appPoolName
 Start-Website -Name $siteName
+
+$poolState = (Get-WebAppPoolState -Name $appPoolName).Value
+$siteState = (Get-WebsiteState -Name $siteName).Value
+if ($poolState -ne 'Started' -or $siteState -ne 'Started') {
+    throw "IIS chua khoi dong duoc website (AppPool=$poolState, Website=$siteState)."
+}
 Start-Process "http://localhost:$WebPort"
 
 Write-Host ""

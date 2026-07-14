@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasAdminLayoutData;
 use App\Models\AuditLog;
+use App\Models\Badge;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Visit;
 use App\Models\Visitor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -685,6 +688,10 @@ class CatalogController extends Controller
                         'status' => 'available',
                         'issued_at' => null,
                     ]);
+
+                // Older on-premise databases may not have the visitor cascade.
+                // Delete appointments explicitly to prevent a foreign-key 500.
+                Visit::query()->whereIn('id', $visitIds)->delete();
             }
 
             $visitor->delete();

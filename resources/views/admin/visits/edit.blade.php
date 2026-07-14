@@ -91,12 +91,11 @@
             <section class="panel-card">
                 <div class="panel-header">
                     <div>
-                        <h3>Quyen truy cap va an ninh</h3>
-                        <p>Cap nhat khu vuc va hinh thuc check-in.</p>
+                        <h3>Hinh thuc check-in</h3>
+                        <p>Cap nhat cach tiep nhan khach.</p>
                     </div>
                 </div>
                 <div class="row g-3">
-                    <input type="hidden" name="access_zone" value="{{ old('access_zone', $visit->access_zone) }}">
                     <div class="col-md-6">
                         <label class="form-label">Loai check-in</label>
                         <select name="checkin_method" class="form-select" required>

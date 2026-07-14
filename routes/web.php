@@ -115,7 +115,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:visits.manage')
         ->name('admin.visits.cancel');
     Route::delete('/visits/{visit}', [AdminUiController::class, 'visitsDestroy'])
-        ->middleware('permission:visits.manage')
+        ->middleware('permission:visits.delete')
         ->name('admin.visits.destroy');
     Route::post('/visits/{visit}/generate-qr', [AdminUiController::class, 'generateVisitQr'])
         ->middleware('permission:visits.manage')
@@ -131,6 +131,7 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/approvals/{visit}/approve-checkin', [AdminUiController::class, 'approveAndCheckin'])
         ->name('admin.approvals.approve-checkin');
     Route::post('/approvals/{visit}/reject', [AdminUiController::class, 'rejectVisit'])
+        ->middleware('permission:approvals.delete')
         ->name('admin.approvals.reject');
     Route::post('/approvals/{visit}/wait', [AdminUiController::class, 'waitVisit'])
         ->name('admin.approvals.wait');
@@ -204,7 +205,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:alerts.view')
         ->name('admin.watchlists.update');
     Route::delete('/watchlists/{watchlist}', [AdminUiController::class, 'watchlistsDestroy'])
-        ->middleware('permission:alerts.view')
+        ->middleware('permission:alerts.delete')
         ->name('admin.watchlists.destroy');
 
     Route::get('/notifications', [AdminUiController::class, 'notificationsIndex'])
@@ -216,6 +217,7 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/notifications/read-all', [AdminUiController::class, 'markAllNotificationsRead'])
         ->name('admin.notifications.read-all');
     Route::delete('/notifications/{notification}', [AdminUiController::class, 'notificationsDestroy'])
+        ->middleware('permission:notifications.delete')
         ->name('admin.notifications.destroy');
 
     Route::get('/departments', [CatalogController::class, 'departmentsIndex'])
@@ -281,7 +283,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:visitors.manage')
         ->name('admin.visitors.update');
     Route::delete('/visitors/{visitor}', [CatalogController::class, 'visitorsDestroy'])
-        ->middleware('permission:visitors.manage')
+        ->middleware('permission:visitors.delete')
         ->name('admin.visitors.destroy');
 
     Route::get('/reports', [AdminUiController::class, 'reportsIndex'])

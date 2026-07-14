@@ -299,6 +299,7 @@
                             </form>
                         @endif
                     
+                        @if (auth()->user()?->hasPermission('notifications.delete'))
                         <form method="post" action="{{ route('admin.notifications.destroy', $notification) }}" onsubmit="return confirm('Xóa thông báo này?')" data-disable-on-submit>
                             @csrf
                             @method('delete')
@@ -307,6 +308,7 @@
                                 Xóa
                             </button>
                         </form>
+                        @endif
                     </div>
                 </article>
             @empty

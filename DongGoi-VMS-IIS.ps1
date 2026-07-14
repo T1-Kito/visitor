@@ -46,6 +46,11 @@ New-Item -ItemType Directory -Force -Path `
     (Join-Path $appTarget "storage\framework\views"), `
     (Join-Path $appTarget "storage\logs") | Out-Null
 
+# Khong mang cache package discovery tu may phat trien vao ban production.
+# Cac file nay co the tham chieu package dev (vi du Laravel Pail) da bi loai bo boi --no-dev.
+Get-ChildItem (Join-Path $appTarget "bootstrap\cache") -Filter "*.php" -ErrorAction SilentlyContinue |
+    Remove-Item -Force
+
 Write-Host "Dang chuan bi vendor production..."
 if (Get-Command composer -ErrorAction SilentlyContinue) {
     Push-Location $appTarget

@@ -582,6 +582,8 @@
     $lobbyModeEnabled = ($settings['kiosk.lobby_mode_enabled'] ?? '0') === '1';
     $ownerLogoUrl = $settings['kiosk.owner_logo_url'] ?? ($settings['admin.logo_url'] ?? null);
     $customerLogoUrl = $settings['kiosk.customer_logo_url'] ?? ($settings['kiosk.logo_url'] ?? null);
+    $logoUrls = array_values(array_unique(array_filter([$ownerLogoUrl, $customerLogoUrl])));
+    [$ownerLogoUrl, $customerLogoUrl] = [$logoUrls[0] ?? null, $logoUrls[1] ?? null];
     $primaryColor = $settings['kiosk.primary_color'] ?? '#146bd7';
     $primaryColor = preg_match('/^#[0-9a-fA-F]{6}$/', (string) $primaryColor) ? $primaryColor : '#146bd7';
 
@@ -722,6 +724,11 @@
                         </form>
                     @endif
                 </div>
+                @if ($isJustSubmitted)
+                    <p class="ks-lead" data-auto-return>
+                        Tự động quay lại màn hình đăng ký sau <strong id="ksReturnCountdown">30</strong> giây.
+                    </p>
+                @endif
             </section>
         </section>
 
@@ -760,6 +767,8 @@
             'Vui lòng ngồi chờ tại khu vực tiếp khách.': 'Please wait in the reception area.',
             'Về trang chủ': 'Back to home',
             'Xác nhận check-in': 'Confirm check-in',
+            'Tự động quay lại màn hình đăng ký sau': 'Automatically returning to the registration screen in',
+            'giây.': 'seconds.',
         };
         const reverseStatusTranslations = Object.fromEntries(
             Object.entries(statusTranslations).map(([vi, en]) => [en, vi])
@@ -817,6 +826,20 @@
         translateStatusPage();
         updateClock();
         setInterval(updateClock, 30000);
+
+        @if ($isJustSubmitted)
+        let returnSeconds = 30;
+        const returnCountdown = document.getElementById('ksReturnCountdown');
+        const returnUrl = @json($successReturnUrl ?? route('kiosk.index'));
+        const returnTimer = window.setInterval(function () {
+            returnSeconds -= 1;
+            if (returnCountdown) returnCountdown.textContent = String(Math.max(returnSeconds, 0));
+            if (returnSeconds <= 0) {
+                window.clearInterval(returnTimer);
+                window.location.replace(returnUrl);
+            }
+        }, 1000);
+        @endif
     </script>
 </body>
 </html>

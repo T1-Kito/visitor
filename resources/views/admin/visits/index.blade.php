@@ -133,11 +133,13 @@
                                 @elseif ($visit['status'] === 'checked_in')
                                     <form action="{{ route('admin.checkout.confirm', $visit['id']) }}" method="post" data-disable-on-submit>@csrf<button class="vs-icon-btn checkout" type="submit" title="Cho khach ra" aria-label="Cho khach ra"><i class="bi bi-box-arrow-right"></i></button></form>
                                 @endif
+                                @if (auth()->user()?->hasPermission('visits.delete'))
                                 <form class="vs-delete-action" action="{{ route('admin.visits.destroy', $visit['id']) }}" method="post" onsubmit="return confirm('Xoa lich hen nay?')" data-disable-on-submit>
                                     @csrf
                                     @method('delete')
                                     <button class="vs-icon-btn danger" type="submit" title="Xoa lich hen" aria-label="Xoa lich hen"><i class="bi bi-trash"></i></button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

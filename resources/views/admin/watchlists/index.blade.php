@@ -134,6 +134,7 @@
                                 <a class="watchlist-icon-btn" href="{{ route('admin.watchlists.edit', $watchlist) }}" title="Sửa quy tắc">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                @if (auth()->user()?->hasPermission('alerts.delete'))
                                 <form method="post" action="{{ route('admin.watchlists.destroy', $watchlist) }}" onsubmit="return confirm('Xóa quy tắc cảnh báo này?')">
                                     @csrf
                                     @method('DELETE')
@@ -141,6 +142,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -137,11 +137,13 @@
                                 <button class="ap-btn ap-btn-approve" type="submit" data-loading-text="Đang duyệt..."><i class="bi bi-check2"></i> Duyệt</button>
                             @endif
                         </form>
+                        @if (auth()->user()?->hasPermission('approvals.delete'))
                         <form action="{{ route('admin.approvals.reject', $visit['id']) }}" method="post" data-disable-on-submit>
                             @csrf
                             <input type="hidden" name="reason" value="Yêu cầu tiếp khách không phù hợp.">
                             <button class="ap-btn ap-btn-reject" type="submit" data-loading-text="Đang từ chối..."><i class="bi bi-x"></i> Từ chối</button>
                         </form>
+                        @endif
                     @else
                         <span class="ap-processed" title="Đã xử lý" aria-label="Đã xử lý"><i class="bi bi-check2"></i></span>
                     @endif

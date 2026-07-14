@@ -26,6 +26,12 @@ class AdminSeeder extends Seeder
                 ['name' => 'Quan ly khach', 'slug' => 'visitors.manage'],
                 ['name' => 'Quan ly badge', 'slug' => 'badges.manage'],
                 ['name' => 'Xem canh bao', 'slug' => 'alerts.view'],
+                ['name' => 'Xoa lich hen', 'slug' => 'visits.delete'],
+                ['name' => 'Tu choi duyet khach', 'slug' => 'approvals.delete'],
+                ['name' => 'Xoa du lieu khach ra vao', 'slug' => 'access.delete'],
+                ['name' => 'Xoa canh bao', 'slug' => 'alerts.delete'],
+                ['name' => 'Xoa thong bao', 'slug' => 'notifications.delete'],
+                ['name' => 'Xoa khach', 'slug' => 'visitors.delete'],
             ])->map(function (array $permission): Permission {
                 return Permission::query()->updateOrCreate(
                     ['slug' => $permission['slug']],

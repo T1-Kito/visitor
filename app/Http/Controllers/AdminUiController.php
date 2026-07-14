@@ -1172,7 +1172,7 @@ class AdminUiController extends Controller
             'expected_checkout_at' => $expectedCheckoutAt,
             'status' => 'pending',
             'purpose' => $validated['purpose'],
-            'access_zone' => $validated['access_zone'] ?? null,
+            'access_zone' => $visit->access_zone,
             'checkin_method' => $validated['checkin_method'],
             'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
             'qr_expires_at' => $qrBaseTime->copy()->addDay(),
@@ -4234,6 +4234,8 @@ XML;
             'reason' => ['required', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        return $validated;
     }
 
     /**
