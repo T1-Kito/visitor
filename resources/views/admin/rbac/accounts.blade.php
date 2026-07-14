@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Tài khoản nhân viên | Visitor Management')
-@section('page_title', 'Tài khoản nhân viên')
-@section('page_subtitle', 'Liên kết tài khoản đăng nhập với nhân viên nội bộ và vai trò vận hành')
+@section('page_title', '')
+@section('page_subtitle', '')
 
 @push('styles')
 <style>
@@ -24,21 +24,14 @@
 @endphp
 
 <div class="acct-shell">
-    <section class="acct-toolbar">
-        <div>
-            <h2>Tạo tài khoản đăng nhập cho nhân viên</h2>
-            <p>Host là vai trò gán cho nhân viên nội bộ; tài khoản sẽ được liên kết vào employees.user_id.</p>
-        </div>
-        <div class="acct-actions">
-            <a class="acct-btn" href="{{ route('admin.rbac.index') }}"><i class="bi bi-shield-lock"></i>Ma trận phân quyền</a>
-        </div>
-    </section>
-
     <section class="acct-card">
         <div class="acct-card-head">
             <div>
                 <h3>Tài khoản mới</h3>
                 <p>Chọn nhân viên, email đăng nhập và vai trò vận hành.</p>
+            </div>
+            <div class="acct-actions">
+                <a class="acct-btn" href="{{ route('admin.rbac.index') }}"><i class="bi bi-shield-lock"></i>Ma trận phân quyền</a>
             </div>
         </div>
         <form class="acct-form" method="post" action="{{ route('admin.rbac.users.store') }}">
