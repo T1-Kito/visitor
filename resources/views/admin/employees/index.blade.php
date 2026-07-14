@@ -118,13 +118,11 @@
                                         aria-label="Sửa nhân viên {{ $employee->name }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                @if ($employee->hosted_visits_count === 0)
-                                    <form method="post" action="{{ route('admin.employees.destroy', $employee) }}" onsubmit="return confirm('Xóa nhân viên này?')">
-                                        @csrf
-                                        @method('delete')
-                                        <button class="resource-icon-btn danger" type="submit" title="Xóa nhân viên"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                @endif
+                                <form method="post" action="{{ route('admin.employees.destroy', $employee) }}" onsubmit="return confirm('Xóa nhân viên này? Các lịch tiếp khách cũ vẫn được giữ lại.')">
+                                    @csrf
+                                    @method('delete')
+                                    <button class="resource-icon-btn danger" type="submit" title="Xóa nhân viên"><i class="bi bi-trash"></i></button>
+                                </form>
                             </div>
                         </td>
                     </tr>

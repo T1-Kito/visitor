@@ -564,17 +564,26 @@ class CatalogController extends Controller
 
     public function employeesDestroy(Employee $employee): RedirectResponse
     {
-        if ($employee->hostedVisits()->exists()) {
-            return redirect()
-                ->back()
-                ->with('error', 'Khong the xoa nhan vien da co lich tiep khach. Hay chuyen sang inactive neu khong con lam viec.');
-        }
-
         $employeeId = (string) $employee->id;
         $employeeEmail = $employee->email;
-        $employee->delete();
+        $employeeName = $employee->name;
+        $hostedVisitsCount = $employee->hostedVisits()->count();
 
-        $this->logAudit('employee.deleted', 'employee', $employeeId, ['email' => $employeeEmail]);
+        DB::transaction(function () use ($employee, $employeeName): void {
+            $employee->hostedVisits()
+                ->where(function ($query): void {
+                    $query->whereNull('host_name')->orWhere('host_name', '');
+                })
+                ->update(['host_name' => $employeeName]);
+
+            $employee->hostedVisits()->update(['host_employee_id' => null]);
+            $employee->delete();
+        });
+
+        $this->logAudit('employee.deleted', 'employee', $employeeId, [
+            'email' => $employeeEmail,
+            'hosted_visits_detached' => $hostedVisitsCount,
+        ]);
 
         return redirect()
             ->route('admin.employees.index')

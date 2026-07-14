@@ -268,7 +268,7 @@
                     Sửa
                 </button>
                 @if ($visits->isEmpty())
-                    <form method="post" action="{{ route('admin.employees.destroy', $employee) }}" onsubmit="return confirm('Xóa nhân viên này?')">
+                    <form method="post" action="{{ route('admin.employees.destroy', $employee) }}" onsubmit="return confirm('Xóa nhân viên này? Các lịch tiếp khách cũ vẫn được giữ lại.')">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-outline-danger" type="submit" title="Xóa nhân viên">

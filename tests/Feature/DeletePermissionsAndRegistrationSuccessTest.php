@@ -53,6 +53,27 @@ class DeletePermissionsAndRegistrationSuccessTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_delete_employee_and_keep_old_appointment_history(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $admin = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $visit = Visit::query()->whereNotNull('host_employee_id')->firstOrFail();
+        $employee = Employee::query()->findOrFail($visit->host_employee_id);
+        $expectedHostName = $visit->host_name ?: $employee->name;
+
+        $this->actingAs($admin)
+            ->delete(route('admin.employees.destroy', $employee))
+            ->assertRedirect(route('admin.employees.index'));
+
+        $this->assertDatabaseMissing('employees', ['id' => $employee->id]);
+        $this->assertDatabaseHas('visits', [
+            'id' => $visit->id,
+            'host_employee_id' => null,
+            'host_name' => $expectedHostName,
+        ]);
+    }
+
     public function test_manage_permission_does_not_grant_delete_permission(): void
     {
         $this->seed(VmsSeeder::class);
