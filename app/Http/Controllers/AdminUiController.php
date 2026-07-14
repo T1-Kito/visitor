@@ -2661,7 +2661,7 @@ class AdminUiController extends Controller
         $visits = $rangeVisits
             ->when($filters['status'] !== 'all', fn (Collection $items) => $items->where('status', $filters['status']))
             ->when($departmentFilter !== 'all', fn (Collection $items) => $items->filter(
-                fn (Visit $visit) => (string) ($visit->hostEmployee?->department?->id ?? '') === $departmentFilter
+                fn (Visit $visit) => (string) ($visit->department_id ?? $visit->hostEmployee?->department_id ?? '') === $departmentFilter
             ))
             ->when($typeFilter === 'company', fn (Collection $items) => $items->filter(
                 fn (Visit $visit) => filled($visit->visitor?->company)
@@ -2706,7 +2706,7 @@ class AdminUiController extends Controller
                         'tone' => 'warning',
                         'icon' => 'bi-hourglass-split',
                         'title' => 'Chờ duyệt: '.($visit->visitor?->full_name ?? 'Chưa rõ tên'),
-                        'detail' => $visit->code.' · '.($visit->hostEmployee?->name ?? 'Chưa có người tiếp'),
+                        'detail' => $visit->code.' · '.($visit->host_display_name !== '-' ? $visit->host_display_name : 'Chưa có người tiếp'),
                         'time' => $visit->scheduled_at?->format('H:i d/m'),
                         'url' => route('admin.visits.show', $visit),
                     ])
@@ -2725,13 +2725,15 @@ class AdminUiController extends Controller
         }
 
         $topHosts = $visits
-            ->groupBy(fn (Visit $visit) => $visit->hostEmployee?->id ?? 0)
+            ->groupBy(fn (Visit $visit) => $visit->host_employee_id !== null
+                ? 'employee:'.$visit->host_employee_id
+                : 'manual:'.Str::lower($visit->host_display_name))
             ->map(function (Collection $items): array {
                 $visit = $items->first();
 
                 return [
-                    'name' => $visit?->hostEmployee?->name ?? 'Chưa có người tiếp',
-                    'department' => $visit?->hostEmployee?->department?->name ?? '-',
+                    'name' => $visit?->host_display_name !== '-' ? $visit->host_display_name : 'Chưa có người tiếp',
+                    'department' => $visit?->department_display_name ?? '-',
                     'total' => $items->count(),
                 ];
             })
@@ -2740,7 +2742,7 @@ class AdminUiController extends Controller
             ->values();
 
         $topDepartments = $visits
-            ->groupBy(fn (Visit $visit) => $visit->hostEmployee?->department?->name ?? 'Chưa có phòng ban')
+            ->groupBy(fn (Visit $visit) => $visit->department_display_name !== '-' ? $visit->department_display_name : 'Chưa có phòng ban')
             ->map(fn (Collection $items, string $name): array => [
                 'name' => $name,
                 'total' => $items->count(),
@@ -2751,7 +2753,7 @@ class AdminUiController extends Controller
             ->values();
 
         $departments = $rangeVisits
-            ->map(fn (Visit $visit) => $visit->hostEmployee?->department)
+            ->map(fn (Visit $visit) => $visit->department ?? $visit->hostEmployee?->department)
             ->filter()
             ->unique('id')
             ->sortBy('name')
@@ -2811,9 +2813,11 @@ class AdminUiController extends Controller
         $filters = $this->reportFilters($request);
 
         $rows = $this->filteredVisitsQuery($filters)
+            ->withoutEagerLoads()
             ->leftJoin('employees', 'visits.host_employee_id', '=', 'employees.id')
-            ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
-            ->selectRaw('COALESCE(departments.name, "No department") as department')
+            ->leftJoin('departments as visit_departments', 'visits.department_id', '=', 'visit_departments.id')
+            ->leftJoin('departments as employee_departments', 'employees.department_id', '=', 'employee_departments.id')
+            ->selectRaw('COALESCE(visit_departments.name, employee_departments.name, "No department") as department')
             ->selectRaw('COUNT(*) as total')
             ->selectRaw("SUM(CASE WHEN visits.status = 'checked_in' THEN 1 ELSE 0 END) as checked_in")
             ->selectRaw("SUM(CASE WHEN visits.status = 'checked_out' THEN 1 ELSE 0 END) as checked_out")
@@ -2835,11 +2839,13 @@ class AdminUiController extends Controller
         $filters = $this->reportFilters($request);
 
         $rows = $this->filteredVisitsQuery($filters)
+            ->withoutEagerLoads()
             ->leftJoin('employees', 'visits.host_employee_id', '=', 'employees.id')
-            ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
+            ->leftJoin('departments as visit_departments', 'visits.department_id', '=', 'visit_departments.id')
+            ->leftJoin('departments as employee_departments', 'employees.department_id', '=', 'employee_departments.id')
             ->selectRaw('employees.id as host_id')
-            ->selectRaw('COALESCE(employees.name, "No host") as host')
-            ->selectRaw('COALESCE(departments.name, "No department") as department')
+            ->selectRaw('COALESCE(NULLIF(visits.host_name, ""), employees.name, "No host") as host')
+            ->selectRaw('COALESCE(visit_departments.name, employee_departments.name, "No department") as department')
             ->selectRaw('COUNT(*) as total')
             ->selectRaw("SUM(CASE WHEN visits.status = 'checked_in' THEN 1 ELSE 0 END) as checked_in")
             ->selectRaw("SUM(CASE WHEN visits.status = 'checked_out' THEN 1 ELSE 0 END) as checked_out")
@@ -3157,9 +3163,11 @@ class AdminUiController extends Controller
     {
         if ($type === 'by-department') {
             return $this->filteredVisitsQuery($filters)
+                ->withoutEagerLoads()
                 ->leftJoin('employees', 'visits.host_employee_id', '=', 'employees.id')
-                ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
-                ->selectRaw('COALESCE(departments.name, "No department") as department')
+                ->leftJoin('departments as visit_departments', 'visits.department_id', '=', 'visit_departments.id')
+                ->leftJoin('departments as employee_departments', 'employees.department_id', '=', 'employee_departments.id')
+                ->selectRaw('COALESCE(visit_departments.name, employee_departments.name, "No department") as department')
                 ->selectRaw('COUNT(*) as total')
                 ->selectRaw("SUM(CASE WHEN visits.status = 'checked_in' THEN 1 ELSE 0 END) as checked_in")
                 ->selectRaw("SUM(CASE WHEN visits.status = 'checked_out' THEN 1 ELSE 0 END) as checked_out")
@@ -3174,10 +3182,12 @@ class AdminUiController extends Controller
 
         if ($type === 'by-host') {
             return $this->filteredVisitsQuery($filters)
+                ->withoutEagerLoads()
                 ->leftJoin('employees', 'visits.host_employee_id', '=', 'employees.id')
-                ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
-                ->selectRaw('COALESCE(employees.name, "No host") as host')
-                ->selectRaw('COALESCE(departments.name, "No department") as department')
+                ->leftJoin('departments as visit_departments', 'visits.department_id', '=', 'visit_departments.id')
+                ->leftJoin('departments as employee_departments', 'employees.department_id', '=', 'employee_departments.id')
+                ->selectRaw('COALESCE(NULLIF(visits.host_name, ""), employees.name, "No host") as host')
+                ->selectRaw('COALESCE(visit_departments.name, employee_departments.name, "No department") as department')
                 ->selectRaw('COUNT(*) as total')
                 ->selectRaw("SUM(CASE WHEN visits.status = 'checked_in' THEN 1 ELSE 0 END) as checked_in")
                 ->selectRaw("SUM(CASE WHEN visits.status = 'checked_out' THEN 1 ELSE 0 END) as checked_out")

@@ -198,8 +198,8 @@
                         <td><span class="report-code">{{ $visit->code }}</span></td>
                         <td><span class="report-guest">{{ $visit->visitor?->full_name ?? '-' }}</span><span class="report-muted">{{ $visit->visitor?->phone ?? '' }}</span></td>
                         <td>{{ $visit->visitor?->company ?? '-' }}</td>
-                        <td>{{ $visit->hostEmployee?->name ?? '-' }}</td>
-                        <td>{{ $visit->hostEmployee?->department?->name ?? '-' }}</td>
+                        <td>{{ $visit->host_display_name }}</td>
+                        <td>{{ $visit->department_display_name }}</td>
                         <td>{{ $visit->actual_checkin_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td>{{ $visit->actual_checkout_at?->format('d/m/Y H:i') ?? '-' }}</td>
                         <td>{{ $duration }}</td>

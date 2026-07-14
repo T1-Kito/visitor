@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\User;
+use App\Models\Visit;
+use App\Models\Visitor;
 use Database\Seeders\VmsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -71,5 +74,42 @@ class ReportsEndpointsTest extends TestCase
             ->get(route('mobile.home'))
             ->assertOk()
             ->assertSee(route('mobile.reports'), false);
+    }
+
+    public function test_reports_show_manual_host_and_visit_department(): void
+    {
+        $this->seed(VmsSeeder::class);
+
+        $user = User::query()->where('email', 'superadmin@company.local')->firstOrFail();
+        $department = Department::query()->firstOrFail();
+        $visitor = Visitor::query()->create(['full_name' => 'Khach Bao Cao']);
+        $visit = Visit::query()->create([
+            'code' => 'REPORT-MANUAL-HOST',
+            'visitor_id' => $visitor->id,
+            'host_employee_id' => null,
+            'host_name' => 'Nguyen Nguoi Tiep',
+            'department_id' => $department->id,
+            'scheduled_at' => now(),
+            'expected_checkout_at' => now()->addHour(),
+            'status' => 'checked_in',
+            'purpose' => 'Kiem tra bao cao',
+            'checkin_method' => 'manual',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.reports.index'))
+            ->assertOk()
+            ->assertSeeText('Nguyen Nguoi Tiep')
+            ->assertSeeText($department->name);
+
+        $this->actingAs($user)
+            ->getJson(route('admin.reports.by-host'))
+            ->assertOk()
+            ->assertJsonFragment([
+                'host' => 'Nguyen Nguoi Tiep',
+                'department' => $department->name,
+            ]);
+
+        $this->assertSame('Nguyen Nguoi Tiep', $visit->host_display_name);
     }
 }
