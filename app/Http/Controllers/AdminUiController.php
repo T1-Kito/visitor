@@ -3805,14 +3805,26 @@ XML;
     {
         $user->loadMissing('roles');
 
-        return $user->roles->contains(fn ($role): bool => in_array($role->slug, ['super_admin', 'admin'], true));
+        if ($user->roles->contains(fn ($role): bool => in_array($role->slug, ['super_admin', 'admin'], true))) {
+            return true;
+        }
+
+        if (! $user->hasPermission('approvals.manage')) {
+            return false;
+        }
+
+        // Host accounts may only approve appointments assigned to themselves.
+        // Receptionist, department-manager and custom operational roles that are
+        // explicitly granted approvals.manage can process the shared queue.
+        return $user->roles->contains(fn ($role): bool => $role->slug !== 'employee');
     }
 
     private function userCanApproveOwnHostVisits(User $user): bool
     {
         $user->loadMissing('roles');
 
-        return $user->roles->contains(fn ($role): bool => $role->slug === 'employee');
+        return $user->hasPermission('approvals.manage')
+            && $user->roles->contains(fn ($role): bool => $role->slug === 'employee');
     }
 
     /**

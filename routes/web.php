@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permission:dashboard.view')
         ->name('mobile.favorites.update');
     Route::get('/m/approvals', [AdminUiController::class, 'mobileApprovals'])
+        ->middleware('permission:approvals.manage')
         ->name('mobile.approvals');
     Route::get('/m/checkin', [AdminUiController::class, 'mobileCheckin'])
         ->middleware('permission:checkin.manage')
@@ -125,15 +126,19 @@ Route::middleware('auth')->group(function (): void {
         ->name('admin.visits.send-qr-email');
 
     Route::get('/approvals', [AdminUiController::class, 'approvalsIndex'])
+        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.index');
     Route::post('/approvals/{visit}/approve', [AdminUiController::class, 'approveVisit'])
+        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.approve');
     Route::post('/approvals/{visit}/approve-checkin', [AdminUiController::class, 'approveAndCheckin'])
+        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.approve-checkin');
     Route::post('/approvals/{visit}/reject', [AdminUiController::class, 'rejectVisit'])
         ->middleware('permission:approvals.delete')
         ->name('admin.approvals.reject');
     Route::post('/approvals/{visit}/wait', [AdminUiController::class, 'waitVisit'])
+        ->middleware('permission:approvals.manage')
         ->name('admin.approvals.wait');
 
     Route::get('/access', fn () => redirect()->route('admin.visits.index'))
