@@ -229,8 +229,16 @@ $envContent | Set-Content (Join-Path $appPath ".env") -Encoding UTF8
 $php = Join-Path $phpPath "php.exe"
 Push-Location $appPath
 try {
-    & $php artisan migrate --force
-    if ($LASTEXITCODE -ne 0) { throw "Migration database that bai." }
+    & $php artisan config:clear | Out-Host
+
+    $migrationLog = Join-Path $logsPath ("migration-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".log")
+    & $php artisan migrate --force -vvv 2>&1 | Tee-Object -FilePath $migrationLog | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "[LOI] Migration database that bai. Xem chi tiet tai:"
+        Write-Host $migrationLog
+        throw "Migration database that bai. Log chi tiet: $migrationLog"
+    }
     & $php artisan db:seed --class=AdminSeeder --force
     if ($LASTEXITCODE -ne 0) { throw "Khong tao duoc tai khoan admin." }
     & $php artisan storage:link

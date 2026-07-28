@@ -97,7 +97,7 @@ class ReportsEndpointsTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get(route('admin.reports.index'))
+            ->get(route('admin.reports.index', ['status' => 'checked_in']))
             ->assertOk()
             ->assertSeeText('Nguyen Nguoi Tiep')
             ->assertSeeText($department->name);

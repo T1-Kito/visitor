@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HasAdminLayoutData;
-use App\Models\Approval;
 use App\Models\AccessControlLog;
+use App\Models\Approval;
 use App\Models\AuditLog;
 use App\Models\Badge;
 use App\Models\Department;
@@ -16,6 +16,7 @@ use App\Models\UserMobileFavorite;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
+use App\Support\BadgeLifecycle;
 use App\Support\DynamicMailSettings;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,7 +27,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use ZipArchive;
@@ -125,6 +129,7 @@ class AdminUiController extends Controller
             && filled($settings['mail.password'] ?? null)
             && filled($settings['mail.from_address'] ?? null);
     }
+
     public function dashboard(Request $request): View|RedirectResponse
     {
         if ($this->isMobileRequest($request)) {
@@ -155,11 +160,11 @@ class AdminUiController extends Controller
 
         return view('admin.dashboard', $this->withBase([
             'stats' => [
-                'today'        => $summary['today_visits'],
-                'in_company'   => $summary['in_company'],
-                'pending'      => $summary['pending'],
-                'checked_out'  => $summary['checked_out_today'],
-                'overstay'     => $summary['overstay'] ?? 0,
+                'today' => $summary['today_visits'],
+                'in_company' => $summary['in_company'],
+                'pending' => $summary['pending'],
+                'checked_out' => $summary['checked_out_today'],
+                'overstay' => $summary['overstay'] ?? 0,
             ],
             'visits' => $this->mapVisitRows($recentVisits->getCollection()),
             'recentVisits' => $recentVisits,
@@ -491,8 +496,10 @@ class AdminUiController extends Controller
         $visit->load([
             'visitor',
             'hostEmployee.department',
+            'department',
             'approval.approver',
             'activeBadge',
+            'requestedBadge',
         ]);
 
         return view('mobile.visit-show', $this->withBase([
@@ -928,6 +935,7 @@ class AdminUiController extends Controller
             ],
         ]));
     }
+
     public function visitsLiveState(): JsonResponse
     {
         return response()->json($this->adminVisitLiveState());
@@ -1065,6 +1073,7 @@ class AdminUiController extends Controller
             'purpose' => $validated['purpose'],
             'access_zone' => $validated['access_zone'] ?? null,
             'checkin_method' => $validated['checkin_method'],
+            'requested_badge_id' => $this->badgeIdForNumber($validated['visitor_id_card_number'] ?? null),
             'qr_token' => $this->generateQrToken(),
             'qr_expires_at' => $qrBaseTime->copy()->addDay(),
             'rejection_reason' => null,
@@ -1101,9 +1110,11 @@ class AdminUiController extends Controller
         $visit->load([
             'visitor',
             'hostEmployee.department',
+            'department',
             'approval.approver',
             'activeBadge',
             'badges',
+            'requestedBadge',
         ]);
 
         return view('admin.visits.show', $this->withBase([
@@ -1113,7 +1124,7 @@ class AdminUiController extends Controller
             'canGenerateQr' => $visit->status === 'approved',
             'hosts' => $this->hostsForSelect(),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
-            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->visitor?->visitor_id_card_number),
+            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->requestedBadge?->badge_no ?? $visit->visitor?->visitor_id_card_number),
             'accessZones' => $this->accessZones(),
             'activityLogs' => AuditLog::query()
                 ->where('entity_type', 'visit')
@@ -1132,13 +1143,13 @@ class AdminUiController extends Controller
                 ->with('error', "Khong the sua lich {$visit->code} trong trang thai {$visit->status}.");
         }
 
-        $visit->load(['visitor', 'hostEmployee.department']);
+        $visit->load(['visitor', 'hostEmployee.department', 'requestedBadge']);
 
         return view('admin.visits.edit', $this->withBase([
             'visit' => $visit,
             'hosts' => $this->hostsForSelect(),
             'departments' => Department::query()->orderBy('name')->get(['id', 'name']),
-            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->visitor?->visitor_id_card_number),
+            'visitorCardOptions' => $this->visitorCardOptionsForAdmin($visit->requestedBadge?->badge_no ?? $visit->visitor?->visitor_id_card_number),
             'accessZones' => $this->accessZones(),
         ]));
     }
@@ -1177,6 +1188,7 @@ class AdminUiController extends Controller
             'purpose' => $validated['purpose'],
             'access_zone' => $visit->access_zone,
             'checkin_method' => $validated['checkin_method'],
+            'requested_badge_id' => $this->badgeIdForNumber($validated['visitor_id_card_number'] ?? null),
             'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
             'qr_expires_at' => $qrBaseTime->copy()->addDay(),
             'rejection_reason' => null,
@@ -1247,17 +1259,7 @@ class AdminUiController extends Controller
         $code = $visit->code;
         $visitId = $visit->id;
 
-        DB::transaction(function () use ($visit, $visitId): void {
-            Badge::query()
-                ->where('visit_id', $visitId)
-                ->update([
-                    'visit_id' => null,
-                    'status' => 'available',
-                    'issued_at' => null,
-                ]);
-
-            $visit->delete();
-        });
+        DB::transaction(fn (): int => $this->deleteVisitsAndRelated(collect([$visitId])));
 
         $this->logAudit('visit.deleted', 'visit', (string) $visitId, [
             'code' => $code,
@@ -1267,6 +1269,53 @@ class AdminUiController extends Controller
             ->route('admin.visits.index')
             ->with('status', "Da xoa lich hen {$code}.");
     }
+
+    public function visitsBulkDeletePreview(Request $request): JsonResponse
+    {
+        $filters = $this->validateVisitBulkDeleteFilters($request);
+
+        return response()->json([
+            'count' => $this->visitsForBulkDeletion($filters)->count(),
+            'from_date' => $filters['from_date'],
+            'to_date' => $filters['to_date'],
+            'status_scope' => $filters['status_scope'],
+        ]);
+    }
+
+    public function visitsBulkDestroy(Request $request): RedirectResponse
+    {
+        $filters = $this->validateVisitBulkDeleteFilters($request);
+        $request->validate([
+            'confirm_bulk_delete' => ['accepted'],
+        ], [
+            'confirm_bulk_delete.accepted' => 'Bạn phải xác nhận trước khi xóa hàng loạt.',
+        ]);
+
+        $visits = $this->visitsForBulkDeletion($filters)
+            ->get(['id', 'code']);
+
+        if ($visits->isEmpty()) {
+            return redirect()
+                ->route('admin.visits.index')
+                ->with('error', 'Không có lịch hẹn phù hợp trong khoảng ngày đã chọn.');
+        }
+
+        $visitIds = $visits->pluck('id');
+        $deletedCount = DB::transaction(fn (): int => $this->deleteVisitsAndRelated($visitIds));
+
+        $this->logAudit('visit.bulk_deleted', 'visit', 'bulk', [
+            'count' => $deletedCount,
+            'from_date' => $filters['from_date'],
+            'to_date' => $filters['to_date'],
+            'status_scope' => $filters['status_scope'],
+            'codes' => $visits->pluck('code')->take(100)->values()->all(),
+        ]);
+
+        return redirect()
+            ->route('admin.visits.index')
+            ->with('status', "Đã xóa {$deletedCount} lịch hẹn trong khoảng {$filters['from_date']} đến {$filters['to_date']}.");
+    }
+
     public function generateVisitQr(Visit $visit): RedirectResponse
     {
         if ($visit->status !== 'approved') {
@@ -1387,35 +1436,35 @@ class AdminUiController extends Controller
 
         $mapApprovalRows = function (Collection $visits): Collection {
             return $visits->map(function (Visit $visit): array {
-            $createdAt = $visit->created_at instanceof Carbon ? $visit->created_at : null;
-            $waitingMinutes = $createdAt ? max(0, (int) $createdAt->diffInMinutes(now())) : 0;
-            $approvalStatus = $visit->approval?->status;
-            if (! in_array($approvalStatus, ['pending', 'approved', 'rejected'], true)) {
-                $approvalStatus = match ($visit->status) {
-                    'rejected' => 'rejected',
-                    'approved', 'checked_in', 'checked_out' => 'approved',
-                    default => 'pending',
-                };
-            }
+                $createdAt = $visit->created_at instanceof Carbon ? $visit->created_at : null;
+                $waitingMinutes = $createdAt ? max(0, (int) $createdAt->diffInMinutes(now())) : 0;
+                $approvalStatus = $visit->approval?->status;
+                if (! in_array($approvalStatus, ['pending', 'approved', 'rejected'], true)) {
+                    $approvalStatus = match ($visit->status) {
+                        'rejected' => 'rejected',
+                        'approved', 'checked_in', 'checked_out' => 'approved',
+                        default => 'pending',
+                    };
+                }
 
-            return [
-                'id' => $visit->id,
-                'code' => $visit->code,
-                'visitor' => $visit->visitor?->full_name ?? '-',
-                'company' => $visit->visitor?->company ?? '-',
-                'host' => $visit->host_display_name,
-                'department' => $visit->department_display_name,
-                'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
-                'time' => $visit->scheduled_at?->format('H:i') ?? '-',
-                'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
-                'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
-                'created_time' => $createdAt?->format('H:i - d/m/Y') ?? '-',
-                'waiting_minutes' => $waitingMinutes,
-                'status' => $approvalStatus,
-                'visit_status' => $visit->status,
-                'purpose' => $visit->purpose,
-                'note' => $visit->visitor?->note ?? '-',
-            ];
+                return [
+                    'id' => $visit->id,
+                    'code' => $visit->code,
+                    'visitor' => $visit->visitor?->full_name ?? '-',
+                    'company' => $visit->visitor?->company ?? '-',
+                    'host' => $visit->host_display_name,
+                    'department' => $visit->department_display_name,
+                    'creator' => $visit->creator?->name ?? 'Kiosk / Khách tự đăng ký',
+                    'time' => $visit->scheduled_at?->format('H:i') ?? '-',
+                    'date' => $visit->scheduled_at?->format('d/m/Y') ?? '-',
+                    'date_iso' => $visit->scheduled_at?->toDateString() ?? '',
+                    'created_time' => $createdAt?->format('H:i - d/m/Y') ?? '-',
+                    'waiting_minutes' => $waitingMinutes,
+                    'status' => $approvalStatus,
+                    'visit_status' => $visit->status,
+                    'purpose' => $visit->purpose,
+                    'note' => $visit->visitor?->note ?? '-',
+                ];
             })->values();
         };
 
@@ -1475,11 +1524,11 @@ class AdminUiController extends Controller
             ->whereKey($visit->id)
             ->where('status', 'pending')
             ->update([
-            'status' => 'approved',
-            'rejection_reason' => null,
-            'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
-            'qr_expires_at' => $visit->qr_expires_at ?? ($visit->scheduled_at?->lt(now()) ? now() : ($visit->scheduled_at ?? now()))->copy()->addDay(),
-        ]);
+                'status' => 'approved',
+                'rejection_reason' => null,
+                'qr_token' => $visit->qr_token ?: $this->generateQrToken(),
+                'qr_expires_at' => $visit->qr_expires_at ?? ($visit->scheduled_at?->lt(now()) ? now() : ($visit->scheduled_at ?? now()))->copy()->addDay(),
+            ]);
 
         if ($approved !== 1) {
             if ($request->expectsJson()) {
@@ -1617,6 +1666,7 @@ class AdminUiController extends Controller
 
         return redirect()->back()->with('status', "Đã duyệt và xác nhận khách vào cho lịch {$visit->code}.");
     }
+
     public function rejectVisit(Request $request, Visit $visit): RedirectResponse|JsonResponse
     {
         if (! $this->canActOnVisit($visit)) {
@@ -1641,9 +1691,9 @@ class AdminUiController extends Controller
             ->whereKey($visit->id)
             ->whereIn('status', ['pending', 'approved'])
             ->update([
-            'status' => 'rejected',
-            'rejection_reason' => $reason,
-        ]);
+                'status' => 'rejected',
+                'rejection_reason' => $reason,
+            ]);
 
         if ($rejected !== 1) {
             if ($request->expectsJson()) {
@@ -1876,6 +1926,39 @@ class AdminUiController extends Controller
         $keyword = trim((string) $request->query('q', ''));
         $department = trim((string) $request->query('department', ''));
 
+        $applyCommonFilters = function (Builder $query) use ($keyword, $department): void {
+            if ($keyword !== '') {
+                $query->where(function (Builder $nested) use ($keyword): void {
+                    $nested->where('code', 'like', "%{$keyword}%")
+                        ->orWhere('host_name', 'like', "%{$keyword}%")
+                        ->orWhereHas('visitor', function (Builder $visitorQuery) use ($keyword): void {
+                            $visitorQuery->where('full_name', 'like', "%{$keyword}%")
+                                ->orWhere('company', 'like', "%{$keyword}%")
+                                ->orWhere('phone', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('hostEmployee', function (Builder $hostQuery) use ($keyword): void {
+                            $hostQuery->where('name', 'like', "%{$keyword}%");
+                        });
+                });
+            }
+
+            if ($department !== '') {
+                $query->where(function (Builder $departmentFilter) use ($department): void {
+                    $departmentFilter
+                        ->whereHas('department', function (Builder $departmentQuery) use ($department): void {
+                            $departmentQuery->where('name', $department);
+                        })
+                        ->orWhere(function (Builder $hostDepartmentFilter) use ($department): void {
+                            $hostDepartmentFilter
+                                ->whereNull('department_id')
+                                ->whereHas('hostEmployee.department', function (Builder $departmentQuery) use ($department): void {
+                                    $departmentQuery->where('name', $department);
+                                });
+                        });
+                });
+            }
+        };
+
         $query = $this->baseVisitQuery();
 
         match ($type) {
@@ -1884,32 +1967,11 @@ class AdminUiController extends Controller
             'out' => $query->whereBetween('actual_checkout_at', [$from, $to]),
             default => $query->where(function ($nested) use ($from, $to): void {
                 $nested->whereBetween('actual_checkin_at', [$from, $to])
-                    ->orWhereBetween('actual_checkout_at', [$from, $to])
-                    ->orWhere('status', 'checked_in');
+                    ->orWhereBetween('actual_checkout_at', [$from, $to]);
             }),
         };
 
-        if ($keyword !== '') {
-            $query->where(function ($nested) use ($keyword): void {
-                $nested->where('code', 'like', "%{$keyword}%")
-                    ->orWhereHas('visitor', function ($visitorQuery) use ($keyword): void {
-                        $visitorQuery->where('full_name', 'like', "%{$keyword}%")
-                            ->orWhere('company', 'like', "%{$keyword}%")
-                            ->orWhere('phone', 'like', "%{$keyword}%");
-                    })
-                    ->orWhereHas('hostEmployee', function ($hostQuery) use ($keyword): void {
-                        $hostQuery->where('name', 'like', "%{$keyword}%");
-                    });
-            });
-        }
-
-        if ($department !== '') {
-            $query->whereHas('hostEmployee.department', function ($departmentQuery) use ($department): void {
-                $departmentQuery->where('name', $department);
-            });
-        }
-
-        $totalRows = (clone $query)->count();
+        $applyCommonFilters($query);
 
         match ($type) {
             'inside', 'in' => $query->orderByDesc('actual_checkin_at'),
@@ -1956,7 +2018,8 @@ class AdminUiController extends Controller
             $rows = $query->get()->map($mapRow);
         }
 
-        $today = now()->toDateString();
+        $statsQuery = $this->baseVisitQuery();
+        $applyCommonFilters($statsQuery);
 
         return [
             'accessRows' => $rows,
@@ -1968,10 +2031,13 @@ class AdminUiController extends Controller
                 'department' => $department,
             ],
             'listStats' => [
-                'inside' => Visit::query()->where('status', 'checked_in')->count(),
-                'in_today' => Visit::query()->whereDate('actual_checkin_at', $today)->count(),
-                'out_today' => Visit::query()->whereDate('actual_checkout_at', $today)->count(),
-                'all_range' => $totalRows,
+                'inside' => (clone $statsQuery)->where('status', 'checked_in')->count(),
+                'in_range' => (clone $statsQuery)->whereBetween('actual_checkin_at', [$from, $to])->count(),
+                'out_range' => (clone $statsQuery)->whereBetween('actual_checkout_at', [$from, $to])->count(),
+                'all_range' => (clone $statsQuery)->where(function (Builder $nested) use ($from, $to): void {
+                    $nested->whereBetween('actual_checkin_at', [$from, $to])
+                        ->orWhereBetween('actual_checkout_at', [$from, $to]);
+                })->count(),
             ],
             'departments' => Department::query()->orderBy('name')->pluck('name')->all(),
         ];
@@ -1999,22 +2065,22 @@ class AdminUiController extends Controller
             $scannedVisit = $this->baseVisitQuery()->find((int) $scannedVisitId);
         }
 
-        $inCompany      = Visit::query()->where('status', 'checked_in')->count();
+        $inCompany = Visit::query()->where('status', 'checked_in')->count();
         $checkedOutToday = Visit::query()->where('status', 'checked_out')->whereDate('actual_checkout_at', $today)->count();
-        $checkedInToday  = Visit::query()->where('status', 'checked_in')->whereDate('actual_checkin_at', $today)->count();
-        $totalToday      = $inCompany + $checkedOutToday;
+        $checkedInToday = Visit::query()->where('status', 'checked_in')->whereDate('actual_checkin_at', $today)->count();
+        $totalToday = $inCompany + $checkedOutToday;
 
         return view('admin.checkin.index', $this->withBase([
-            'readyToCheckin'  => $this->mapVisitRows($readyToCheckin),
-            'upcomingToday'   => $this->mapVisitRows($approvedWaitingCheckin),
-            'scannedVisit'    => $scannedVisit,
-            'scannedQrExpired'=> $scannedByQr && ($scannedVisit?->qr_expires_at?->lt(now()) ?? false),
-            'todayStats'      => [
-                'total'        => $totalToday,
-                'in_company'   => $inCompany,
-                'checked_out'  => $checkedOutToday,
-                'pct_in'       => $totalToday > 0 ? round($inCompany / $totalToday * 100) : 0,
-                'pct_out'      => $totalToday > 0 ? round($checkedOutToday / $totalToday * 100) : 0,
+            'readyToCheckin' => $this->mapVisitRows($readyToCheckin),
+            'upcomingToday' => $this->mapVisitRows($approvedWaitingCheckin),
+            'scannedVisit' => $scannedVisit,
+            'scannedQrExpired' => $scannedByQr && ($scannedVisit?->qr_expires_at?->lt(now()) ?? false),
+            'todayStats' => [
+                'total' => $totalToday,
+                'in_company' => $inCompany,
+                'checked_out' => $checkedOutToday,
+                'pct_in' => $totalToday > 0 ? round($inCompany / $totalToday * 100) : 0,
+                'pct_out' => $totalToday > 0 ? round($checkedOutToday / $totalToday * 100) : 0,
             ],
         ]));
     }
@@ -2105,6 +2171,7 @@ class AdminUiController extends Controller
             ->with('checkin_scanned_by_qr', $scannedByQr)
             ->with('status', "Đã tự động xác nhận khách vào cho lịch {$visit->code}.");
     }
+
     public function checkoutIndex(): View
     {
         $insideVisits = $this->baseVisitQuery()
@@ -2183,7 +2250,7 @@ class AdminUiController extends Controller
         $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
             || str_contains($nameKey, 'khach khong vao');
 
-        return ($isNoEntryCard ? '9' : '1') . '|' . str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
+        return ($isNoEntryCard ? '9' : '1').'|'.str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -2223,6 +2290,21 @@ class AdminUiController extends Controller
         }
 
         return $options;
+    }
+
+    private function badgeIdForNumber(?string $badgeNo): ?int
+    {
+        $badgeNo = trim((string) $badgeNo);
+
+        if ($badgeNo === '') {
+            return null;
+        }
+
+        $badgeId = Badge::query()
+            ->where('badge_no', $badgeNo)
+            ->value('id');
+
+        return $badgeId !== null ? (int) $badgeId : null;
     }
 
     public function badgesStore(Request $request): RedirectResponse
@@ -2275,7 +2357,7 @@ class AdminUiController extends Controller
             }
 
             for ($number = (int) $rangeStart; $number <= (int) $rangeEnd; $number++) {
-                $badgeNumbers->push($prefix . ' ' . $number);
+                $badgeNumbers->push($prefix.' '.$number);
             }
         }
 
@@ -2300,7 +2382,7 @@ class AdminUiController extends Controller
         $tooLong = $badgeNumbers->first(fn ($value) => mb_strlen($value) > 40);
         if ($tooLong !== null) {
             return back()
-                ->withErrors(['badge_numbers' => 'Số thẻ "' . $tooLong . '" dài quá 40 ký tự.'])
+                ->withErrors(['badge_numbers' => 'Số thẻ "'.$tooLong.'" dài quá 40 ký tự.'])
                 ->withInput();
         }
 
@@ -2311,7 +2393,7 @@ class AdminUiController extends Controller
 
         if (! empty($existing)) {
             return back()
-                ->withErrors(['badge_numbers' => 'Các số thẻ đã tồn tại: ' . implode(', ', array_slice($existing, 0, 12)) . (count($existing) > 12 ? '...' : '')])
+                ->withErrors(['badge_numbers' => 'Các số thẻ đã tồn tại: '.implode(', ', array_slice($existing, 0, 12)).(count($existing) > 12 ? '...' : '')])
                 ->withInput();
         }
 
@@ -2329,13 +2411,13 @@ class AdminUiController extends Controller
 
         return redirect()
             ->route('admin.badges.index')
-            ->with('status', 'Đã thêm ' . $badgeNumbers->count() . ' số thẻ khách.');
+            ->with('status', 'Đã thêm '.$badgeNumbers->count().' số thẻ khách.');
     }
 
     public function badgesUpdate(Request $request, Badge $badge): RedirectResponse
     {
         $validated = $request->validate([
-            'badge_no' => ['required', 'string', 'max:40', \Illuminate\Validation\Rule::unique('badges', 'badge_no')->ignore($badge->id)],
+            'badge_no' => ['required', 'string', 'max:40', Rule::unique('badges', 'badge_no')->ignore($badge->id)],
             'status' => ['required', 'in:available,revoked'],
             'label_vi' => ['required', 'string', 'max:120'],
             'label_en' => ['required', 'string', 'max:120'],
@@ -2389,6 +2471,7 @@ class AdminUiController extends Controller
 
         return redirect()->back()->with('status', "Đã xác nhận khách ra cho lịch {$visit->code}.");
     }
+
     public function scanCheckoutQr(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -2456,6 +2539,7 @@ class AdminUiController extends Controller
             ->with('checkout_scanned_visit_id', $visit->id)
             ->with('status', "Đã tự động xác nhận khách ra cho lịch {$visit->code}.");
     }
+
     public function scanCheckoutBadge(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -2499,6 +2583,7 @@ class AdminUiController extends Controller
             ->with('checkout_scanned_visit_id', $badge->visit->id)
             ->with('status', "Đã tự động xác nhận khách ra bằng thẻ {$badge->badge_no}.");
     }
+
     public function alertsIndex(): View
     {
         $visits = $this->baseVisitQuery()
@@ -2687,6 +2772,7 @@ class AdminUiController extends Controller
             ->route('admin.notifications.index')
             ->with('status', 'Da xoa thong bao.');
     }
+
     public function reportsIndex(Request $request): View
     {
         $filters = $this->reportFilters($request);
@@ -2838,6 +2924,7 @@ class AdminUiController extends Controller
             'statusLabels' => $statusLabels,
         ]));
     }
+
     public function reportsVisits(Request $request): JsonResponse
     {
         $filters = $this->reportFilters($request);
@@ -2966,7 +3053,7 @@ class AdminUiController extends Controller
                 'host' => $visit->host_display_name,
                 'department' => $visit->department_display_name,
                 'access_zone' => $visit->access_zone,
-                'badge_no' => $visit->activeBadge?->badge_no,
+                'badge_no' => $visit->activeBadge?->badge_no ?? $visit->requestedBadge?->badge_no,
                 'checkin_at' => $visit->actual_checkin_at?->toIso8601String(),
                 'expected_checkout_at' => $visit->expected_checkout_at?->toIso8601String(),
             ])->all(),
@@ -3186,7 +3273,7 @@ class AdminUiController extends Controller
             'purpose' => $visit->purpose,
             'status' => $visit->status,
             'access_zone' => $visit->access_zone,
-            'badge_no' => $visit->activeBadge?->badge_no,
+            'badge_no' => $visit->activeBadge?->badge_no ?? $visit->requestedBadge?->badge_no,
             'actual_checkin_at' => $visit->actual_checkin_at?->toIso8601String(),
             'actual_checkout_at' => $visit->actual_checkout_at?->toIso8601String(),
             'expected_checkout_at' => $visit->expected_checkout_at?->toIso8601String(),
@@ -3284,7 +3371,7 @@ class AdminUiController extends Controller
             abort(500, 'Khong the tao file XLSX tam.');
         }
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($filePath, ZipArchive::OVERWRITE) !== true) {
             abort(500, 'Khong the tao workbook XLSX.');
         }
@@ -3532,7 +3619,7 @@ XML;
                     'department' => $visit->department_display_name,
                     'purpose' => $visit->purpose,
                     'access_zone' => $visit->access_zone,
-                    'badge_no' => $visit->activeBadge?->badge_no,
+                    'badge_no' => $visit->activeBadge?->badge_no ?? $visit->requestedBadge?->badge_no,
                     'actual_checkin_at' => $checkinAt?->toIso8601String(),
                     'expected_checkout_at' => $expectedCheckoutAt?->toIso8601String(),
                     'duration_minutes' => $checkinAt !== null ? (int) $checkinAt->diffInMinutes(now()) : null,
@@ -3621,8 +3708,10 @@ XML;
             'creator',
             'approval.approver',
             'activeBadge',
+            'requestedBadge',
         ]);
     }
+
     /**
      * @return array<string, mixed>
      */
@@ -3724,13 +3813,13 @@ XML;
         }
 
         if (blank($validated['host_name'] ?? null)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'host_name' => 'Vui long nhap nguoi tiep khach.',
             ]);
         }
 
         if (blank($validated['department_id'] ?? null)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'department_id' => 'Vui long chon phong ban.',
             ]);
         }
@@ -3748,6 +3837,91 @@ XML;
             Carbon::createFromFormat('Y-m-d H:i', $validated['visit_date'].' '.$validated['visit_time']),
             Carbon::createFromFormat('Y-m-d H:i', $validated['visit_date'].' '.$validated['expected_checkout_time']),
         ];
+    }
+
+    /**
+     * @return array{from_date: string, to_date: string, status_scope: string}
+     */
+    private function validateVisitBulkDeleteFilters(Request $request): array
+    {
+        $validated = $request->validate([
+            'from_date' => ['required', 'date'],
+            'to_date' => ['required', 'date', 'after_or_equal:from_date'],
+            'status_scope' => ['nullable', 'in:history,all,pending,approved,checked_in,checked_out,rejected,cancelled'],
+        ], [
+            'from_date.required' => 'Vui lòng chọn ngày bắt đầu.',
+            'to_date.required' => 'Vui lòng chọn ngày kết thúc.',
+            'to_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+            'status_scope.in' => 'Phạm vi trạng thái không hợp lệ.',
+        ]);
+
+        return [
+            'from_date' => Carbon::parse($validated['from_date'])->toDateString(),
+            'to_date' => Carbon::parse($validated['to_date'])->toDateString(),
+            'status_scope' => $validated['status_scope'] ?? 'history',
+        ];
+    }
+
+    /**
+     * @param  array{from_date: string, to_date: string, status_scope: string}  $filters
+     */
+    private function visitsForBulkDeletion(array $filters): Builder
+    {
+        $query = Visit::query()->whereBetween('scheduled_at', [
+            Carbon::parse($filters['from_date'])->startOfDay(),
+            Carbon::parse($filters['to_date'])->endOfDay(),
+        ]);
+
+        if ($filters['status_scope'] === 'history') {
+            return $query->whereIn('status', ['checked_out', 'rejected', 'cancelled']);
+        }
+
+        if ($filters['status_scope'] !== 'all') {
+            $query->where('status', $filters['status_scope']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Release reusable badges and remove dependent operational records before visits.
+     *
+     * @param  Collection<int, int|string>  $visitIds
+     */
+    private function deleteVisitsAndRelated(Collection $visitIds): int
+    {
+        $ids = $visitIds
+            ->map(fn ($id): int => (int) $id)
+            ->filter(fn (int $id): bool => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        Badge::query()
+            ->whereIn('visit_id', $ids)
+            ->update([
+                'visit_id' => null,
+                'status' => 'available',
+                'issued_at' => null,
+                'revoked_at' => null,
+                'valid_until' => null,
+            ]);
+
+        AccessControlLog::query()
+            ->whereIn('visit_id', $ids)
+            ->delete();
+
+        Notification::query()
+            ->where('entity_type', 'visit')
+            ->whereIn('entity_id', $ids->map(fn (int $id): string => (string) $id))
+            ->delete();
+
+        return Visit::query()
+            ->whereIn('id', $ids)
+            ->delete();
     }
 
     private function scopeVisitsForApproval(Builder $query): Builder
@@ -4020,24 +4194,29 @@ XML;
             return $windowError;
         }
 
-        $checkedInAt = $visit->actual_checkin_at ?? now();
-        $checkedIn = Visit::query()
-            ->whereKey($visit->id)
-            ->where('status', 'approved')
-            ->update([
-            'status' => 'checked_in',
-            'actual_checkin_at' => $checkedInAt,
-        ]);
+        $assignment = app(BadgeLifecycle::class)->checkIn(
+            $visit,
+            $visit->actual_checkin_at ?? now(),
+        );
 
-        if ($checkedIn !== 1) {
-            $visit->refresh();
+        if ($assignment['result'] === 'requested_badge_unavailable') {
+            $badgeNo = $assignment['requested_badge_no'] ?? 'đã chọn';
 
-            return "Lịch {$visit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($visit->status)}.";
+            return "Thẻ {$badgeNo} không còn sẵn sàng. Vui lòng chọn thẻ khác trước khi check-in.";
         }
 
-        $visit->refresh();
+        if ($assignment['result'] === 'no_badge_available') {
+            return 'Không còn thẻ khách sẵn sàng để cấp.';
+        }
 
-        $badge = $this->issueBadgeForVisit($visit);
+        if ($assignment['result'] !== 'checked_in') {
+            $currentVisit = $assignment['visit'];
+
+            return "Lịch {$currentVisit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($currentVisit->status)}.";
+        }
+
+        $visit = $assignment['visit'];
+        $badge = $assignment['badge'];
 
         AccessControlLog::query()->create([
             'visit_id' => $visit->id,
@@ -4109,33 +4288,16 @@ XML;
             };
         }
 
-        $checkedOut = Visit::query()
-            ->whereKey($visit->id)
-            ->where('status', 'checked_in')
-            ->update([
-            'status' => 'checked_out',
-            'actual_checkout_at' => now(),
-        ]);
+        $checkout = app(BadgeLifecycle::class)->checkOut($visit, now());
 
-        if ($checkedOut !== 1) {
-            $visit->refresh();
+        if ($checkout['result'] !== 'checked_out') {
+            $currentVisit = $checkout['visit'];
 
-            return "Lịch {$visit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($visit->status)}.";
+            return "Lịch {$currentVisit->code} đã được xử lý trước đó. Trạng thái hiện tại: {$this->visitStatusLabel($currentVisit->status)}.";
         }
 
-        $visit->refresh();
-
-        $badge = Badge::query()
-            ->where('visit_id', $visit->id)
-            ->where('status', 'active')
-            ->first();
-
-        if ($badge !== null) {
-            $badge->update([
-                'status' => 'revoked',
-                'revoked_at' => now(),
-            ]);
-        }
+        $visit = $checkout['visit'];
+        $badge = $checkout['badge'];
 
         AccessControlLog::query()->create([
             'visit_id' => $visit->id,
@@ -4149,37 +4311,6 @@ XML;
         ]);
 
         return null;
-    }
-
-    private function issueBadgeForVisit(Visit $visit): ?Badge
-    {
-        $existingBadge = Badge::query()
-            ->where('visit_id', $visit->id)
-            ->where('status', 'active')
-            ->first();
-
-        if ($existingBadge !== null) {
-            return $existingBadge;
-        }
-
-        $badge = Badge::query()
-            ->where('status', 'available')
-            ->orderBy('badge_no')
-            ->first();
-
-        if ($badge === null) {
-            return null;
-        }
-
-        $badge->update([
-            'visit_id' => $visit->id,
-            'status' => 'active',
-            'issued_at' => now(),
-            'revoked_at' => null,
-            'valid_until' => $visit->expected_checkout_at,
-        ]);
-
-        return $badge;
     }
 
     /**
@@ -4487,7 +4618,7 @@ XML;
             ]);
         }
 
-        $qrSvg = (string) \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+        $qrSvg = (string) QrCode::format('svg')
             ->size(180)
             ->margin(1)
             ->errorCorrection('M')

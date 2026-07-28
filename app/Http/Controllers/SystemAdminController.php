@@ -57,7 +57,7 @@ class SystemAdminController extends Controller
             ->get();
 
         $roles = Role::query()
-            ->whereIn('slug', ['admin', 'receptionist', 'guard', 'employee', 'department_manager', 'security_admin'])
+            ->where('slug', '!=', 'super_admin')
             ->orderBy('name')
             ->get();
         $roleOrder = ['admin', 'receptionist', 'guard', 'employee', 'department_manager', 'security_admin'];

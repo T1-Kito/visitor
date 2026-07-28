@@ -118,7 +118,7 @@
                             <div class="va-info"><i class="bi bi-telephone"></i><div><span class="va-label">Số điện thoại</span><span class="va-value">{{ $visit->visitor?->phone ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-envelope"></i><div><span class="va-label">Email</span><span class="va-value">{{ $visit->visitor?->email ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-card-text"></i><div><span class="va-label">CCCD / Hộ chiếu</span><span class="va-value">{{ $visit->visitor?->identity_no ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-person-vcard"></i><div><span class="va-label">Số thẻ khách</span><span class="va-value">{{ $visit->visitor?->visitor_id_card_number ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-person-vcard"></i><div><span class="va-label">Số thẻ khách</span><span class="va-value">{{ $visit->activeBadge?->badge_no ?? $visit->requestedBadge?->badge_no ?? $visit->visitor?->visitor_id_card_number ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-chat-text"></i><div><span class="va-label">Ghi chú</span><span class="va-value">{{ $visit->visitor?->note ?? '-' }}</span></div></div>
                         </div>
                     </div>
@@ -129,7 +129,7 @@
                             <div class="va-info"><i class="bi bi-card-checklist"></i><div><span class="va-label">Loại lịch hẹn</span><span class="va-value">{{ $visit->visitor?->company ? 'Đặt trước' : 'Khách vãng lai' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-calendar-check"></i><div><span class="va-label">Ngày giờ check-in</span><span class="va-value">{{ $visit->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
                             <div class="va-info"><i class="bi bi-clock-history"></i><div><span class="va-label">Ngày giờ check-out dự kiến</span><span class="va-value">{{ $visit->expected_checkout_at?->format('d/m/Y H:i') ?? '-' }}</span></div></div>
-                            <div class="va-info"><i class="bi bi-geo-alt"></i><div><span class="va-label">Khu vực</span><span class="va-value">{{ $visit->access_zone ?? '-' }}</span></div></div>
+                            <div class="va-info"><i class="bi bi-building"></i><div><span class="va-label">Phòng ban</span><span class="va-value">{{ $visit->department_display_name }}</span></div></div>
                             @unless ($hideQrWorkflow)
                             <div class="va-info"><i class="bi bi-qr-code-scan"></i><div><span class="va-label">Hình thức vào</span><span class="va-value">{{ $methodText }}</span></div></div>
 
@@ -316,7 +316,7 @@
                         <select name="visitor_id_card_number" class="form-select">
                             <option value="">Ch&#7885;n th&#7867; kh&#225;ch</option>
                             @foreach ($visitorCardOptions as $card)
-                                <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number', $visit->visitor?->visitor_id_card_number) === (string) $card['value'])>{{ $card['label'] }}</option>
+                                <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number', $visit->requestedBadge?->badge_no ?? $visit->visitor?->visitor_id_card_number) === (string) $card['value'])>{{ $card['label'] }}</option>
                             @endforeach
                         </select>
                     </div>

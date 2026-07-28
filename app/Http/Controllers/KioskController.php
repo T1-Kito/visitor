@@ -14,12 +14,14 @@ use App\Models\User;
 use App\Models\Visit;
 use App\Models\Visitor;
 use App\Models\Watchlist;
+use App\Support\BadgeLifecycle;
 use App\Support\DynamicMailSettings;
 use App\Support\PublicRegistrationAccess;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -168,6 +170,7 @@ class KioskController extends Controller
             'purpose' => $validated['purpose'],
             'access_zone' => $this->defaultAccessZone(),
             'checkin_method' => 'qr',
+            'requested_badge_id' => $this->badgeIdForNumber($validated['visitor_id_card_number'] ?? null),
             'qr_token' => $this->generateQrToken(),
             'qr_expires_at' => $scheduledAt->copy()->addDay(),
         ]);
@@ -345,12 +348,35 @@ class KioskController extends Controller
                 ->with('error', 'QR đã hết hạn. Vui lòng liên hệ lễ tân để được hỗ trợ.');
         }
 
-        $visit->update([
-            'status' => 'checked_in',
-            'actual_checkin_at' => now(),
-        ]);
+        $assignment = app(BadgeLifecycle::class)->checkIn($visit, now());
 
-        $badge = $this->issueBadgeForVisit($visit);
+        if ($assignment['result'] === 'requested_badge_unavailable') {
+            $badgeNo = $assignment['requested_badge_no'] ?? 'đã chọn';
+            $message = "Thẻ {$badgeNo} không còn sẵn sàng. Vui lòng liên hệ lễ tân để chọn thẻ khác.";
+
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $message], 409)
+                : redirect()->route('kiosk.checkin.status', $visit)->with('error', $message);
+        }
+
+        if ($assignment['result'] === 'no_badge_available') {
+            $message = 'Không còn thẻ khách sẵn sàng để cấp. Vui lòng liên hệ lễ tân.';
+
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $message], 409)
+                : redirect()->route('kiosk.checkin.status', $visit)->with('error', $message);
+        }
+
+        if ($assignment['result'] !== 'checked_in') {
+            $message = "Lịch {$visit->code} đã được xử lý trước đó.";
+
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $message], 409)
+                : redirect()->route('kiosk.checkin.status', $visit)->with('error', $message);
+        }
+
+        $visit = $assignment['visit'];
+        $badge = $assignment['badge'];
 
         AccessControlLog::query()->create([
             'visit_id' => $visit->id,
@@ -435,7 +461,7 @@ class KioskController extends Controller
                 'checked_out' => "Đã tìm thấy lịch {$visit->code}, nhưng trạng thái hiện tại là Đã rời công ty. Chưa thể check-out.",
                 'rejected' => "Lịch {$visit->code} đã bị từ chối, không thể check-out.",
                 'cancelled' => "Lịch {$visit->code} đã bị hủy, không thể check-out.",
-                default => "Chỉ khách đang trong công ty mới được check-out. Trạng thái hiện tại chưa phù hợp.",
+                default => 'Chỉ khách đang trong công ty mới được check-out. Trạng thái hiện tại chưa phù hợp.',
             };
 
             if ($request->expectsJson()) {
@@ -451,22 +477,18 @@ class KioskController extends Controller
                 ->with('error', $message);
         }
 
-        $visit->update([
-            'status' => 'checked_out',
-            'actual_checkout_at' => now(),
-        ]);
+        $checkout = app(BadgeLifecycle::class)->checkOut($visit, now());
 
-        $badge = Badge::query()
-            ->where('visit_id', $visit->id)
-            ->where('status', 'active')
-            ->first();
+        if ($checkout['result'] !== 'checked_out') {
+            $message = "Lịch {$visit->code} đã được xử lý trước đó.";
 
-        if ($badge !== null) {
-            $badge->update([
-                'status' => 'revoked',
-                'revoked_at' => now(),
-            ]);
+            return $request->expectsJson()
+                ? response()->json(['ok' => false, 'message' => $message], 409)
+                : redirect()->route('kiosk.checkin.status', $visit)->with('error', $message);
         }
+
+        $visit = $checkout['visit'];
+        $badge = $checkout['badge'];
 
         AccessControlLog::query()->create([
             'visit_id' => $visit->id,
@@ -514,7 +536,7 @@ class KioskController extends Controller
         ]);
     }
 
-    private function visitorCardOptions(): \Illuminate\Support\Collection
+    private function visitorCardOptions(): Collection
     {
         $badges = Badge::query()
             ->where('status', 'available')
@@ -537,35 +559,29 @@ class KioskController extends Controller
             'label_en' => 'Visitor card '.$number,
         ]);
     }
+
+    private function badgeIdForNumber(?string $badgeNo): ?int
+    {
+        $badgeNo = trim((string) $badgeNo);
+
+        if ($badgeNo === '') {
+            return null;
+        }
+
+        $badgeId = Badge::query()
+            ->where('badge_no', $badgeNo)
+            ->value('id');
+
+        return $badgeId !== null ? (int) $badgeId : null;
+    }
+
     private function badgeDisplaySortKey(Badge $badge): string
     {
         $nameKey = Str::lower(Str::ascii($badge->badge_no));
         $isNoEntryCard = str_contains($nameKey, 'guest do not enter')
             || str_contains($nameKey, 'khach khong vao');
 
-        return ($isNoEntryCard ? '9' : '1') . '|' . str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
-    }
-    private function issueBadgeForVisit(Visit $visit): ?Badge
-    {
-        $badge = Badge::query()
-            ->where('status', 'available')
-            ->get()
-            ->sortBy(fn (Badge $badge): string => $this->badgeDisplaySortKey($badge))
-            ->first();
-
-        if ($badge === null) {
-            return null;
-        }
-
-        $badge->update([
-            'visit_id' => $visit->id,
-            'status' => 'active',
-            'issued_at' => now(),
-            'revoked_at' => null,
-            'valid_until' => $visit->expected_checkout_at,
-        ]);
-
-        return $badge;
+        return ($isNoEntryCard ? '9' : '1').'|'.str_pad((string) $badge->id, 12, '0', STR_PAD_LEFT);
     }
 
     private function defaultAccessZone(): string

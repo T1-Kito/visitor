@@ -44,7 +44,9 @@
     $approvalDone = in_array($visit->status, ['approved', 'checked_in', 'checked_out'], true);
     $checkinDone = in_array($visit->status, ['checked_in', 'checked_out'], true);
     $checkoutDone = $visit->status === 'checked_out';
-    $badgeNumber = $visit->activeBadge?->badge_no;
+    $badgeNumber = $visit->activeBadge?->badge_no
+        ?? $visit->requestedBadge?->badge_no
+        ?? $visit->visitor?->visitor_id_card_number;
 @endphp
 
 <div class="mv-detail">
@@ -126,11 +128,10 @@
         <div class="mv-panel-title"><i class="bi bi-calendar2-week"></i><h2>Thông tin lịch hẹn</h2></div>
         <div class="mv-list">
             <div class="mv-row"><span>Người cần gặp</span><strong>{{ $visit->hostEmployee?->name ?? '-' }}</strong></div>
-            <div class="mv-row"><span>Phòng ban</span><strong>{{ $visit->hostEmployee?->department?->name ?? '-' }}</strong></div>
+            <div class="mv-row"><span>Phòng ban</span><strong>{{ $visit->department_display_name }}</strong></div>
             <div class="mv-row"><span>Giờ hẹn</span><strong>{{ $visit->scheduled_at?->format('H:i - d/m/Y') ?? '-' }}</strong></div>
             <div class="mv-row"><span>Dự kiến ra</span><strong>{{ $visit->expected_checkout_at?->format('H:i - d/m/Y') ?? '-' }}</strong></div>
             <div class="mv-row"><span>Mục đích</span><strong>{{ $visit->purpose ?: '-' }}</strong></div>
-            <div class="mv-row"><span>Khu vực</span><strong>{{ $visit->access_zone ?: '-' }}</strong></div>
             @if ($badgeNumber)
                 <div class="mv-row"><span>Thẻ ra/vào</span><strong>{{ $badgeNumber }}</strong></div>
             @endif

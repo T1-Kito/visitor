@@ -104,6 +104,7 @@
                 <div>
                     <span class="ap-cell-label">Người tiếp</span>
                     <span class="ap-primary">{{ $visit['host'] }}</span>
+                    <span class="ap-secondary"><i class="bi bi-building"></i> {{ $visit['department'] }}</span>
                 </div>
 
                 <div>

@@ -40,6 +40,7 @@
 .vs-filter-empty{padding:32px 16px;text-align:center;color:#8192a8;font-size:13px}
 .vs-card,.vs-row,.vs-btn,.vs-tab{transition:none!important}.vs-card:hover{transform:none!important;box-shadow:none!important}
 .vs-filter .form-control:focus,.vs-filter .form-select:focus{border-color:#dce8f6!important;box-shadow:none!important;outline:0!important}.vs-filter .form-control,.vs-filter .form-select{transition:none!important}
+.vs-bulk-open{min-height:42px;border:1px solid #fecaca!important;border-radius:12px!important;background:#fff!important;color:#dc2626!important;font-size:.8rem!important;font-weight:600!important;white-space:nowrap}.vs-bulk-open:hover{background:#fff5f5!important}.vs-bulk-backdrop{position:fixed;inset:0;z-index:1080;display:none;align-items:center;justify-content:center;padding:1rem;background:rgba(15,32,55,.42)}.vs-bulk-backdrop.show{display:flex}.vs-bulk-dialog{width:min(620px,100%);border:1px solid #e5eaf1;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgba(15,32,55,.28);overflow:hidden}.vs-bulk-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1.1rem;border-bottom:1px solid #edf2f7}.vs-bulk-head h3{margin:0;color:#10233d;font-size:1rem}.vs-bulk-head p{margin:.2rem 0 0;color:#7187a3;font-size:.76rem}.vs-bulk-close{width:34px;height:34px;border:1px solid #dbe6f3;border-radius:10px;background:#fff;color:#64748b}.vs-bulk-body{display:grid;gap:1rem;padding:1.1rem}.vs-bulk-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.vs-bulk-field label{display:block;margin-bottom:.35rem;color:#29435f;font-size:.75rem;font-weight:600}.vs-bulk-field .form-control,.vs-bulk-field .form-select{min-height:42px;border-color:#dce8f6;border-radius:11px;font-size:.8rem}.vs-bulk-field-wide{grid-column:1/-1}.vs-bulk-preview{display:flex;align-items:flex-start;gap:.7rem;padding:.8rem;border:1px solid #cfe2f7;border-radius:13px;background:#f3f8fe;color:#29435f;font-size:.78rem;line-height:1.45}.vs-bulk-preview.danger{border-color:#fecaca;background:#fff5f5;color:#b91c1c}.vs-bulk-confirm{display:flex;align-items:flex-start;gap:.55rem;color:#526b87;font-size:.76rem;line-height:1.4}.vs-bulk-confirm input{margin-top:.15rem}.vs-bulk-actions{display:flex;justify-content:flex-end;gap:.6rem;padding-top:.2rem}.vs-bulk-actions .btn{min-height:40px;border-radius:11px;font-size:.8rem;font-weight:600}@media(max-width:768px){.vs-bulk-grid{grid-template-columns:1fr}.vs-bulk-field-wide{grid-column:auto}}
 </style>
 @endpush
 
@@ -71,8 +72,69 @@
                     </option>
                 @endforeach
             </select>
-            <button class="btn btn-light" type="button"><i class="bi bi-funnel"></i> Bộ lọc</button>
+            @if (auth()->user()?->hasPermission('visits.delete'))
+                <button class="vs-bulk-open" id="openVisitBulkDelete" type="button"><i class="bi bi-trash3"></i> Xóa hàng loạt</button>
+            @endif
         </div>
+
+        @if (auth()->user()?->hasPermission('visits.delete'))
+            <div class="vs-bulk-backdrop {{ $errors->hasAny(['from_date', 'to_date', 'status_scope', 'confirm_bulk_delete']) ? 'show' : '' }}" id="visitBulkDeleteModal" aria-hidden="{{ $errors->hasAny(['from_date', 'to_date', 'status_scope', 'confirm_bulk_delete']) ? 'false' : 'true' }}">
+                <section class="vs-bulk-dialog" role="dialog" aria-modal="true" aria-labelledby="visitBulkDeleteTitle">
+                    <div class="vs-bulk-head">
+                        <div>
+                            <h3 id="visitBulkDeleteTitle">Xóa lịch hẹn hàng loạt</h3>
+                            <p>Chọn phạm vi theo ngày hẹn. Dữ liệu đã xóa không thể khôi phục.</p>
+                        </div>
+                        <button class="vs-bulk-close" id="closeVisitBulkDelete" type="button" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                    <form id="visitBulkDeleteForm" action="{{ route('admin.visits.bulk-delete') }}" method="post" data-preview-url="{{ route('admin.visits.bulk-delete.preview') }}">
+                        @csrf
+                        @method('delete')
+                        <div class="vs-bulk-body">
+                            <div class="vs-bulk-grid">
+                                <div class="vs-bulk-field">
+                                    <label for="bulkVisitFromDate">Từ ngày</label>
+                                    <input class="form-control" id="bulkVisitFromDate" name="from_date" type="date" value="{{ old('from_date', now()->startOfMonth()->toDateString()) }}" required>
+                                    @error('from_date')<span class="text-danger small d-block mt-1">{{ $message }}</span>@enderror
+                                </div>
+                                <div class="vs-bulk-field">
+                                    <label for="bulkVisitToDate">Đến ngày</label>
+                                    <input class="form-control" id="bulkVisitToDate" name="to_date" type="date" value="{{ old('to_date', now()->toDateString()) }}" required>
+                                    @error('to_date')<span class="text-danger small d-block mt-1">{{ $message }}</span>@enderror
+                                </div>
+                                <div class="vs-bulk-field vs-bulk-field-wide">
+                                    <label for="bulkVisitStatusScope">Phạm vi trạng thái</label>
+                                    <select class="form-select" id="bulkVisitStatusScope" name="status_scope">
+                                        <option value="history" @selected(old('status_scope', 'history') === 'history')>Chỉ lịch sử đã kết thúc / từ chối / hủy (khuyến nghị)</option>
+                                        <option value="all" @selected(old('status_scope') === 'all')>Tất cả trạng thái trong khoảng ngày</option>
+                                        <option value="checked_out" @selected(old('status_scope') === 'checked_out')>Đã rời công ty</option>
+                                        <option value="rejected" @selected(old('status_scope') === 'rejected')>Đã từ chối</option>
+                                        <option value="cancelled" @selected(old('status_scope') === 'cancelled')>Đã hủy</option>
+                                        <option value="pending" @selected(old('status_scope') === 'pending')>Chờ duyệt</option>
+                                        <option value="approved" @selected(old('status_scope') === 'approved')>Đã duyệt, chưa check-in</option>
+                                        <option value="checked_in" @selected(old('status_scope') === 'checked_in')>Đang trong công ty</option>
+                                    </select>
+                                    @error('status_scope')<span class="text-danger small d-block mt-1">{{ $message }}</span>@enderror
+                                </div>
+                            </div>
+                            <div class="vs-bulk-preview" id="visitBulkDeletePreview">
+                                <i class="bi bi-info-circle"></i>
+                                <span>Đang kiểm tra số lịch hẹn phù hợp...</span>
+                            </div>
+                            <label class="vs-bulk-confirm">
+                                <input id="confirmVisitBulkDelete" name="confirm_bulk_delete" type="checkbox" value="1" required>
+                                <span>Tôi hiểu dữ liệu lịch hẹn và thông tin vận hành liên quan trong phạm vi này sẽ bị xóa.</span>
+                            </label>
+                            @error('confirm_bulk_delete')<span class="text-danger small d-block mt-1">{{ $message }}</span>@enderror
+                            <div class="vs-bulk-actions">
+                                <button class="btn btn-light" id="cancelVisitBulkDelete" type="button">Hủy</button>
+                                <button class="btn btn-danger" id="submitVisitBulkDelete" type="submit" disabled><i class="bi bi-trash3"></i> Xóa lịch đã chọn</button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        @endif
 
         <div class="vs-tabs" id="visitTabs">
             @foreach ($statusFilters as $value => $label)
@@ -276,6 +338,111 @@
     applyFilters();
 })();
 (() => {
+    const modal = document.getElementById('visitBulkDeleteModal');
+    const openButton = document.getElementById('openVisitBulkDelete');
+    const closeButton = document.getElementById('closeVisitBulkDelete');
+    const cancelButton = document.getElementById('cancelVisitBulkDelete');
+    const form = document.getElementById('visitBulkDeleteForm');
+
+    if (!modal || !openButton || !form) {
+        return;
+    }
+
+    const fromInput = document.getElementById('bulkVisitFromDate');
+    const toInput = document.getElementById('bulkVisitToDate');
+    const statusInput = document.getElementById('bulkVisitStatusScope');
+    const confirmation = document.getElementById('confirmVisitBulkDelete');
+    const submitButton = document.getElementById('submitVisitBulkDelete');
+    const preview = document.getElementById('visitBulkDeletePreview');
+    const previewText = preview.querySelector('span');
+    let matchingCount = 0;
+    let previewRequest = null;
+
+    const syncSubmitButton = () => {
+        submitButton.disabled = matchingCount < 1 || !confirmation.checked;
+    };
+
+    const setModalOpen = (open) => {
+        modal.classList.toggle('show', open);
+        modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if (open) {
+            updatePreview();
+        }
+    };
+
+    const updatePreview = async () => {
+        matchingCount = 0;
+        confirmation.checked = false;
+        syncSubmitButton();
+        preview.classList.remove('danger');
+
+        if (!fromInput.value || !toInput.value) {
+            previewText.textContent = 'Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.';
+            return;
+        }
+
+        if (toInput.value < fromInput.value) {
+            preview.classList.add('danger');
+            previewText.textContent = 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.';
+            return;
+        }
+
+        previewText.textContent = 'Đang kiểm tra số lịch hẹn phù hợp...';
+        previewRequest?.abort();
+        previewRequest = new AbortController();
+
+        const params = new URLSearchParams({
+            from_date: fromInput.value,
+            to_date: toInput.value,
+            status_scope: statusInput.value,
+        });
+
+        try {
+            const response = await fetch(`${form.dataset.previewUrl}?${params.toString()}`, {
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                cache: 'no-store',
+                signal: previewRequest.signal,
+            });
+            const payload = await response.json();
+
+            if (!response.ok) {
+                throw new Error(payload.message || 'Không kiểm tra được dữ liệu.');
+            }
+
+            matchingCount = Number(payload.count || 0);
+            preview.classList.toggle('danger', matchingCount > 0);
+            previewText.textContent = matchingCount > 0
+                ? `Có ${matchingCount} lịch hẹn sẽ bị xóa cùng dữ liệu vận hành liên quan.`
+                : 'Không có lịch hẹn phù hợp trong phạm vi đã chọn.';
+            syncSubmitButton();
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            preview.classList.add('danger');
+            previewText.textContent = error.message || 'Không kiểm tra được dữ liệu. Vui lòng thử lại.';
+        }
+    };
+
+    openButton.addEventListener('click', () => setModalOpen(true));
+    closeButton?.addEventListener('click', () => setModalOpen(false));
+    cancelButton?.addEventListener('click', () => setModalOpen(false));
+    [fromInput, toInput, statusInput].forEach((input) => input.addEventListener('change', updatePreview));
+    confirmation.addEventListener('change', syncSubmitButton);
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) setModalOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal.classList.contains('show')) setModalOpen(false);
+    });
+    form.addEventListener('submit', (event) => {
+        const confirmed = matchingCount > 0
+            && confirmation.checked
+            && window.confirm(`Bạn chắc chắn muốn xóa ${matchingCount} lịch hẹn? Thao tác này không thể hoàn tác.`);
+        if (!confirmed) event.preventDefault();
+    });
+
+    if (modal.classList.contains('show')) updatePreview();
+})();
+(() => {
     const liveUrl = @json(route('admin.visits.live-state'));
     let currentVersion = @json($visitLiveState['version'] ?? '');
     let reloading = false;
@@ -284,6 +451,7 @@
         const active = document.activeElement;
         return document.hidden
             || document.querySelector('.modal.show')
+            || document.querySelector('.vs-bulk-backdrop.show')
             || (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))
             || document.querySelector('form[data-disable-on-submit] button[disabled]');
     };

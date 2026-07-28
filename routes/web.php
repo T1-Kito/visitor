@@ -103,6 +103,12 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/visits', [AdminUiController::class, 'visitsStore'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.store');
+    Route::get('/visits/bulk-delete/preview', [AdminUiController::class, 'visitsBulkDeletePreview'])
+        ->middleware('permission:visits.delete')
+        ->name('admin.visits.bulk-delete.preview');
+    Route::delete('/visits/bulk-delete', [AdminUiController::class, 'visitsBulkDestroy'])
+        ->middleware('permission:visits.delete')
+        ->name('admin.visits.bulk-delete');
     Route::get('/visits/{visit}', [AdminUiController::class, 'visitsShow'])
         ->middleware('permission:visits.manage')
         ->name('admin.visits.show');

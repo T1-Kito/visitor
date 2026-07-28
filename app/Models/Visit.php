@@ -29,6 +29,7 @@ class Visit extends Model
         'purpose',
         'access_zone',
         'checkin_method',
+        'requested_badge_id',
         'qr_token',
         'qr_expires_at',
         'rejection_reason',
@@ -88,5 +89,10 @@ class Visit extends Model
     public function activeBadge(): HasOne
     {
         return $this->hasOne(Badge::class)->where('status', 'active');
+    }
+
+    public function requestedBadge(): BelongsTo
+    {
+        return $this->belongsTo(Badge::class, 'requested_badge_id');
     }
 }

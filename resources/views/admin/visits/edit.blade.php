@@ -40,7 +40,7 @@
                         <select name="visitor_id_card_number" class="form-select">
                             <option value="">Chon the khach</option>
                             @foreach ($visitorCardOptions as $card)
-                                <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number', $visit->visitor?->visitor_id_card_number) === (string) $card['value'])>{{ $card['label'] }}</option>
+                                <option value="{{ $card['value'] }}" @selected((string) old('visitor_id_card_number', $visit->requestedBadge?->badge_no ?? $visit->visitor?->visitor_id_card_number) === (string) $card['value'])>{{ $card['label'] }}</option>
                             @endforeach
                         </select>
                     </div>

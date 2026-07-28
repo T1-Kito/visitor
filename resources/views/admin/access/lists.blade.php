@@ -24,8 +24,8 @@
 <div class="al-page">
     <section class="al-tabs">
         <a class="al-tab inside {{ $type === 'inside' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'inside'])) }}"><span>Đang trong công ty</span><strong>{{ $listStats['inside'] }}</strong></a>
-        <a class="al-tab in {{ $type === 'in' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'in'])) }}"><span>Khách vào hôm nay</span><strong>{{ $listStats['in_today'] }}</strong></a>
-        <a class="al-tab out {{ $type === 'out' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'out'])) }}"><span>Khách ra hôm nay</span><strong>{{ $listStats['out_today'] }}</strong></a>
+        <a class="al-tab in {{ $type === 'in' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'in'])) }}"><span>Khách vào theo lọc</span><strong>{{ $listStats['in_range'] }}</strong></a>
+        <a class="al-tab out {{ $type === 'out' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'out'])) }}"><span>Khách ra theo lọc</span><strong>{{ $listStats['out_range'] }}</strong></a>
         <a class="al-tab all {{ $type === 'all' ? 'active' : '' }}" href="{{ route('admin.access.lists', array_merge($queryBase, ['type' => 'all'])) }}"><span>Tất cả theo lọc</span><strong>{{ $listStats['all_range'] }}</strong></a>
     </section>
 
