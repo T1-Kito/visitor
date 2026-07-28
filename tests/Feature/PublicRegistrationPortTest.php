@@ -17,6 +17,9 @@ class PublicRegistrationPortTest extends TestCase
         $this->get('http://115.73.209.88:8443/kiosk/register')->assertOk();
         $this->get('http://115.73.209.88:8443/kiosk/privacy-notice')
             ->assertRedirect('https://www.dhl.com/global-en/home/footer/privacy-notice.html');
+        $this->getJson('http://115.73.209.88:8443/kiosk/visitor-cards')
+            ->assertOk()
+            ->assertJsonStructure(['data']);
         $this->get('http://115.73.209.88:8443/login')->assertNotFound();
         $this->get('http://115.73.209.88:8443/kiosk')->assertNotFound();
         $this->get('http://115.73.209.88:8443/dashboard')->assertNotFound();

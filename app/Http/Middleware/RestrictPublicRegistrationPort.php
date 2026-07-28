@@ -19,6 +19,7 @@ class RestrictPublicRegistrationPort
             'GET kiosk/register',
             'GET kiosk/privacy-notice',
             'GET kiosk/employees/search',
+            'GET kiosk/visitor-cards',
             'POST kiosk/checkin/manual',
         ];
         $requestSignature = strtoupper($request->method()).' '.$request->path();

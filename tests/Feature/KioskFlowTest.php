@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AccessControlLog;
 use App\Models\Approval;
+use App\Models\Badge;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SystemSetting;
@@ -89,6 +90,7 @@ class KioskFlowTest extends TestCase
         $this->seed(VmsSeeder::class);
 
         $host = Employee::query()->where('is_active', true)->firstOrFail();
+        $badge = Badge::query()->where('status', 'available')->firstOrFail();
         $checkinAt = now()->addMinutes(30)->startOfMinute();
         $checkoutAt = $checkinAt->copy()->addHours(4);
 
@@ -99,7 +101,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => '',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P12345678',
-            'visitor_id_card_number' => '1',
+            'visitor_id_card_number' => $badge->badge_no,
             'host_employee_id' => $host->id,
             'host_name' => $host->name,
             'department_id' => $host->department_id ?? Department::query()->value('id'),
@@ -124,7 +126,7 @@ class KioskFlowTest extends TestCase
 
         $this->assertSame('pending', $visit->status);
         $this->assertNull($visit->visitor->email);
-        $this->assertSame('1', $visit->visitor->visitor_id_card_number);
+        $this->assertSame($badge->badge_no, $visit->visitor->visitor_id_card_number);
         $this->assertSame($checkinAt->format('Y-m-d H:i'), $visit->scheduled_at->format('Y-m-d H:i'));
         $this->assertSame($checkoutAt->format('Y-m-d H:i'), $visit->expected_checkout_at->format('Y-m-d H:i'));
         $this->assertNotNull($visit->qr_token);
@@ -144,6 +146,7 @@ class KioskFlowTest extends TestCase
     {
         $this->seed(VmsSeeder::class);
         $host = Employee::query()->where('is_active', true)->firstOrFail();
+        $badge = Badge::query()->where('status', 'available')->firstOrFail();
         $checkinAt = now()->addHours(2)->startOfMinute();
         $checkoutAt = $checkinAt->copy()->subHour();
 
@@ -154,7 +157,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => 'invalid.schedule@example.test',
             'visitor_company' => 'Demo Company',
             'visitor_identity_no' => 'P87654321',
-            'visitor_id_card_number' => '2',
+            'visitor_id_card_number' => $badge->badge_no,
             'host_name' => $host->name,
             'department_id' => $host->department_id ?? Department::query()->value('id'),
             'host_employee_id' => $host->id,
@@ -249,6 +252,7 @@ class KioskFlowTest extends TestCase
     {
         $this->seed(VmsSeeder::class);
         $department = Department::query()->firstOrFail();
+        $badge = Badge::query()->where('status', 'available')->firstOrFail();
         $checkinAt = now()->startOfMinute();
         $checkoutAt = $checkinAt->copy()->addHours(4);
 
@@ -259,7 +263,7 @@ class KioskFlowTest extends TestCase
             'visitor_email' => '',
             'visitor_company' => 'Manual Company',
             'visitor_identity_no' => 'P-MANUAL-01',
-            'visitor_id_card_number' => '9',
+            'visitor_id_card_number' => $badge->badge_no,
             'host_name' => 'Nguyen Van Ngoai',
             'department_id' => $department->id,
             'purpose' => 'Họp',
@@ -274,7 +278,7 @@ class KioskFlowTest extends TestCase
         $visit = Visit::query()->where('host_name', 'Nguyen Van Ngoai')->firstOrFail();
         $this->assertNull($visit->host_employee_id);
         $this->assertSame($department->id, $visit->department_id);
-        $this->assertSame('9', $visit->visitor->visitor_id_card_number);
+        $this->assertSame($badge->badge_no, $visit->visitor->visitor_id_card_number);
         $this->assertNull($visit->visitor->email);
 
         $this->from('/kiosk')->post('/kiosk/checkin/manual', [

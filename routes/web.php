@@ -15,6 +15,7 @@ Route::get('/kiosk', [KioskController::class, 'index'])->name('kiosk.index');
 Route::get('/kiosk/register', [KioskController::class, 'register'])->name('kiosk.register');
 Route::get('/kiosk/privacy-notice', [KioskController::class, 'privacyNotice'])->name('kiosk.privacy-notice');
 Route::get('/kiosk/employees/search', [KioskController::class, 'searchEmployees'])->name('kiosk.employees.search');
+Route::get('/kiosk/visitor-cards', [KioskController::class, 'visitorCards'])->name('kiosk.visitor-cards');
 Route::post('/kiosk/checkin/manual', [KioskController::class, 'storeWalkIn'])->name('kiosk.checkin.manual');
 Route::post('/kiosk/checkin/scan-qr', [KioskController::class, 'scanQr'])->name('kiosk.checkin.scan-qr');
 Route::post('/kiosk/checkout/scan-qr', [KioskController::class, 'scanCheckoutQr'])->name('kiosk.checkout.scan-qr');

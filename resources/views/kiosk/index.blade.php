@@ -1553,7 +1553,13 @@
                             <label class="form-label">Visitor ID card number <span class="text-danger">*</span></label>
                             <div class="kiosk-input-wrap">
                                 <i class="bi bi-person-vcard"></i>
-                                <select class="form-select" name="visitor_id_card_number" required>
+                                <select
+                                    id="kioskVisitorCardSelect"
+                                    class="form-select"
+                                    name="visitor_id_card_number"
+                                    data-options-url="{{ route('kiosk.visitor-cards') }}"
+                                    required
+                                >
                                     <option value="" disabled data-label-vi="Chọn thẻ khách" data-label-en="Select visitor card" @selected(! old('visitor_id_card_number'))>Chọn thẻ khách</option>
                                     @foreach (($visitorCardOptions ?? collect()) as $card)
                                         <option value="{{ $card['value'] }}" data-label-vi="{{ $card['label_vi'] }}" data-label-en="{{ $card['label_en'] }}" @selected((string) old('visitor_id_card_number') === (string) $card['value'])>{{ $card['label_en'] }}</option>
@@ -1913,25 +1919,32 @@
                     });
                 };
 
-                Array.from(select.options).forEach((option) => {
-                    if (option.disabled && option.value === '') return;
+                const rebuild = () => {
+                    menu.replaceChildren();
 
-                    const item = document.createElement('button');
-                    item.type = 'button';
-                    item.className = 'kiosk-select-option';
-                    item.dataset.value = option.value;
-                    item.textContent = option.textContent.trim();
-                    item.addEventListener('click', () => {
-                        select.value = option.value;
-                        select.dispatchEvent(new Event('change', { bubbles: true }));
-                        shell.classList.remove('is-open');
-                        refresh();
+                    Array.from(select.options).forEach((option) => {
+                        if (option.disabled && option.value === '') return;
+
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'kiosk-select-option';
+                        item.dataset.value = option.value;
+                        item.textContent = option.textContent.trim();
+                        item.addEventListener('click', () => {
+                            select.value = option.value;
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                            shell.classList.remove('is-open');
+                            refresh();
+                        });
+                        menu.appendChild(item);
                     });
-                    menu.appendChild(item);
-                });
+
+                    refresh();
+                };
 
                 button.addEventListener('click', (event) => {
                     event.stopPropagation();
+                    select.dispatchEvent(new CustomEvent('kiosk:select-open'));
                     document.querySelectorAll('.kiosk-select-shell.is-open').forEach((openShell) => {
                         if (openShell !== shell) openShell.classList.remove('is-open');
                     });
@@ -1939,11 +1952,85 @@
                 });
 
                 select.addEventListener('change', refresh);
+                select.addEventListener('kiosk:options-updated', rebuild);
                 shell.appendChild(button);
                 shell.appendChild(menu);
-                refresh();
+                rebuild();
             });
         }
+
+        const visitorCardSelect = document.getElementById('kioskVisitorCardSelect');
+        let visitorCardRefreshPromise = null;
+
+        function applyVisitorCardOptions(cards) {
+            if (!visitorCardSelect) return;
+
+            const normalizedCards = Array.isArray(cards)
+                ? cards.filter((card) => card && String(card.value ?? '').trim() !== '')
+                : [];
+            const currentValue = visitorCardSelect.value;
+            const currentStillAvailable = normalizedCards.some((card) => String(card.value) === currentValue);
+            const fragment = document.createDocumentFragment();
+            const placeholder = document.createElement('option');
+            const hasAvailableCards = normalizedCards.length > 0;
+
+            placeholder.value = '';
+            placeholder.disabled = true;
+            placeholder.dataset.labelVi = hasAvailableCards ? 'Chọn thẻ khách' : 'Hiện không có thẻ sẵn sàng';
+            placeholder.dataset.labelEn = hasAvailableCards ? 'Select visitor card' : 'No visitor card is currently available';
+            placeholder.textContent = kioskLanguage === 'en' ? placeholder.dataset.labelEn : placeholder.dataset.labelVi;
+            placeholder.selected = !currentStillAvailable;
+            fragment.appendChild(placeholder);
+
+            normalizedCards.forEach((card) => {
+                const option = document.createElement('option');
+                option.value = String(card.value);
+                option.dataset.labelVi = String(card.label_vi || card.value);
+                option.dataset.labelEn = String(card.label_en || card.value);
+                option.textContent = kioskLanguage === 'en' ? option.dataset.labelEn : option.dataset.labelVi;
+                option.selected = currentStillAvailable && option.value === currentValue;
+                fragment.appendChild(option);
+            });
+
+            visitorCardSelect.replaceChildren(fragment);
+            visitorCardSelect.dispatchEvent(new CustomEvent('kiosk:options-updated'));
+        }
+
+        async function refreshVisitorCards() {
+            if (!visitorCardSelect?.dataset.optionsUrl) return;
+            if (visitorCardRefreshPromise) return visitorCardRefreshPromise;
+
+            visitorCardRefreshPromise = fetch(visitorCardSelect.dataset.optionsUrl, {
+                method: 'GET',
+                cache: 'no-store',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(async (response) => {
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const payload = await response.json();
+                    applyVisitorCardOptions(payload.data);
+                })
+                .catch(() => {
+                    // Keep the last valid list when the network is temporarily unavailable.
+                })
+                .finally(() => {
+                    visitorCardRefreshPromise = null;
+                });
+
+            return visitorCardRefreshPromise;
+        }
+
+        visitorCardSelect?.addEventListener('kiosk:select-open', refreshVisitorCards);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') refreshVisitorCards();
+        });
+        window.addEventListener('focus', refreshVisitorCards);
+        setInterval(() => {
+            if (document.visibilityState === 'visible') refreshVisitorCards();
+        }, 10000);
 
         document.addEventListener('click', () => {
             document.querySelectorAll('.kiosk-select-shell.is-open').forEach((shell) => shell.classList.remove('is-open'));
@@ -2261,6 +2348,9 @@
                 });
                 const payload = await response.json();
                 renderLookupModal(payload, !response.ok);
+                if (response.ok && currentLookupMode() === 'checkout') {
+                    refreshVisitorCards();
+                }
             } catch (error) {
                 renderLookupModal({ message: 'Không thể kiểm tra mã lúc này. Vui lòng thử lại.' }, true);
             } finally {
@@ -2288,6 +2378,7 @@
                 });
                 const payload = await response.json();
                 renderLookupModal(payload, !response.ok);
+                if (response.ok) refreshVisitorCards();
             } catch (error) {
                 renderLookupModal({ message: 'Không thể xác nhận check-in lúc này. Vui lòng thử lại.' }, true);
             }
@@ -2311,6 +2402,7 @@
 
         updateLocalizedOptions();
         enhanceKioskSelects();
+        refreshVisitorCards();
         translateKiosk();
         updateSafetyLanguage();
         setLookupMode(document.getElementById('kioskLookupMode')?.value);

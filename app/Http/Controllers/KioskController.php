@@ -94,14 +94,25 @@ class KioskController extends Controller
         return response()->json(['data' => $employees]);
     }
 
+    public function visitorCards(): JsonResponse
+    {
+        return response()
+            ->json(['data' => $this->visitorCardOptions()->values()])
+            ->withHeaders([
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]);
+    }
+
     public function storeWalkIn(Request $request): RedirectResponse
     {
         $isKioskV2 = $request->input('registration_form') === 'kiosk_v2';
         $requiredForKiosk = $isKioskV2 ? 'required' : 'nullable';
-        $visitorCardValues = array_values(array_unique(array_merge(
-            $this->visitorCardOptions()->pluck('value')->map(fn ($value): string => (string) $value)->all(),
-            array_map('strval', range(1, 20))
-        )));
+        $visitorCardValues = $this->visitorCardOptions()
+            ->pluck('value')
+            ->map(fn ($value): string => (string) $value)
+            ->values()
+            ->all();
 
         $validated = $request->validate([
             'registration_form' => ['nullable', 'in:kiosk_v2'],
@@ -126,6 +137,8 @@ class KioskController extends Controller
             'expected_checkout_time' => ['nullable', 'date_format:H:i'],
             'policy_accepted' => ['accepted'],
             'safety_acknowledged' => ['accepted'],
+        ], [
+            'visitor_id_card_number.in' => 'Thẻ khách vừa được sử dụng hoặc không còn sẵn sàng. Vui lòng chọn lại.',
         ]);
 
         $visitor = Visitor::query()->create([
@@ -549,7 +562,7 @@ class KioskController extends Controller
                 'label_en' => $badge->label_en ?: $badge->badge_no,
             ]);
 
-        if ($badges->isNotEmpty()) {
+        if ($badges->isNotEmpty() || Badge::query()->exists()) {
             return $badges;
         }
 
